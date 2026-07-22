@@ -1,0 +1,77 @@
+/* =========================================================================
+   tokens.css  —  DESIGN TOKENS  ·  "MONOLITH"
+   -------------------------------------------------------------------------
+   Recolored to a monochrome system: true-black base rising through charcoal,
+   a calibrated grey text scale, and a single WHITE accent that resolves as a
+   grey→white sheen on signature elements (milled-aluminum light). Change a
+   value here and it propagates everywhere. Light mode is the clean inverse.
+   ========================================================================= */
+
+:root {
+  /* --- Surfaces (black rising to charcoal) -------------------------- */
+  --bg:            #000000;   /* page base — true black */
+  --bg-elev:       #0b0b0d;   /* raised panels / cards */
+  --bg-elev-2:     #141417;   /* card hover / inputs */
+  --hairline:      #242429;   /* engraved rules & borders */
+  --hairline-soft: #161619;
+
+  /* --- Text (grey scale to near-white) ------------------------------ */
+  --ink:        #f6f6f8;   /* primary text */
+  --ink-mid:    #9b9ba4;   /* secondary text */
+  --ink-low:    #5e5e67;   /* captions / labels */
+
+  /* --- Accent (white, fading from grey) ----------------------------- */
+  --volt:       #ffffff;                       /* the accent — white */
+  --volt-soft:  rgba(255, 255, 255, 0.10);     /* washes */
+  --volt-glow:  rgba(255, 255, 255, 0.20);     /* glows / shadows */
+  --volt-ink:   #000000;                        /* text that sits ON white */
+  --sheen:      linear-gradient(180deg, #84848d 0%, #ffffff 72%);  /* grey → white */
+  --sheen-dim:  linear-gradient(180deg, #56565f 0%, #b9b9c1 100%); /* dimmer, secondary */
+
+  /* --- Type ---------------------------------------------------------- */
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body:    "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* fluid type scale */
+  --t-hero:   clamp(3.2rem, 11vw, 9rem);
+  --t-score:  clamp(4rem, 18vw, 15rem);
+  --t-h2:     clamp(1.9rem, 4.5vw, 3.2rem);
+  --t-h3:     clamp(1.25rem, 2.2vw, 1.6rem);
+  --t-body:   clamp(1rem, 1.15vw, 1.125rem);
+  --t-label:  0.72rem;
+
+  /* --- Spacing / layout --------------------------------------------- */
+  --gutter:     clamp(1.25rem, 5vw, 6rem);
+  --section-y:  clamp(5rem, 12vw, 10rem);
+  --maxw:       1240px;
+  --radius:     14px;
+  --radius-sm:  9px;
+
+  /* --- Motion -------------------------------------------------------- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur:  0.6s;
+}
+
+/* ----------------------------------------------------------------------
+   LIGHT MODE  —  the clean inverse: near-white paper, grey text, and the
+   accent flips to near-black (grey→black sheen) so it still reads as a fade.
+   ---------------------------------------------------------------------- */
+[data-theme="light"] {
+  --bg:            #ffffff;
+  --bg-elev:       #f5f5f7;
+  --bg-elev-2:     #ebebee;
+  --hairline:      #d9d9df;
+  --hairline-soft: #e8e8ec;
+
+  --ink:     #0a0a0c;
+  --ink-mid: #4c4c56;
+  --ink-low: #84848e;
+
+  --volt:      #111114;
+  --volt-soft: rgba(0, 0, 0, 0.06);
+  --volt-glow: rgba(0, 0, 0, 0.16);
+  --volt-ink:  #ffffff;
+  --sheen:     linear-gradient(180deg, #6a6a73 0%, #0a0a0c 78%);
+  --sheen-dim: linear-gradient(180deg, #a0a0a9 0%, #3a3a42 100%);
+}

@@ -1,0 +1,182 @@
+/* ============================================================
+   components.css  ·  reusable blocks (v11)
+   page hero · scorewall (the signature) · feature panel · cards
+   · ledger · marquee · link rows · game cards
+   ============================================================ */
+
+/* ── PAGE HERO ── */
+.phero { padding: calc(var(--s16) + var(--s3)) 0 var(--s10); }
+.phero-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--s3); flex-wrap: wrap; margin-bottom: var(--s5);
+}
+.phero-status {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--f-mono); font-size: var(--t-micro); font-weight: 500;
+  letter-spacing: 0.01em; color: var(--fg-2);
+  border: 1px solid var(--line); border-radius: var(--r-chip); padding: 8px 16px;
+}
+.phero-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--fg); }
+.phero-loc { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); }
+.phero-title {
+  font-family: var(--f-display); font-weight: 800;
+  font-size: var(--t-hero); line-height: 0.98; letter-spacing: -0.01em; color: var(--fg);
+}
+.phero-lead { margin-top: var(--s5); max-width: 60ch; font-size: var(--t-lead); line-height: 1.6; color: var(--fg-2); }
+.phero-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s6); }
+
+.venture-disclaimer {
+  margin-top: var(--s5); text-align: center;
+  font-size: 0.8125rem; color: var(--fg-3); max-width: 56ch; margin-inline: auto;
+}
+
+/* ── SCOREWALL — the signature. index.html only. huge tabular scores,
+   red interpunct (one of red's three jobs), one orchestrated entrance
+   on load — no scroll-linking, nothing else on the site moves like this. ── */
+.scorewall {
+  display: flex; flex-wrap: wrap; gap: var(--s8);
+  margin-top: var(--s8); padding-top: var(--s6); border-top: 1px solid var(--line);
+}
+.scoreline { display: flex; flex-direction: column; gap: 6px; }
+.scoreline-v {
+  font-family: var(--f-display); font-weight: 800;
+  font-size: var(--t-score); line-height: 0.9; letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.scoreline-v .sep { color: var(--red); }
+.scoreline-k { font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.02em; color: var(--fg-3); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .scoreline {
+    opacity: 0; transform: translateY(10px);
+    animation: score-in var(--dur-2) var(--ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 0.08s + 0.1s);
+  }
+  @keyframes score-in {
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* ── FEATURE PANEL — image band. no separate dark/light flip needed:
+   the whole site is ink, panels read as raised via border + fill. ── */
+.feature { padding-block: 0 var(--s12); }
+.feature-panel {
+  position: relative; border: 1px solid var(--line); border-radius: var(--r-media); overflow: clip;
+  aspect-ratio: 16 / 7; background: var(--raised);
+  display: flex; align-items: flex-end; padding: clamp(var(--s5), 5vw, var(--s10));
+}
+@media (max-width: 720px) { .feature-panel { aspect-ratio: 4 / 5; } }
+.feature-panel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.feature-panel:not(.awaiting)::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(to top, rgba(11,11,13,0.6), rgba(11,11,13,0) 42%);
+}
+.feature-panel.awaiting img { display: none; }
+.feature-mark { position: relative; z-index: 2; display: block; font-size: clamp(1.6rem, 5vw, 3.2rem); }
+.feature-panel:not(.awaiting) .feature-mark { display: none; }
+.feature-cap {
+  position: absolute; right: clamp(var(--s4), 4vw, var(--s8)); bottom: clamp(var(--s4), 4vw, var(--s8)); z-index: 2;
+  font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.02em; color: var(--paper-2);
+}
+
+/* ── MARQUEE — static keyword strip ── */
+.marquee { border-block: 1px solid var(--line); padding-block: var(--s3); overflow: clip; }
+.marquee-row { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; }
+.marq-item {
+  display: inline-flex; align-items: center; font-family: var(--f-display); font-weight: 500;
+  font-size: clamp(1rem, 2vw, 1.35rem); color: var(--fg-2); white-space: nowrap; padding-inline: var(--s4);
+}
+.marq-item::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: var(--fg-3); margin-left: var(--s8); }
+.marq-item:last-child::after { display: none; }
+
+/* ── CARDS — raised surface, sharp corners, static (no lift-on-hover) ── */
+.cards {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); margin-top: var(--s10);
+}
+@media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
+.cards--2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 720px) { .cards--2 { grid-template-columns: 1fr; } }
+.card {
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--r-card);
+  padding: var(--s5) var(--s5) var(--s6);
+  transition: border-color var(--dur-1) var(--ease-out);
+  display: flex; flex-direction: column;
+}
+.card:hover { border-color: var(--fg-3); }
+.card-k { display: inline-block; font-family: var(--f-mono); font-weight: 500; font-size: var(--t-micro); letter-spacing: 0.01em; color: var(--fg-3); margin-bottom: var(--s2); }
+.card-title { font-family: var(--f-display); font-weight: 700; font-size: var(--t-h3); letter-spacing: -0.005em; margin-bottom: var(--s2); }
+.card-desc { color: var(--fg-2); font-size: 1rem; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--s4); }
+.tag {
+  font-family: var(--f-mono); font-size: var(--t-micro); font-weight: 500; color: var(--fg-2);
+  border: 1px solid var(--line); border-radius: var(--r-chip); padding: 5px 12px;
+}
+
+/* ── GAME CARDS — cover banner + play action ── */
+.game-card {
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--r-card);
+  overflow: clip; display: flex; flex-direction: column;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+.game-card:hover { border-color: var(--fg-3); }
+.game-cover { position: relative; aspect-ratio: 16 / 9; background: var(--ink-2); overflow: clip; border-bottom: 1px solid var(--line); }
+.game-cover img, .game-cover video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.game-cover .await {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3);
+}
+.game-body { padding: var(--s4) var(--s5) var(--s5); display: flex; flex-direction: column; flex: 1; }
+.game-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); margin-bottom: var(--s2); }
+.game-score { font-family: var(--f-display); font-weight: 800; font-size: 1.8rem; line-height: 1; letter-spacing: -0.01em; }
+.game-score .sep { color: var(--red); }
+.game-status { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-2); display: inline-flex; align-items: center; gap: 7px; }
+.game-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--fg); }
+.game-title { font-family: var(--f-display); font-weight: 700; font-size: var(--t-h3); letter-spacing: -0.005em; margin-bottom: var(--s1); }
+.game-scorelabel { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); margin-bottom: var(--s3); }
+.game-desc { color: var(--fg-2); font-size: 0.9375rem; margin-bottom: var(--s3); }
+.game-foot { margin-top: auto; padding-top: var(--s3); border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.play-btn {
+  font-family: var(--f-mono); font-size: var(--t-label); font-weight: 500;
+  color: var(--on-red); background: var(--red); padding: 11px 22px; border-radius: var(--r-chip);
+  display: inline-flex; align-items: center; gap: 8px; transition: background var(--dur-1) var(--ease-out);
+}
+.play-btn:hover { background: #d8253e; }
+.play-btn svg { width: 11px; height: 11px; }
+
+/* ── LEDGER — scorecard rows. plain heavy numerals: red is not one of
+   this component's jobs, only the wordmark/scoreline-interpunct/CTA are. ── */
+.ledger { margin-top: var(--s8); border-top: 1px solid var(--line); max-width: 820px; }
+.ledger--center { margin-inline: auto; }
+.ledger .row { display: flex; align-items: baseline; gap: var(--s3); padding-block: var(--s4); border-bottom: 1px solid var(--line); }
+.ledger .v {
+  font-family: var(--f-display); font-weight: 700; font-size: var(--t-num); line-height: 1; letter-spacing: -0.01em;
+  min-width: 4.5ch; color: var(--fg); font-variant-numeric: tabular-nums;
+}
+.ledger .lead-dots { flex: 1; min-width: var(--s3); border-bottom: 2px dotted var(--fg-3); transform: translateY(-0.35em); }
+.ledger .k { font-family: var(--f-mono); font-size: var(--t-label); color: var(--fg-2); text-align: right; max-width: 30ch; }
+
+/* ── LINK ROWS — socials / index ── */
+.links-list { margin-top: var(--s5); border-top: 1px solid var(--line); }
+.link-row {
+  display: flex; align-items: baseline; gap: var(--s2);
+  padding-block: var(--s4); border-bottom: 1px solid var(--line);
+  transition: padding-left var(--dur-1) var(--ease-out);
+}
+.link-row:hover { padding-left: var(--s1); }
+.link-name { font-family: var(--f-display); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.005em; }
+.link-dots { flex: 1; min-width: var(--s3); border-bottom: 2px dotted var(--fg-3); transform: translateY(-0.35em); }
+.link-handle { font-family: var(--f-mono); font-size: var(--t-label); color: var(--fg-2); white-space: nowrap; }
+
+/* ── INDEX ROUTES — the site's own contents page ── */
+.routes { margin-top: var(--s10); border-top: 1px solid var(--line); }
+.route {
+  display: flex; align-items: center; gap: var(--s3);
+  padding-block: var(--s5); border-bottom: 1px solid var(--line);
+  transition: padding-left var(--dur-1) var(--ease-out);
+}
+.route:hover { padding-left: var(--s2); }
+.route-n { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); width: 3ch; }
+.route-name { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 3.6vw, 2.4rem); letter-spacing: -0.01em; line-height: 1; }
+.route-desc { font-size: 0.9375rem; color: var(--fg-2); margin-left: auto; max-width: 34ch; text-align: right; }
+@media (max-width: 640px) { .route-desc { display: none; } }
+.route-arrow { color: var(--fg-3); }

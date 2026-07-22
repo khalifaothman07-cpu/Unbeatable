@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112">
+  <!-- IAM GOLF favicon — the G, lifted from the wordmark geometry -->
+  <rect width="112" height="112" rx="24" fill="#0a0a0a"/>
+  <g transform="translate(-198,-2)" fill="#ffffff" stroke="#ffffff">
+    <path d="M 281.74 74.07 A 29.50 29.50 0 1 1 281.74 41.93" fill="none" stroke-width="17" stroke-linecap="butt"/>
+    <rect x="259" y="58" width="29" height="17" stroke="none"/>
+  </g>
+</svg>

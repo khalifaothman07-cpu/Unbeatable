@@ -1,0 +1,91 @@
+/* ============================================================
+   IAM GOLF — media.css   ·   rounded media frames (shared)
+   Big radius, honest "awaiting asset" state — never a fake
+   image. Light hatch on paper. Self-contained; reads tokens.
+   ============================================================ */
+.media {
+  position: relative;
+  overflow: clip;
+  border-radius: var(--r-media);
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.media img, .media video { width: 100%; height: 100%; object-fit: cover; }
+
+.media .media-cap {
+  position: absolute;
+  left: 16px; bottom: 14px; z-index: 2;
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: rgba(12, 12, 12, 0.6);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* awaiting state — light hatch, honest label */
+.media .media-await { display: none; }
+.media.awaiting img, .media.awaiting video { display: none; }
+.media.awaiting {
+  background: repeating-linear-gradient(
+      -45deg,
+      rgba(16, 16, 16, 0.05) 0 1px,
+      transparent 1px 10px
+    ),
+    var(--paper-2);
+}
+.media.awaiting .media-await {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: var(--s3);
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* kit plate — pricing figure (rounded, captioned) */
+.plate { margin: 0; }
+.plate-frame {
+  position: relative;
+  overflow: clip;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-media);
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.plate-media { width: 100%; height: 100%; object-fit: cover; }
+.plate-await { display: none; }
+.plate.awaiting .plate-media { display: none; }
+.plate.awaiting .plate-frame {
+  background: repeating-linear-gradient(
+      -45deg,
+      rgba(16, 16, 16, 0.05) 0 1px,
+      transparent 1px 10px
+    ),
+    var(--paper-2);
+}
+.plate.awaiting .plate-await {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: var(--s3);
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.plate-cap {
+  display: flex; justify-content: space-between; gap: var(--s2);
+  padding-top: var(--s2);
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.plate-cap .plate-alt { color: var(--fg-3); }
+@media (max-width: 560px) { .plate-cap .plate-alt { display: none; } }

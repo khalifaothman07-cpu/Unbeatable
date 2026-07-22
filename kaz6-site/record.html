@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Record — KAZ6</title>
+  <meta name="description" content="The verifiable record — 18 debate medals, 5 MUN Best Council awards, 300K+ followers, 3 strategy games shipped." />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status">The record</span>
+        <span class="phero-loc">Verifiable · no inflation</span>
+      </div>
+      <h1 class="phero-title">Record</h1>
+      <p class="phero-lead">Three arenas, one method — argue the case the way you build the game. Every number below is real and checkable.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <p class="eyebrow eyebrow--left">The arenas</p>
+      <h2 class="section-title section-title--left">Where it was earned</h2>
+      <div class="cards" data-render="arenas"></div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <p class="eyebrow">By the numbers</p>
+      <h2 class="section-title">The ledger</h2>
+      <div class="ledger ledger--center" data-render="stats"></div>
+    </div>
+  </section>
+
+  <footer class="foot" id="foot"></footer>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

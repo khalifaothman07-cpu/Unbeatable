@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>13–0 · Europa | Build the Ultimate All-Time XI</title>
+  <meta name="description" content="Build the ultimate all-time European XI — spin a generator for real European clubs and eras, draft your XI, and simulate a Europa campaign chasing a perfect 13–0. Unofficial fan game." />
+  <meta name="theme-color" content="#120B14" />
+  <meta property="og:title" content="13–0 · Europa" />
+  <meta property="og:description" content="Draft an all-time European XI and chase a perfect 13–0 season." />
+  <meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Sofia+Sans:ital,wght@0,400;0,600;0,800;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand" onclick="go('home')"><div class="mark">13<span>–</span>0</div><div class="sub">Europe</div></div>
+    <div class="pill" id="modePill">All-Time Draft</div>
+  </div>
+
+  <!-- HOME -->
+  <section id="home" class="screen active">
+    <div class="hero">
+      <div class="eyebrow">Unofficial Fan Draft Game</div>
+      <div class="bigscore">13<span class="dash">–</span>0</div>
+      <h1>Build the ultimate <em>all-time</em> La Liga XI</h1>
+      <p>Generate a squad to land on a real European club and season, draft a player from it, and build your XI position by position — then simulate a Europa campaign and see how each of your players performs.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="startRun()">Start New Run →</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works</button>
+      </div>
+      <div class="formrow">
+        <span class="formlbl">Formation</span>
+        <div class="formopts" id="formOpts">
+          <button class="fopt active" data-f="4-3-3" onclick="pickFormation(this)">4-3-3</button>
+          <button class="fopt" data-f="4-4-2" onclick="pickFormation(this)">4-4-2</button>
+          <button class="fopt" data-f="3-5-2" onclick="pickFormation(this)">3-5-2</button>
+          <button class="fopt" data-f="4-2-3-1" onclick="pickFormation(this)">4-2-3-1</button>
+          <button class="fopt" data-f="3-4-3" onclick="pickFormation(this)">3-4-3</button>
+        </div>
+      </div>
+      <div class="toggle" id="hardToggle" onclick="toggleHard()"><div class="switch"></div><span>Hard Mode — hide player ratings while drafting</span></div>
+      <div class="toggle" id="peakToggle" onclick="togglePeak()"><div class="switch"></div><span>All-time peak ratings — use each player's best-ever rating, not the season's</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="sClubs">0</b><small>Real Clubs</small></div>
+      <div class="stat"><b id="sSquads">0</b><small>Historic Squads</small></div>
+      <div class="stat"><b id="sPlayers">0</b><small>Player Seasons</small></div>
+      <div class="stat"><b>1961–24</b><small>Eras Covered</small></div>
+    </div>
+    <div class="howto" id="how">
+      <h2>How to play</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Generate a squad</h3><p>Each tap lands on a real European club and season — and never repeats within a run.</p></div>
+        <div class="step"><div class="n">2</div><h3>Draft a player</h3><p>Pick one from that squad, or re-roll if you don't like it. Slot them into your chosen formation.</p></div>
+        <div class="step"><div class="n">3</div><h3>Build your XI</h3><p>Repeat until all 11 positions are filled with European royalty.</p></div>
+        <div class="step"><div class="n">4</div><h3>Simulate</h3><p>Win the group, survive the knockout bracket, and chase a perfect 13–0 — then read every player's stat line.</p></div>
+      </div>
+    </div>
+    <div class="howto">
+      <h2>The challenges</h2>
+      <div class="steps">
+        <div class="step"><div class="n">★</div><h3>13–0</h3><p>Win every game from group to final. The near-impossible perfect run.</p></div>
+        <div class="step"><div class="n">⛨</div><h3>Invincibles</h3><p>Lift the trophy without a single defeat.</p></div>
+        <div class="step"><div class="n">∴</div><h3>Champions</h3><p>Win the final and lift the continental crown.</p></div>
+        <div class="step"><div class="n">∞</div><h3>One-Club XI</h3><p>Stack a single club for a chemistry bonus.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DRAFT -->
+  <section id="draft" class="screen">
+    <div class="draft-head"><h2 id="draftTitle">Draft your XI · 0/11</h2><div class="lines" id="lineCounts"></div></div>
+    <div class="progress"><i id="progBar"></i></div>
+    <div class="chembar"><i id="chemFill"></i><span id="chemTxt">Chemistry 0/33</span></div>
+    <div class="draft-grid">
+      <div class="pitch" id="pitch"></div>
+      <div class="spinbox">
+        <div class="genwin empty" id="reveal">
+          <div class="glabel">Squad generator</div><div class="gclub">— — —</div><div class="gseason" id="poolHint">— squads · 1961–2024</div>
+        </div>
+        <div class="spin-actions">
+          <button class="btn btn-gold" id="spinBtn" onclick="doSpin()">Generate squad</button>
+        </div>
+        <div class="pickwrap" id="pickWrap" style="display:none">
+          <div class="pickhead">
+            <h4 id="pickTitle">Pick a player</h4>
+            <button class="reroll" id="rerollBtn" onclick="reroll()">⟳ Re-roll</button>
+          </div>
+          <div class="players" id="players"></div>
+          <div class="nostock" id="noStock" style="display:none"></div>
+        </div>
+        <div class="sim-cta" id="simCta" style="display:none">
+          <button class="btn btn-primary" onclick="runCampaign()">Enter Europa →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="screen">
+    <div class="verdict" id="verdict"></div>
+    <div class="res-stats" id="resStats"></div>
+    <div class="benchmark" id="benchmark"></div>
+    <div class="res-grid">
+      <div>
+        <div class="panel" style="margin-bottom:18px"><h3>Player Stats</h3><div id="squadList"></div></div>
+        <div class="panel"><h3>Group Stage</h3><table id="tableEl"></table></div>
+      </div>
+      <div class="panel"><h3>Knockout Run</h3><div class="matchlog" id="matchLog"></div></div>
+    </div>
+    <div class="res-actions">
+      <button class="btn btn-primary" onclick="startRun()">New Run →</button>
+      <button class="btn btn-gold" onclick="shareRun()">Copy Result</button>
+      <button class="btn btn-ghost" onclick="go('home')">Home</button>
+    </div>
+  </section>
+
+  <div class="footer">
+    <b>13–0 · Europa</b> is an independent, fan-made game. Not affiliated with, endorsed by or sponsored by any club, league or governing body.<br>
+    Club and player names are used descriptively for an editorial game. No logos, crests or likenesses are used. Player ratings and simulated stats are an independent interpretation.<br>
+    Inspired by the format of 38-0.app & 82-0.com.
+  </div>
+</div>
+
+<div class="simover" id="simOver">
+  <div class="lbl">Simulating the campaign…</div><div class="tk" id="simTick">0</div>
+  <div class="mini" id="simMini"><span class="w">0W</span> · <span class="d">0D</span> · <span class="l">0L</span></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
