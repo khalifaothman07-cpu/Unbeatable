@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KAZ6 — Khalifa Othman</title>
+  <meta name="description" content="Khalifa Othman — competitive debater who builds strategy games. Debate, Model UN, content, and IAM GOLF." />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <!-- HERO — type-forward on paper, no background photo -->
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status" data-field="role">Debate · Strategy games — Bahrain</span>
+        <span class="phero-loc">Manama · 26.22°N 50.58°E</span>
+      </div>
+      <h1 class="phero-title">Khalifa<br>Othman</h1>
+      <p class="phero-lead" data-field="tagline"></p>
+      <div class="phero-actions">
+        <a class="btn" href="games.html">The work</a>
+        <a class="btn btn-ghost" href="ventures.html">IAM GOLF</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- keyword marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-row" data-render="marquee"></div>
+  </div>
+
+  <!-- ROUTES — the multi-page map -->
+  <section class="section">
+    <div class="wrap">
+      <p class="eyebrow eyebrow--left">Where to look</p>
+      <h2 class="section-title section-title--left">Five ways in</h2>
+      <nav class="routes" data-render="routes" aria-label="Site sections"></nav>
+    </div>
+  </section>
+
+  <!-- THE RECORD — stat ledger for density -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <p class="eyebrow">The record</p>
+      <h2 class="section-title">By the numbers</h2>
+      <div class="ledger ledger--center" data-render="stats"></div>
+    </div>
+  </section>
+
+  <footer class="foot band-dark" id="foot"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

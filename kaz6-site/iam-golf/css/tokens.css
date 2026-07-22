@@ -1,0 +1,65 @@
+/* ============================================================
+   IAM GOLF — tokens.css   ·   system "GALLERY" (v3)
+   Light, airy, gallery-forward — paper ground, big rounded
+   panels, one dark footer. Strict brand monochrome (no hue).
+   Confident weights, not brutalist. Self-contained.
+   ============================================================ */
+:root {
+  color-scheme: only light;   /* 'only' = hard opt-out of UA dark tinting */
+  /* mono scale — brand black/white only */
+  --paper: #f7f6f3;       /* page ground — warm off-white */
+  --paper-2: #efeee9;     /* raised card fill */
+  --white: #ffffff;
+  --ink: #101010;         /* primary text on paper */
+  --ink-2: rgba(16, 16, 16, 0.62);   /* secondary */
+  --ink-3: rgba(16, 16, 16, 0.38);   /* tertiary / labels */
+  --hair: rgba(16, 16, 16, 0.14);    /* hairlines on paper */
+  --carbon: #0c0c0c;      /* feature panels + footer */
+  --coal: #161616;
+
+  /* contextual (bands flip these) */
+  --bg: var(--paper);
+  --fg: var(--ink);
+  --fg-2: var(--ink-2);
+  --fg-3: var(--ink-3);
+  --line: var(--hair);
+
+  /* type — one athletic grotesk, mono for labels/ledger */
+  --f-display: "Archivo", system-ui, sans-serif;
+  --f-body: "Archivo", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --t-hero: clamp(3.25rem, 11vw, 9rem);   /* wordmark svg driver */
+  --t-h2: clamp(2rem, 5.6vw, 4rem);        /* centered section titles */
+  --t-why: clamp(1.5rem, 3.3vw, 2.5rem);
+  --t-half: clamp(6.5rem, 19vw, 14rem);    /* the ½ monument */
+  --t-lead: clamp(1.0625rem, 1.7vw, 1.3125rem);
+  --t-body: 1.0625rem;
+  --t-label: 0.8125rem;
+  --t-micro: 0.75rem;
+
+  /* 8-point spacing — airier than MATTE */
+  --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
+  --s5: 40px; --s6: 48px; --s8: 64px; --s10: 80px;
+  --s12: 96px; --s16: 128px; --s20: 160px;
+
+  --maxw: 1200px;
+  --gutter: clamp(20px, 5vw, 64px);
+  --r-chip: 999px;
+  --r-card: 20px;         /* the rounded-panel signature */
+  --r-media: 22px;
+
+  /* motion */
+  --dur-1: 0.35s;
+  --dur-2: 0.7s;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* dark band — footer + feature panels invert */
+.band-dark {
+  --bg: var(--carbon);
+  --fg: var(--paper);
+  --fg-2: rgba(247, 246, 243, 0.66);
+  --fg-3: rgba(247, 246, 243, 0.4);
+  --line: rgba(247, 246, 243, 0.16);
+}

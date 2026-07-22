@@ -1,0 +1,17 @@
+/* ============================================================
+   footer.css  ·  dark, columned (ported from IAM GOLF)
+   ============================================================ */
+.foot { background: var(--carbon); color: var(--paper); padding: var(--s12) var(--gutter) var(--s6); }
+.foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: var(--s6); align-items: start; }
+@media (max-width: 720px) { .foot-grid { grid-template-columns: 1fr; gap: var(--s5); } }
+.foot-mark { font-size: 1.5rem; color: var(--paper); }
+.foot-tag { margin-top: var(--s2); color: rgba(247,246,243,0.6); font-size: 0.9375rem; max-width: 34ch; }
+.foot-col h4 { font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,246,243,0.5); margin-bottom: var(--s3); font-weight: 500; }
+.foot-col a, .foot-col p { color: rgba(247,246,243,0.82); font-size: 0.9375rem; }
+.foot-col a { display: block; transition: color var(--dur-1) var(--ease-out); }
+.foot-col a:hover { color: var(--paper); }
+.foot-base {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap;
+  margin-top: var(--s10); padding-top: var(--s4); border-top: 1px solid rgba(247,246,243,0.16);
+}
+.foot-note { font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(247,246,243,0.42); white-space: nowrap; }

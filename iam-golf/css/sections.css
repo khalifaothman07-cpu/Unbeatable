@@ -1,0 +1,164 @@
+/* =========================================================================
+   sections.css  —  IAM GOLF · SECTION STYLES
+   Monochrome / milled-aluminum. The brand statement "I AM" is the hero.
+   ========================================================================= */
+
+/* --- TOP NAV -------------------------------------------------------- */
+.nav {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem var(--gutter, 1.4rem);
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hairline);
+}
+.nav-brand { display: flex; align-items: baseline; gap: .6rem; }
+.nav-mark {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 1.05rem; letter-spacing: .02em;
+}
+.nav-parent {
+  font-family: var(--font-mono); font-size: .6rem;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink-low);
+}
+.nav-cta {
+  font-family: var(--font-mono); font-size: .72rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  padding: .55rem 1.1rem; transition: border-color .2s, background .2s, transform .2s;
+}
+.nav-cta:hover { border-color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); transform: translateY(-1px); }
+
+/* --- HERO ----------------------------------------------------------- */
+.hero {
+  position: relative; isolation: isolate;
+  min-height: 88vh; display: flex; align-items: center;
+  padding: clamp(3rem, 8vw, 6rem) 0;
+  overflow: hidden;
+}
+/* faint fairway-mow motif behind the hero, neutral grey */
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    repeating-linear-gradient(118deg, rgba(255,255,255,.035) 0 28px, transparent 28px 56px),
+    radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.06), transparent 60%);
+  -webkit-mask-image: radial-gradient(130% 110% at 50% 10%, #000 50%, transparent);
+          mask-image: radial-gradient(130% 110% at 50% 10%, #000 50%, transparent);
+}
+.hero-inner { width: 100%; }
+.hero-status {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-mid);
+  border: 1px solid var(--hairline); border-radius: 999px;
+  padding: .4rem .85rem; margin-bottom: 2rem;
+}
+.hero-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink-mid); }
+.hero-statement {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(5rem, 26vw, 18rem); line-height: .82;
+  letter-spacing: -0.04em;
+  background: var(--sheen); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.hero-brand {
+  font-family: var(--font-mono); font-size: clamp(1rem, 2.4vw, 1.4rem);
+  letter-spacing: .42em; text-transform: uppercase; color: var(--ink);
+  margin: .6rem 0 1.6rem; padding-left: .42em;
+}
+.hero-tagline { color: var(--ink-mid); max-width: 56ch; font-size: clamp(1.02rem, 1.4vw, 1.18rem); margin-bottom: 2.2rem; }
+.hero-actions { display: flex; gap: .8rem; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-weight: 600; font-size: .8rem;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: .9rem 1.5rem; border-radius: 999px; cursor: pointer;
+  transition: transform .2s var(--ease), background .2s, border-color .2s;
+}
+.btn-primary { background: var(--ink); color: var(--volt-ink); border: 1px solid var(--ink); }
+.btn-primary:hover { transform: translateY(-2px); }
+.btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--hairline); }
+.btn-ghost:hover { border-color: var(--ink); transform: translateY(-2px); }
+
+/* --- BRANDS MARQUEE ------------------------------------------------- */
+.brands {
+  border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+  padding: 1.6rem 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.brands-row { display: inline-flex; gap: 3.5rem; white-space: nowrap; animation: marquee 22s linear infinite; }
+.brand {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.3rem, 3vw, 2rem); color: var(--ink-low);
+  letter-spacing: -0.01em; transition: color .3s;
+}
+.brands:hover .brand { color: var(--ink-mid); }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .brands-row { animation: none; } }
+
+/* --- PILLARS (the model) ------------------------------------------- */
+.pillars-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.2rem; margin-top: 2.5rem;
+}
+.pillar {
+  border: 1px solid var(--hairline); border-radius: 16px;
+  padding: clamp(1.5rem, 3vw, 2.2rem); background: var(--bg-elev);
+  transition: transform .3s var(--ease), border-color .3s;
+}
+.pillar:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--ink) 24%, var(--hairline)); }
+.pillar-k {
+  font-family: var(--font-mono); font-size: .8rem; letter-spacing: .1em;
+  color: var(--ink-low); display: block; margin-bottom: 1.2rem;
+}
+.pillar-title { font-size: clamp(1.3rem, 2.4vw, 1.7rem); margin-bottom: .7rem; }
+.pillar-desc { color: var(--ink-mid); line-height: 1.6; }
+
+/* --- WHY ------------------------------------------------------------ */
+.why { border-top: 1px solid var(--hairline); }
+.why-copy {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: clamp(1.5rem, 4vw, 2.6rem); line-height: 1.25;
+  letter-spacing: -0.02em; max-width: 22ch + 18ch; max-width: 40ch;
+  color: var(--ink);
+}
+.why-copy { max-width: 46ch; }
+
+/* --- LINKS / CONTACT ----------------------------------------------- */
+.links-list { display: grid; gap: .6rem; margin-top: 2rem; max-width: 520px; }
+.link-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.1rem 1.3rem; border: 1px solid var(--hairline);
+  border-radius: 12px; background: var(--bg-elev);
+  transition: transform .2s var(--ease), border-color .2s, background .2s;
+}
+.link-row:hover { transform: translateY(-2px); border-color: var(--ink); background: var(--bg-elev-2); }
+.link-name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; }
+.link-handle {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-mono); font-size: .8rem; color: var(--ink-mid);
+}
+.link-handle .arrow { width: 13px; height: 13px; }
+
+/* --- FOOTER --------------------------------------------------------- */
+.foot {
+  border-top: 1px solid var(--hairline);
+  padding: 2.4rem var(--gutter, 1.4rem);
+  display: flex; flex-direction: column; gap: 1.1rem;
+}
+.foot-top {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.foot-mark { font-family: var(--font-display); font-weight: 700; letter-spacing: .02em; }
+.foot-studio {
+  font-family: var(--font-mono); font-size: .74rem; letter-spacing: .04em;
+  color: var(--ink-mid); transition: color .2s;
+}
+.foot-studio:hover { color: var(--ink); }
+.foot-disclaimer {
+  font-family: var(--font-mono); font-size: .66rem; line-height: 1.6;
+  letter-spacing: .02em; color: var(--ink-low); max-width: 72ch;
+}
+.foot-note { font-family: var(--font-mono); font-size: .72rem; color: var(--ink-low); letter-spacing: .04em; }

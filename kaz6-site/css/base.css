@@ -1,0 +1,116 @@
+/* ============================================================
+   base.css  ·  reset, shell, shared primitives
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; background: var(--paper) !important; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  font-family: var(--f-body);
+  font-size: var(--t-body);
+  line-height: 1.65;
+  color: var(--fg);
+  background: var(--bg) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img, svg, video { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 3px; }
+.band-dark ::selection { background: var(--paper); color: var(--carbon); }
+.band-dark :focus-visible { outline-color: var(--paper); }
+
+/* section shell */
+.section { background: var(--bg); color: var(--fg); padding-block: var(--s16); }
+@media (max-width: 720px) { .section { padding-block: var(--s10); } }
+.section--tight { padding-block: var(--s10); }
+
+/* eyebrow — small centered kicker above section titles */
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  text-align: center;
+  margin-bottom: var(--s3);
+}
+.eyebrow--left { text-align: left; }
+
+/* centered display title */
+.section-title {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: var(--t-h2);
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
+  margin-inline: auto;
+  max-width: 22ch;
+}
+.section-title--left { text-align: left; margin-inline: 0; }
+
+/* lead paragraph under a title */
+.section-lead {
+  margin: var(--s4) auto 0;
+  max-width: 60ch;
+  text-align: center;
+  font-size: var(--t-lead);
+  color: var(--fg-2);
+}
+.section-lead--left { text-align: left; margin-inline: 0; }
+
+/* buttons — dark pill on light */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--f-mono);
+  font-size: var(--t-label); font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--paper); background: var(--ink);
+  padding: 15px 30px; border-radius: var(--r-chip);
+  transition: transform var(--dur-1) var(--ease-out), opacity var(--dur-1) var(--ease-out);
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-ghost { color: var(--fg); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn-ghost:hover { box-shadow: inset 0 0 0 1.5px var(--fg); }
+.btn[aria-disabled="true"] { opacity: 0.4; pointer-events: none; }
+
+/* scroll reveal — transform/opacity only, fully gated */
+.reveal {
+  opacity: 0; transform: translateY(22px);
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+.reveal.in { opacity: 1; transform: none; }
+.reveal.d1 { transition-delay: 0.06s; }
+.reveal.d2 { transition-delay: 0.12s; }
+.reveal.d3 { transition-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .btn, .btn:hover { transform: none; transition: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* wordmark — real Archivo type (IAM GOLF's "retire the constructed SVG" move) */
+.wordmark {
+  font-family: var(--f-display);
+  font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.02em; line-height: 1; white-space: nowrap;
+}
+
+/* belt-and-suspenders: re-assert light if a webview reports dark */
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: only light; }
+  html, body { background: var(--paper) !important; color: var(--ink) !important; }
+}

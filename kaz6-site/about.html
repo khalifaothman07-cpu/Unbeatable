@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>About — KAZ6</title>
+  <meta name="description" content="Khalifa Othman — the person behind the record. Debate, Model UN, content, and the thread through all of it." />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status">About</span>
+        <span class="phero-loc">Manama, Bahrain</span>
+      </div>
+      <h1 class="phero-title">The<br>thread</h1>
+      <p class="phero-lead">One instinct runs through the debates, the games, and the audience: find the system, find the leverage, and finish the hard thing.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="prose" data-render="about"></div>
+    </div>
+  </section>
+
+  <section class="feature">
+    <div class="wrap">
+      <div class="feature-panel" id="portrait-panel">
+        <img src="assets/media/portrait.jpg" alt="Khalifa Othman"
+             onerror="this.closest('.feature-panel').classList.add('awaiting')" />
+        <span class="feature-mark wordmark">KAZ6</span>
+        <span class="feature-cap">FIG. 00 · Khalifa Othman</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <p class="eyebrow">On stage</p>
+      <h2 class="section-title">Othello — as Shakespeare</h2>
+      <p class="section-lead">Playing Shakespeare, the narrator of Othello — a speech I wrote myself and memorized in two weeks, in a costume I designed. Same discipline as the podium: preparation, presence, and holding a room.</p>
+      <div class="feature" style="padding-top:var(--s8)">
+        <div class="feature-panel" style="aspect-ratio:16/9">
+          <img src="assets/media/othello-cast.jpg" alt="Othello — the cast"
+               onerror="this.closest('.feature-panel').classList.add('awaiting')" />
+          <span class="feature-mark wordmark">KAZ6</span>
+          <span class="feature-cap">Othello — the cast</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot band-dark" id="foot"></footer>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

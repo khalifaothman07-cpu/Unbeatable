@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Games — KAZ6</title>
+  <meta name="description" content="Three strategy games by The Unbeatables — España 38·0, Europa 13·0, and 18 Decisions. Draft, manage, and chase a perfect run." />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <!-- HERO -->
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status">The Unbeatables · Studio</span>
+        <span class="phero-loc">3 titles · all live</span>
+      </div>
+      <h1 class="phero-title">Games</h1>
+      <p class="phero-lead">Three strategy games built on one idea: find the system, find the leverage, and chase a perfect run. Two football season-sims and a golf risk-engine — all playable in the browser, no install.</p>
+    </div>
+  </header>
+
+  <!-- THE GRID -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="games-grid cards" data-render="games"></div>
+    </div>
+  </section>
+
+  <!-- HOW THEY'RE BUILT — a little density -->
+  <section class="section section--tight">
+    <div class="wrap">
+      <p class="eyebrow">Under the hood</p>
+      <h2 class="section-title">Built to be unbeatable</h2>
+      <p class="section-lead">Each game is a self-contained build — draft mechanics, a season or knockout engine, and a scoreboard that punishes a single bad call. No microtransactions, no accounts, no filler. Open one and play.</p>
+    </div>
+  </section>
+
+  <footer class="foot band-dark" id="foot"></footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
