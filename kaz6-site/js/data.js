@@ -173,6 +173,7 @@ const SITE = {
     url: "iam-golf/index.html",
     cta: "Visit IAM GOLF",
     secondary: { url: "https://www.instagram.com/iam_golfgcc", label: "@iam_golfgcc" },
+    disclaimer: "IAM GOLF is an independent reseller. Not affiliated with, authorised by, or endorsed by TaylorMade, Titleist, Callaway, or Ping. All trademarks belong to their respective owners.",
   },
 
   film: [

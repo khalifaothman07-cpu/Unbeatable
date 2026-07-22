@@ -22,7 +22,7 @@ function renderNav(){
     var cur=p.file===here?' aria-current="page"':"";
     return '<a class="nav-link" href="'+esc(p.file)+'"'+cur+'>'+esc(p.label)+'</a>';
   }).join("");
-  nav.innerHTML='<a class="nav-mark wordmark" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
+  nav.innerHTML='<a class="nav-mark wordmark wordmark--prism" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
     +'<div class="nav-links">'+links+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
 }
 
@@ -51,11 +51,10 @@ function renderRoutes(){
     +'<span class="route-arrow">'+AR+'</span></a>').join(""));
 }
 
-/* MARQUEE */
+/* MARQUEE (v10: static strip, not a looping duplicate) */
 function renderMarquee(){
   if(!SITE.marquee) return;
-  var one=SITE.marquee.map(w=>'<span class="marq-item">'+esc(w)+'</span>').join("");
-  fill("marquee", one+one);
+  fill("marquee", SITE.marquee.map(w=>'<span class="marq-item">'+esc(w)+'</span>').join(""));
 }
 
 /* GAME CARDS */
@@ -120,6 +119,13 @@ function renderAbout(){
   fill("about", SITE.about.map(p=>'<p class="reveal">'+esc(p)+'</p>').join(""));
 }
 
+/* VENTURE (IAM GOLF summary on ventures.html) */
+function renderVenture(){
+  if(!SITE.venture) return;
+  fill("venture-desc", esc(SITE.venture.desc));
+  fill("venture-disclaimer", esc(SITE.venture.disclaimer||""));
+}
+
 /* simple field fills */
 function renderFields(){
   document.querySelectorAll("[data-field]").forEach(function(el){
@@ -129,6 +135,6 @@ function renderFields(){
 
 function renderAll(){
   renderNav();renderFooter();renderRoutes();renderMarquee();
-  renderGames();renderArenas();renderStats();renderSocials();renderAbout();renderFields();
+  renderGames();renderArenas();renderStats();renderSocials();renderAbout();renderVenture();renderFields();
 }
 document.addEventListener("DOMContentLoaded",renderAll);

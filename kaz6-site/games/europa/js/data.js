@@ -1,5 +1,5 @@
 /*
- * 38-0 Champions League — match database
+ * 13-0 Europa — match database
  * Real clubs/players used descriptively. Ratings & nationalities are an independent interpretation.
  * line = GK | DEF | MID | ATT ; player = [name, line, rating, nationality]
  */

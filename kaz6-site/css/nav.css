@@ -1,5 +1,5 @@
 /* ============================================================
-   nav.css  ·  persistent top nav (multi-page)
+   nav.css  ·  persistent top nav (v10: frosted glass, sentence case)
    ============================================================ */
 .progress {
   position: fixed; top: 0; left: 0; right: 0; height: 2px;
@@ -16,15 +16,15 @@
 }
 /* geometry never changes on scroll — animating nav padding wobbles on iOS */
 .nav.scrolled {
-  background: rgba(247, 246, 243, 0.86);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  background: rgba(245, 245, 247, 0.72);
+  backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6);
   box-shadow: 0 1px 0 var(--line);
 }
-.nav-mark { display: inline-flex; font-size: 1.15rem; color: var(--ink); }
+.nav-mark { display: inline-flex; font-size: 1.2rem; }
 .nav-links { display: flex; align-items: center; gap: var(--s4); }
 .nav-link {
-  font-family: var(--f-mono); font-size: var(--t-micro); font-weight: 500;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2);
+  font-family: var(--f-mono); font-size: 0.9rem; font-weight: 500;
+  color: var(--ink-2);
   transition: color var(--dur-1) var(--ease-out);
 }
 .nav-link:hover, .nav-link[aria-current="page"] { color: var(--ink); }
@@ -33,10 +33,9 @@
 .nav-cta {
   color: var(--paper); background: var(--ink);
   padding: 9px 18px; border-radius: var(--r-chip);
-  transition: transform var(--dur-1) var(--ease-out);
+  transition: opacity var(--dur-1) var(--ease-out);
 }
-.nav-cta:hover { color: var(--paper); transform: translateY(-1px); }
-@media (prefers-reduced-motion: reduce) { .nav-cta:hover { transform: none; } }
+.nav-cta:hover { color: var(--paper); opacity: 0.82; }
 
 /* spacer so fixed nav never overlaps page content */
 .nav-spacer { height: 76px; }

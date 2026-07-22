@@ -1,8 +1,8 @@
-# 38–0 · Champions League
+# 13–0 · Europa
 
-> Build the ultimate all-time European XI, then simulate a 38-game season and chase a perfect, unbeaten **38–0**.
+> Build the ultimate all-time European XI, then simulate a 13-game campaign and chase a perfect, unbeaten **13–0**.
 
-An independent, fan-made football draft game. Spin a generator to land on a real European club and season, draft one player from that squad, build your XI position by position across a formation of your choice, then play out a full 38-game campaign against a realistic league. No build step, no dependencies — just static HTML, CSS, and JavaScript.
+An independent, fan-made football draft game. Spin a generator to land on a real European club and season, draft one player from that squad, build your XI position by position across a formation of your choice, then play out a full 13-game campaign against a realistic league. No build step, no dependencies — just static HTML, CSS, and JavaScript.
 
 **[▶ Play it live](https://YOUR-USERNAME.github.io/champions-league/)** · *(update this link after enabling GitHub Pages)*
 
@@ -16,7 +16,7 @@ An independent, fan-made football draft game. Spin a generator to land on a real
 - **Two rating modes** — *season-accurate* (the player's rating in that exact era) or *all-time peak* (their best rating found anywhere in the database).
 - **Re-rolls** — discard a squad you don't like (8 per run).
 - **Hard mode** — hide ratings while drafting.
-- **History-calibrated simulation** — the league is a fictional super-field of Europe.s greatest clubs, so even a flawless XI is pushed hard, and 38–0 is the lightning strike it should be.
+- **History-calibrated simulation** — the league is a fictional super-field of Europe.s greatest clubs, so even a flawless XI is pushed hard, and 13–0 is the lightning strike it should be.
 - **Post-season player stats** — appearances, goals, assists, clean sheets, average rating, and a Player of the Season.
 - **No duplicate players** — each footballer can be used once per XI, even across different eras.
 
@@ -25,7 +25,7 @@ An independent, fan-made football draft game. Spin a generator to land on a real
 1. **Pick a formation** on the home screen and press *Start New Run*.
 2. **Generate a squad** — you land on a real club and season.
 3. **Draft a player** from that squad into an open slot (or re-roll).
-4. Repeat until your XI is complete, then **simulate the 38-game season**.
+4. Repeat until your XI is complete, then **simulate the 13-game campaign**.
 5. Read the verdict, the final table, and every player's stat line — and try to beat your record.
 
 ## Run locally
@@ -76,7 +76,7 @@ Vanilla HTML/CSS/JS. No frameworks, no build, no dependencies. Fonts (Anton, Sof
 
 ## Disclaimer
 
-This is an unofficial, non-commercial fan project. It is **not affiliated with, endorsed by, or sponsored by** any club, league, or governing body. Club and player names are used descriptively for an editorial game; no logos, crests, or likenesses are included. Player ratings and simulated statistics are an independent interpretation and do not represent any official rating system. Inspired by the format of 38-0.app and 82-0.com.
+This is an unofficial, non-commercial fan project. It is **not affiliated with, endorsed by, or sponsored by** any club, league, or governing body. Club and player names are used descriptively for an editorial game; no logos, crests, or likenesses are included. Player ratings and simulated statistics are an independent interpretation and do not represent any official rating system. Inspired by the format of 13-0.app and 82-0.com.
 
 ## License
 

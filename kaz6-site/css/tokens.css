@@ -1,67 +1,85 @@
 /* ============================================================
-   tokens.css  ·  KAZ6 system "GALLERY" (ported from IAM GOLF v3)
-   Light, airy, gallery-forward — paper ground, big rounded
-   panels, one dark footer. Strict brand monochrome (no hue).
-   Confident weights, not brutalist. Now the whole-site system.
-   Change a value here; it propagates everywhere.
+   tokens.css  ·  KAZ6 system "v10 — QUIET" (GALLERY → Apple shift)
+   Cool neutral ground, Inter as sole typeface, quiet premium
+   over loud athletic. Two deliberate accents only: a spectrum
+   gradient reserved for the wordmark and the big stat numerals
+   — everything else stays disciplined monochrome. Change a
+   value here; it propagates everywhere.
    ============================================================ */
 :root {
   color-scheme: only light;
 
-  /* mono scale — brand black/white only */
-  --paper:   #f7f6f3;                 /* page ground — warm off-white */
-  --paper-2: #efeee9;                 /* raised fill */
+  /* cool neutral scale — Apple system gray, not warm paper */
+  --paper:   #f5f5f7;                 /* page ground */
+  --paper-2: #e8e8ed;                 /* raised fill */
   --white:   #ffffff;
-  --ink:     #101010;                 /* primary text */
-  --ink-2:   rgba(16, 16, 16, 0.62);  /* secondary */
-  --ink-3:   rgba(16, 16, 16, 0.38);  /* tertiary / labels */
-  --hair:    rgba(16, 16, 16, 0.14);  /* hairlines */
-  --carbon:  #0c0c0c;                 /* feature panels + footer */
-  --coal:    #161616;
+  --ink:     #1d1d1f;                 /* primary text */
+  --ink-2:   rgba(29, 29, 31, 0.62);  /* secondary */
+  --ink-3:   rgba(29, 29, 31, 0.42);  /* tertiary / labels */
+  --hair:    rgba(29, 29, 31, 0.12);  /* hairlines */
+  --carbon:  #1d1d1f;                 /* deep media/feature panels only */
 
-  /* contextual (dark bands flip these) */
+  /* contextual (feature panels stay dark; footer no longer does) */
   --bg:   var(--paper);
   --fg:   var(--ink);
   --fg-2: var(--ink-2);
   --fg-3: var(--ink-3);
   --line: var(--hair);
 
-  /* type — one athletic grotesk, mono for labels/ledger */
-  --f-display: "Archivo", system-ui, sans-serif;
-  --f-body:    "Archivo", system-ui, sans-serif;
-  --f-mono:    "IBM Plex Mono", ui-monospace, monospace;
+  /* footer — light gray band, its own fixed palette (v10: no longer dark) */
+  --footer-bg:   var(--paper-2);
+  --footer-fg:   var(--ink);
+  --footer-fg-2: var(--ink-2);
+  --footer-fg-3: var(--ink-3);
+  --footer-line: var(--hair);
 
-  --t-hero:  clamp(3.25rem, 11vw, 8rem);
-  --t-h2:    clamp(2rem, 5.6vw, 4rem);
-  --t-h3:    1.35rem;
-  --t-lead:  clamp(1.0625rem, 1.7vw, 1.3125rem);
+  /* the one signature accent — spectrum gradient, used ONLY on the
+     wordmark and big stat numerals, never as a general accent color */
+  --spectrum: linear-gradient(100deg, #3b82f6, #a855f7 32%, #f43f5e 60%, #f59e0b 82%, #3b82f6);
+
+  /* type — Inter, sole typeface. weight carries the hierarchy that
+     uppercase + letter-spacing used to. */
+  --f-display: "Inter", -apple-system, system-ui, sans-serif;
+  --f-body:    "Inter", -apple-system, system-ui, sans-serif;
+  --f-mono:    "Inter", -apple-system, system-ui, sans-serif; /* labels: Inter, tracked + medium, not a real mono */
+
+  --t-hero:  clamp(3rem, 9.5vw, 6.75rem);
+  --t-h2:    clamp(1.9rem, 4.6vw, 3.25rem);
+  --t-h3:    1.3rem;
+  --t-lead:  clamp(1.0625rem, 1.6vw, 1.25rem);
   --t-body:  1.0625rem;
   --t-label: 0.8125rem;
   --t-micro: 0.75rem;
-  --t-num:   clamp(2.4rem, 6vw, 4.2rem);   /* ledger / stat numerals */
+  --t-num:   clamp(2.6rem, 6.4vw, 4.5rem);   /* ledger / stat numerals */
 
-  /* 8-point spacing */
+  /* 8-point spacing — more generous than v9 */
   --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
   --s5: 40px; --s6: 48px; --s8: 64px; --s10: 80px;
-  --s12: 96px; --s16: 128px; --s20: 160px;
+  --s12: 96px; --s16: 140px; --s20: 176px;
 
   --maxw:   1200px;
   --gutter: clamp(20px, 5vw, 64px);
   --r-chip: 999px;
-  --r-card: 20px;      /* the rounded-panel signature */
-  --r-media: 22px;
+  --r-card: 26px;      /* softer, rounder panels */
+  --r-media: 28px;
 
-  /* motion */
-  --dur-1: 0.35s;
-  --dur-2: 0.7s;
+  /* motion — restrained. one easing, quick and quiet. */
+  --dur-1: 0.3s;
+  --dur-2: 0.6s;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* dark band — footer + feature panels invert */
+/* feature/media panels intentionally stay dark — the one deliberate
+   contrast band left in the system, used only for images/awaiting state */
 .band-dark {
   --bg:   var(--carbon);
   --fg:   var(--paper);
-  --fg-2: rgba(247, 246, 243, 0.66);
-  --fg-3: rgba(247, 246, 243, 0.4);
-  --line: rgba(247, 246, 243, 0.16);
+  --fg-2: rgba(245, 245, 247, 0.66);
+  --fg-3: rgba(245, 245, 247, 0.4);
+  --line: rgba(245, 245, 247, 0.16);
+}
+
+/* belt-and-suspenders: re-assert light if a webview reports dark */
+@media (prefers-color-scheme: dark) {
+  :root { color-scheme: only light; }
 }

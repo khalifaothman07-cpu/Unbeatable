@@ -1,5 +1,5 @@
 /*
- * 38-0 Champions League — game logic (generator, draft, formations, simulation, stats)
+ * 13-0 Europa — game logic (generator, draft, formations, simulation, stats)
  * Requires data.js to be loaded first (defines CLUBS and OPPONENTS).
  */
 
@@ -292,7 +292,7 @@ function renderResults(matches,f){
   const v=document.getElementById('verdict');let cls='',tag='',title='',sub='';
   if(f.champion&&f.W===f.games){cls='perfect';tag='The Impossible';title=`${f.W} – 0`;sub='Every game from group to final, won. You are immortal.';}
   else if(f.champion&&f.L===0){cls='invincible';tag='Invincible';title='Kings of Europe';sub=`Champions without a single defeat — ${f.W}W ${f.D}D.`;}
-  else if(f.champion){cls='champ';tag='Champions of Europe';title='Winners';sub='You went the distance and lifted the European Cup.';}
+  else if(f.champion){cls='champ';tag='Champions of Europe';title='Winners';sub='You went the distance and lifted the continental crown.';}
   else if(f.runnerUp){cls='champ';tag='Runners-up';title='Finalists';sub='One match from glory — beaten in the final.';}
   else if(f.roundReached==='Group Stage'){tag='Eliminated';title='Group Stage';sub='Couldn’t escape the group. Generate a stronger XI.';}
   else{tag='Eliminated';title=f.roundReached;sub=`Knocked out in the ${f.roundReached.toLowerCase()}.`;}
@@ -302,7 +302,7 @@ function renderResults(matches,f){
 
   let cmp;
   if(f.champion&&f.W===f.games) cmp="Thirteen games against the giants of Europe, thirteen wins. No side in history has ever been this perfect.";
-  else if(f.champion&&f.L===0) cmp="You lifted the European Cup without losing once — the mark of a truly invincible side.";
+  else if(f.champion&&f.L===0) cmp="You lifted the continental crown without losing once — the mark of a truly invincible side.";
   else if(f.champion) cmp="Champions of Europe. You beat the best the continent could throw at you when it mattered most.";
   else if(f.runnerUp) cmp="A run to the final against Europe's elite — agonisingly short of the trophy itself.";
   else if(f.roundReached==='Group Stage') cmp="The group bit back. Even all-time XIs can trip at the first hurdle.";
@@ -333,7 +333,7 @@ function renderResults(matches,f){
   document.getElementById('matchLog').innerHTML=bh+log;
 
   const topScorer=[...stats].sort((a,b)=>b.goals-a.goals)[0];
-  lastResultSummary=`13–0 Champions League · my all-time XI ${f.champion?'WON THE CHAMPIONS LEAGUE':'reached the '+f.roundReached.toLowerCase()} — ${f.W}W ${f.D}D ${f.L}L. Top scorer ${topScorer.name} (${topScorer.goals}). ${f.champion&&f.W===f.games?'A PERFECT '+f.W+'–0!':f.champion&&f.L===0?'UNBEATEN CHAMPIONS!':''}`.trim();
+  lastResultSummary=`13–0 Europa · my all-time XI ${f.champion?'WON EUROPA':'reached the '+f.roundReached.toLowerCase()} — ${f.W}W ${f.D}D ${f.L}L. Top scorer ${topScorer.name} (${topScorer.goals}). ${f.champion&&f.W===f.games?'A PERFECT '+f.W+'–0!':f.champion&&f.L===0?'UNBEATEN CHAMPIONS!':''}`.trim();
 }
-function shareRun(){const t=lastResultSummary||'13–0 Champions League';if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast('Result copied'),()=>showToast('Copy failed'));else showToast(t);}
+function shareRun(){const t=lastResultSummary||'13–0 Europa';if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast('Result copied'),()=>showToast('Copy failed'));else showToast(t);}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('on'),2200);}
