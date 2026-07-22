@@ -1,85 +1,87 @@
 /* ============================================================
-   tokens.css  ·  KAZ6 system "v10 — QUIET" (GALLERY → Apple shift)
-   Cool neutral ground, Inter as sole typeface, quiet premium
-   over loud athletic. Two deliberate accents only: a spectrum
-   gradient reserved for the wordmark and the big stat numerals
-   — everything else stays disciplined monochrome. Change a
-   value here; it propagates everywhere.
+   tokens.css  ·  KAZ6 system "v11 — COURTROOM"
+   Bold / gritty / refined. A case being made, not a portfolio
+   on display. Deep ink ground (not a UI gray), one owned accent
+   (Bahrain red — exactly three jobs, see below), a condensed
+   display face with real spine, a mono register for every label
+   and ledger. Change a value here; it propagates everywhere.
    ============================================================ */
 :root {
   color-scheme: only light;
 
-  /* cool neutral scale — Apple system gray, not warm paper */
-  --paper:   #f5f5f7;                 /* page ground */
-  --paper-2: #e8e8ed;                 /* raised fill */
-  --white:   #ffffff;
-  --ink:     #1d1d1f;                 /* primary text */
-  --ink-2:   rgba(29, 29, 31, 0.62);  /* secondary */
-  --ink-3:   rgba(29, 29, 31, 0.42);  /* tertiary / labels */
-  --hair:    rgba(29, 29, 31, 0.12);  /* hairlines */
-  --carbon:  #1d1d1f;                 /* deep media/feature panels only */
+  /* ground — matte ink, a courtroom at night, not a dark UI theme */
+  --ink-0: #0b0b0d;   /* page ground */
+  --ink-1: #17171a;   /* raised surface — panels, footer, cards */
+  --ink-2: #212125;   /* nested / hovered surface */
+  --paper:   #efeee9;                 /* primary text — warm off-white, never stark white */
+  --paper-2: rgba(239, 238, 233, 0.64); /* secondary text */
+  --paper-3: rgba(239, 238, 233, 0.4);  /* tertiary / labels */
+  --hair:    rgba(239, 238, 233, 0.14); /* hairlines */
 
-  /* contextual (feature panels stay dark; footer no longer does) */
-  --bg:   var(--paper);
-  --fg:   var(--ink);
-  --fg-2: var(--ink-2);
-  --fg-3: var(--ink-3);
+  --bg:   var(--ink-0);
+  --fg:   var(--paper);
+  --fg-2: var(--paper-2);
+  --fg-3: var(--paper-3);
   --line: var(--hair);
 
-  /* footer — light gray band, its own fixed palette (v10: no longer dark) */
-  --footer-bg:   var(--paper-2);
-  --footer-fg:   var(--ink);
-  --footer-fg-2: var(--ink-2);
-  --footer-fg-3: var(--ink-3);
+  /* raised surfaces — footer, panels, cards. one shade up from ground,
+     no separate light/dark flip needed now that the whole site is ink */
+  --raised:      var(--ink-1);
+  --footer-bg:   var(--ink-1);
+  --footer-fg:   var(--paper);
+  --footer-fg-2: var(--paper-2);
+  --footer-fg-3: var(--paper-3);
   --footer-line: var(--hair);
 
-  /* the one signature accent — spectrum gradient, used ONLY on the
-     wordmark and big stat numerals, never as a general accent color */
-  --spectrum: linear-gradient(100deg, #3b82f6, #a855f7 32%, #f43f5e 60%, #f59e0b 82%, #3b82f6);
+  /* THE one accent — Bahrain red, deepened off the flag's #CE1126 so it
+     sits on ink instead of vibrating like a UI alert. Exactly three jobs,
+     nowhere else: the wordmark, the interpunct in every scoreline (38·0),
+     primary CTAs. */
+  --red:     #c41f36;
+  --on-red:  var(--paper);  /* text sitting on a red CTA — paper on red clears WCAG AA (~5:1); near-black on this red does not (~3.4:1) */
 
-  /* type — Inter, sole typeface. weight carries the hierarchy that
-     uppercase + letter-spacing used to. */
-  --f-display: "Inter", -apple-system, system-ui, sans-serif;
+  /* type — Inter carries body copy. Big Shoulders Display is the display
+     face: condensed with real editorial weight at 6rem+, and — unlike
+     Space Grotesk or Archivo — not already the default portfolio choice.
+     JetBrains Mono runs every label, tag and ledger figure: a case-file
+     register, tabular figures, under the display face's noise. */
+  --f-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
   --f-body:    "Inter", -apple-system, system-ui, sans-serif;
-  --f-mono:    "Inter", -apple-system, system-ui, sans-serif; /* labels: Inter, tracked + medium, not a real mono */
+  --f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  --t-hero:  clamp(3rem, 9.5vw, 6.75rem);
-  --t-h2:    clamp(1.9rem, 4.6vw, 3.25rem);
-  --t-h3:    1.3rem;
+  --t-hero:  clamp(3.4rem, 10vw, 8rem);
+  --t-h2:    clamp(2rem, 5vw, 3.6rem);
+  --t-h3:    1.4rem;
   --t-lead:  clamp(1.0625rem, 1.6vw, 1.25rem);
   --t-body:  1.0625rem;
   --t-label: 0.8125rem;
   --t-micro: 0.75rem;
-  --t-num:   clamp(2.6rem, 6.4vw, 4.5rem);   /* ledger / stat numerals */
+  --t-num:   clamp(2.6rem, 6.4vw, 4.5rem);     /* ledger / stat numerals */
+  --t-score: clamp(3.8rem, 9.5vw, 7.5rem);     /* the signature scoreline size */
 
-  /* 8-point spacing — more generous than v9 */
+  /* 8-point spacing */
   --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
   --s5: 40px; --s6: 48px; --s8: 64px; --s10: 80px;
   --s12: 96px; --s16: 140px; --s20: 176px;
 
   --maxw:   1200px;
   --gutter: clamp(20px, 5vw, 64px);
-  --r-chip: 999px;
-  --r-card: 26px;      /* softer, rounder panels */
-  --r-media: 28px;
 
-  /* motion — restrained. one easing, quick and quiet. */
+  /* sharp / barely-rounded — an editorial system, not soft rounded-everything */
+  --r-chip:  4px;
+  --r-card:  6px;
+  --r-media: 6px;
+
+  /* motion — one orchestrated moment (the index hero), everything else
+     static. what's left is quick and quiet, not a scroll-reveal utility. */
   --dur-1: 0.3s;
   --dur-2: 0.6s;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* feature/media panels intentionally stay dark — the one deliberate
-   contrast band left in the system, used only for images/awaiting state */
-.band-dark {
-  --bg:   var(--carbon);
-  --fg:   var(--paper);
-  --fg-2: rgba(245, 245, 247, 0.66);
-  --fg-3: rgba(245, 245, 247, 0.4);
-  --line: rgba(245, 245, 247, 0.16);
-}
-
-/* belt-and-suspenders: re-assert light if a webview reports dark */
+/* belt-and-suspenders: iOS webviews sometimes force-dark on top of a
+   declared light color-scheme; re-assert so OUR ink ground always wins
+   rather than an arbitrary system-dark substitute. */
 @media (prefers-color-scheme: dark) {
   :root { color-scheme: only light; }
 }

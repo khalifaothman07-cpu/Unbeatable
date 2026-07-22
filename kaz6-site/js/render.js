@@ -1,11 +1,9 @@
-/* ============================================================
-   render.js  ·  RENDER LAYER (shared across every page)
-   Reads global SITE, injects each block into its mount.
-   Mounts are hooked by [data-render="X"] and filled via
-   querySelectorAll, so a block may appear on several pages.
-   Nav/footer/progress are single per document (by id).
-   No event wiring here (that's main.js / the router).
-   ============================================================ */
+/* =========================================================================
+   render.js  —  RENDER LAYER (shared across every page)
+   Reads from the global SITE object (data.js) and injects every repeating
+   block into its mount point. Pure DOM building — no event wiring here
+   (that lives in main.js). Each function is named for the section it fills.
+   ========================================================================= */
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function splitScore(s){return esc(s).replace(/·/g,'<span class="sep">·</span>');}
 const PLAY='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
@@ -22,7 +20,7 @@ function renderNav(){
     var cur=p.file===here?' aria-current="page"':"";
     return '<a class="nav-link" href="'+esc(p.file)+'"'+cur+'>'+esc(p.label)+'</a>';
   }).join("");
-  nav.innerHTML='<a class="nav-mark wordmark wordmark--prism" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
+  nav.innerHTML='<a class="nav-mark wordmark" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
     +'<div class="nav-links">'+links+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
 }
 
@@ -34,7 +32,7 @@ function renderFooter(){
   f.innerHTML='<div class="wrap"><div class="foot-grid">'
     +'<div class="foot-col"><span class="foot-mark wordmark">'+esc(SITE.name)+'</span><p class="foot-tag">'+esc(SITE.tagline)+'</p></div>'
     +'<div class="foot-col"><h4>Pages</h4>'+pageLinks+'</div>'
-    +'<div class="foot-col"><h4>Elsewhere</h4>'+social+'</div>'
+    +'<div class="foot-col"><h4>Channels</h4>'+social+'</div>'
     +'</div><div class="foot-base">'
     +'<span class="foot-note">'+esc(SITE.meta.place)+' · '+esc(SITE.meta.coords)+'</span>'
     +'<span class="foot-note">© '+esc(SITE.meta.year)+' '+esc(SITE.name)+'</span>'
@@ -44,17 +42,30 @@ function renderFooter(){
 /* HOME ROUTES */
 function renderRoutes(){
   fill("routes", SITE.pages.filter(p=>!p.home).map(p=>
-    '<a class="route reveal" href="'+esc(p.file)+'">'
+    '<a class="route" href="'+esc(p.file)+'">'
     +'<span class="route-n">'+esc(p.n)+'</span>'
     +'<span class="route-name">'+esc(p.label)+'</span>'
     +'<span class="route-desc">'+esc(p.desc)+'</span>'
     +'<span class="route-arrow">'+AR+'</span></a>').join(""));
 }
 
-/* MARQUEE (v10: static strip, not a looping duplicate) */
+/* MARQUEE — static strip */
 function renderMarquee(){
   if(!SITE.marquee) return;
   fill("marquee", SITE.marquee.map(w=>'<span class="marq-item">'+esc(w)+'</span>').join(""));
+}
+
+/* HOME HERO SCOREWALL — the signature moment. Pulls the three game
+   scorelines straight from SITE.games; huge, tabular, red interpunct. */
+function renderHeroScores(){
+  var mounts=document.querySelectorAll('[data-render="hero-scores"]');
+  if(!mounts.length) return;
+  var html=SITE.games.map(function(g,i){
+    return '<div class="scoreline" style="--i:'+i+'">'
+      +'<span class="scoreline-v">'+splitScore(g.score)+'</span>'
+      +'<span class="scoreline-k">'+esc(g.title)+'</span></div>';
+  }).join("");
+  mounts.forEach(el=>{el.innerHTML=html;});
 }
 
 /* GAME CARDS */
@@ -69,12 +80,12 @@ function coverHTML(g){
     +' onerror="this.outerHTML=\'&lt;span class=&quot;await&quot;&gt;Awaiting cover&lt;/span&gt;\'"></div>';
 }
 function renderGames(){
-  fill("games", SITE.games.map(function(g,i){
+  fill("games", SITE.games.map(function(g){
     var play=(g.live&&g.url)
       ? '<a class="play-btn" href="'+esc(g.url)+'" data-game="'+esc(g.id)+'">Play '+PLAY+'</a>'
       : '<span class="play-btn" aria-disabled="true">Soon</span>';
     var tags=g.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
-    return '<article class="game-card reveal d'+((i%3)+1)+'">'+coverHTML(g)
+    return '<article class="game-card">'+coverHTML(g)
       +'<div class="game-body"><div class="game-top">'
       +'<span class="game-score">'+splitScore(g.score)+'</span>'
       +'<span class="game-status">Live</span></div>'
@@ -88,9 +99,9 @@ function renderGames(){
 
 /* ARENA CARDS */
 function renderArenas(){
-  fill("arenas", SITE.arenas.map(function(a,i){
+  fill("arenas", SITE.arenas.map(function(a){
     var tags=a.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
-    return '<article class="card reveal d'+((i%3)+1)+'">'
+    return '<article class="card">'
       +'<span class="card-k">'+esc(a.role)+'</span>'
       +'<h3 class="card-title">'+esc(a.title)+'</h3>'
       +'<p class="card-desc">'+esc(a.desc)+'</p>'
@@ -101,14 +112,14 @@ function renderArenas(){
 /* STAT LEDGER */
 function renderStats(){
   fill("stats", SITE.stats.map(s=>
-    '<div class="row reveal"><span class="v">'+splitScore(s.value)+'</span>'
+    '<div class="row"><span class="v">'+splitScore(s.value)+'</span>'
     +'<span class="lead-dots"></span><span class="k">'+esc(s.label)+'</span></div>').join(""));
 }
 
 /* SOCIAL ROWS */
 function renderSocials(){
   fill("socials", SITE.socials.map(s=>
-    '<a class="link-row reveal" href="'+esc(s.url)+'" target="_blank" rel="noopener">'
+    '<a class="link-row" href="'+esc(s.url)+'" target="_blank" rel="noopener">'
     +'<span class="link-name">'+esc(s.name)+'</span>'
     +'<span class="link-dots"></span>'
     +'<span class="link-handle">'+esc(s.handle)+' '+AR+'</span></a>').join(""));
@@ -116,7 +127,7 @@ function renderSocials(){
 
 /* ABOUT PARAGRAPHS */
 function renderAbout(){
-  fill("about", SITE.about.map(p=>'<p class="reveal">'+esc(p)+'</p>').join(""));
+  fill("about", SITE.about.map(p=>'<p>'+esc(p)+'</p>').join(""));
 }
 
 /* VENTURE (IAM GOLF summary on ventures.html) */
@@ -134,7 +145,7 @@ function renderFields(){
 }
 
 function renderAll(){
-  renderNav();renderFooter();renderRoutes();renderMarquee();
+  renderNav();renderFooter();renderRoutes();renderMarquee();renderHeroScores();
   renderGames();renderArenas();renderStats();renderSocials();renderAbout();renderVenture();renderFields();
 }
 document.addEventListener("DOMContentLoaded",renderAll);

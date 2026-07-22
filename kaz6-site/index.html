@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/nav.css" />
@@ -19,17 +19,21 @@
   <div class="progress" id="progress"></div>
   <nav class="nav" id="nav"></nav>
 
-  <!-- HERO — type-forward on paper, no background photo -->
+  <!-- HERO — the case opens with the record, not the introduction -->
   <header class="phero">
     <div class="wrap">
       <div class="phero-top">
         <span class="phero-status" data-field="role">Debate · Strategy games — Bahrain</span>
         <span class="phero-loc">Manama · 26.22°N 50.58°E</span>
       </div>
-      <h1 class="phero-title" data-echo="Khalifa Othman">Khalifa<br>Othman</h1>
+      <h1 class="phero-title">Khalifa<br>Othman</h1>
       <p class="phero-lead" data-field="tagline"></p>
+
+      <!-- SCOREWALL — the signature moment. everything around it stays quiet. -->
+      <div class="scorewall" data-render="hero-scores" aria-label="Games, by the score"></div>
+
       <div class="phero-actions">
-        <a class="btn" href="games.html">The work</a>
+        <a class="btn" href="games.html">See the games</a>
         <a class="btn btn-ghost" href="ventures.html">IAM GOLF</a>
       </div>
     </div>
@@ -58,7 +62,7 @@
     </div>
   </section>
 
-  <footer class="foot band-dark" id="foot"></footer>
+  <footer class="foot" id="foot"></footer>
 
   <script src="js/data.js"></script>
   <script src="js/render.js"></script>

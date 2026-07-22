@@ -4,21 +4,34 @@
    HANDOFF — read first. Container wipes between chats; the zip
    KO uploads ALWAYS beats memory and project-knowledge files.
 
-   STATE: v9 "GALLERY" — IAM GOLF aesthetic site-wide. Multi-page:
-   index / about / record / games / ventures / contact. Warm paper,
-   Archivo 800–900 uppercase display, IBM Plex Mono labels, big
-   rounded white panels, one dark footer, strict monochrome.
+   STATE: v11 "COURTROOM" — bold/gritty/refined, replacing v10's
+   Apple-identity quiet-premium look (v9 GALLERY before that).
+   Deep ink ground (--ink-0 #0b0b0d, not a UI gray) + a static
+   ~4.5% film-grain overlay (body::before, inline SVG noise, zero
+   requests). ONE owned accent, Bahrain red (--red #c41f36,
+   deepened off the flag's #CE1126) — exactly three jobs: the
+   KAZ6 wordmark, the interpunct in every scoreline (38·0), and
+   primary CTAs (.btn / .play-btn / .nav-cta). Nowhere else —
+   ledger numerals, tags, hovers, focus rings all stay neutral
+   paper/ink. Spectrum gradient, glassmorphism nav blur, and the
+   phero-title glow echo are gone for good — don't reintroduce.
+   Display face is Big Shoulders Display (condensed, real spine
+   at 6rem+); body stays Inter; labels/ledger/tags run JetBrains
+   Mono. Panels sharp (border-radius ≤8px, tokens: --r-card/-media
+   6px, --r-chip 4px) — no more soft rounded-everything.
+   Signature: index.html's hero "scorewall" (.scorewall, filled by
+   renderHeroScores() in render.js from SITE.games) — the three
+   scorelines huge and tabular, the single most striking thing on
+   the site. It's also the ONLY motion left: a one-shot CSS
+   entrance on load (.scoreline / @keyframes score-in), no
+   scroll-linking. main.js dropped the old sitewide scroll-reveal
+   IntersectionObserver entirely — everything else on every page
+   is static now; only nav's hysteresis + progress bar remain in
+   main.js. Don't re-add .reveal/.d1-3 classes to parent templates.
 
-   NEXT (v10): KO is shifting the aesthetic NIKE → APPLE. Read:
-   from loud athletic (900-weight uppercase, shouty scale) to
-   quiet premium — sentence case, lighter weights, generous
-   whitespace, large soft media, restrained motion, soft/frosted
-   surfaces. KEEP: monochrome discipline, multi-page IA, all
-   structure below, data-driven content. At kickoff: propose the
-   type system (SF Pro isn't licensable — Inter or similar), and
-   confirm scope with KO: parent only, or IAM GOLF + game skins
-   too. Fold the open background-texture and wordmark (Archivo
-   type vs constructed six) decisions into the v10 pass.
+   NEXT: no open aesthetic direction from KO yet — v11 is the
+   current system. If another pass is requested, propose it fresh
+   rather than assuming a v9→v10-style pendulum swing back.
 
    STRUCTURE (static, framework-free, Netlify drag-drop):
    /              six pages, shared css/ + js/

@@ -1,41 +1,41 @@
 /* ============================================================
-   nav.css  ·  persistent top nav (v10: frosted glass, sentence case)
+   nav.css  ·  persistent top nav (v11: solid ink, no glass)
    ============================================================ */
 .progress {
   position: fixed; top: 0; left: 0; right: 0; height: 2px;
-  background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; z-index: 120;
+  background: var(--red); transform: scaleX(0); transform-origin: 0 50%; z-index: 120;
   will-change: transform;
 }
 
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  gap: var(--s3); padding: 16px var(--gutter); color: var(--ink);
+  gap: var(--s3); padding: 16px var(--gutter); color: var(--fg);
   transition: background var(--dur-1) var(--ease-out),
     box-shadow var(--dur-1) var(--ease-out);
 }
-/* geometry never changes on scroll — animating nav padding wobbles on iOS */
+/* geometry never changes on scroll — animating nav padding wobbles on iOS.
+   color/background only, no blur: a solid ink bar, not frosted glass. */
 .nav.scrolled {
-  background: rgba(245, 245, 247, 0.72);
-  backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  background: var(--ink-0);
   box-shadow: 0 1px 0 var(--line);
 }
 .nav-mark { display: inline-flex; font-size: 1.2rem; }
 .nav-links { display: flex; align-items: center; gap: var(--s4); }
 .nav-link {
   font-family: var(--f-mono); font-size: 0.9rem; font-weight: 500;
-  color: var(--ink-2);
+  color: var(--fg-2);
   transition: color var(--dur-1) var(--ease-out);
 }
-.nav-link:hover, .nav-link[aria-current="page"] { color: var(--ink); }
+.nav-link:hover, .nav-link[aria-current="page"] { color: var(--fg); }
 .nav-link[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1.5px; }
 @media (max-width: 680px) { .nav-links .nav-link:not(.nav-cta) { display: none; } }
 .nav-cta {
-  color: var(--paper); background: var(--ink);
+  color: var(--on-red); background: var(--red);
   padding: 9px 18px; border-radius: var(--r-chip);
-  transition: opacity var(--dur-1) var(--ease-out);
+  transition: background var(--dur-1) var(--ease-out);
 }
-.nav-cta:hover { color: var(--paper); opacity: 0.82; }
+.nav-cta:hover { color: var(--on-red); background: #d8253e; }
 
 /* spacer so fixed nav never overlaps page content */
 .nav-spacer { height: 76px; }
