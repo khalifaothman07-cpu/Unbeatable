@@ -98,6 +98,13 @@
 }
 .marq-item::after { content: ""; width: 4px; height: 4px; background: var(--fg-3); margin-left: var(--s2); }
 .marq-item:last-child::after { display: none; }
+/* below this width some lines wrap 2 phrases and others wrap 1, so
+   each line centers at a different width and the lines zigzag
+   against each other. force one phrase per line so every line
+   centers consistently instead. */
+@media (max-width: 640px) {
+  .marq-item { flex: 1 1 100%; justify-content: center; }
+}
 
 /* ── DOCKET — arenas (record.html). an asymmetric hairline-divided
    list, never three equal cards. rows step in on alternating lines. ── */
