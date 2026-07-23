@@ -13,7 +13,12 @@
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  gap: var(--s3); padding: 16px var(--gutter);
+  gap: var(--s3);
+  /* padding-top clears the iPhone notch/Dynamic Island (paired with
+     viewport-fit=cover in each page's <meta viewport>); without both
+     together, iOS Safari's toolbar-collapse animation can flash
+     already-scrolled content in the status-bar strip above this bar. */
+  padding: calc(16px + env(safe-area-inset-top, 0px)) var(--gutter) 16px;
   background: var(--band-bg); color: var(--band-fg);
   transition: box-shadow var(--dur-1) var(--ease-out);
 }
@@ -36,5 +41,6 @@
 }
 .nav-cta:hover { color: var(--on-red); background: #970f1a; }
 
-/* spacer so fixed nav never overlaps page content */
-.nav-spacer { height: 76px; }
+/* spacer so fixed nav never overlaps page content — grows with the
+   same safe-area allowance the nav's own padding-top uses */
+.nav-spacer { height: calc(76px + env(safe-area-inset-top, 0px)); }
