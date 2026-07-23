@@ -26,11 +26,19 @@
    footer disclaimer; swap to grayscale/awaiting if KO objects. A 6th
    upload (purple-shoe putt) was dropped as off-brand. Full colour by
    default; duotone is a one-line option if tighter mono is wanted.
-   STANDALONE RULE (per KO): this page must NEVER mention KAZ6, Khalifa,
-   or link back to the parent. It ships INSIDE the parent deploy at
-   /iam-golf/ but presents as an independent company. Parent → golf links
-   are allowed; golf → parent is not. `parent` and `studioUrl` fields are
-   intentionally deleted — do not re-add.
+   STANDALONE RULE — UPDATED (per KO, explicit): golf → parent links are
+   NOW ALLOWED, deliberately reversing the old "never links back" rule.
+   IAM GOLF is a unified property under KAZ6, not a disguised-independent
+   company anymore. A small "← KAZ6" link sits top-left in the nav
+   (index.html, next to the wordmark), pointing to ../index.html, styled
+   locally in this file's own golf.css (.nav-left/.nav-back) — it does NOT
+   route through the parent's shared css/js. Do not remove it, and do not
+   restyle the rest of this subsite to match the parent's system in the
+   same breath — that return link is the ONLY parent-facing change this
+   subsite gets per pass. Still true: never mention "Khalifa" by name in
+   IAM GOLF's own copy/branding (the KAZ6 link is navigation, not a brand
+   mention). `parent` and `studioUrl` content fields stay deleted — the
+   nav link is markup+CSS only, not a data field.
    PRICING is PUBLIC: full kit 850–900 BD, BD only (raised from 500–700
    to match true sale price). "exactly 50%" softened to "roughly half" —
    literal 50% only holds vs a full-MSRP top-tier new bag, so the precise

@@ -13,6 +13,9 @@
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .topbar-left{display:flex;align-items:baseline;gap:14px}
+  .kaz6-home{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:700;text-decoration:none;transition:color .2s}
+  .kaz6-home:hover{color:var(--ink)}
   .brand{display:flex;align-items:baseline;gap:10px;cursor:pointer}
   .brand .mark{font-family:'Anton';font-size:26px;color:var(--gold);line-height:1}
   .brand .mark span{color:var(--garnet)}

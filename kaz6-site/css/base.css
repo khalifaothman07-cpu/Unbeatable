@@ -1,13 +1,12 @@
 /* ============================================================
-   base.css  ·  reset, shell, shared primitives (v11)
+   base.css  ·  reset, shell, shared primitives (v12 MASTHEAD)
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; background: var(--ink-0) !important; }
+html { scroll-behavior: smooth; background: var(--paper) !important; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
-  position: relative;
   font-family: var(--f-body);
   font-size: var(--t-body);
   font-weight: 400;
@@ -25,77 +24,57 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 .wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
 
-::selection { background: var(--paper); color: var(--ink-0); }
-:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; border-radius: 2px; }
-
-/* film grain — the surface reads printed, not rendered. a single static
-   noise tile, no animation, so there is nothing for reduced-motion to
-   disable; costs zero network requests (inline data URI). */
-body::before {
-  content: "";
-  position: fixed; inset: 0;
-  z-index: 500;
-  pointer-events: none;
-  opacity: 0.045;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.nav :focus-visible { outline-color: var(--band-fg); }
 
 /* section shell */
 .section { background: var(--bg); color: var(--fg); padding-block: var(--s16); }
 @media (max-width: 720px) { .section { padding-block: var(--s10); } }
 .section--tight { padding-block: var(--s10); }
 
-/* eyebrow — small kicker above section titles. sentence case, weight
-   (not caps) does the work of distinguishing it. */
+/* eyebrow — tiny tracked-caps label. never empty/vague content. */
 .eyebrow {
   font-family: var(--f-mono);
   font-size: var(--t-micro);
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--fg-3);
-  text-align: center;
   margin-bottom: var(--s3);
 }
-.eyebrow--left { text-align: left; }
 
-/* centered display title — condensed, heavy, sentence case */
+/* display title — uppercase, condensed, tight leading, fills the
+   full column width edge to edge. print logic, not a UI heading. */
 .section-title {
   font-family: var(--f-display);
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
   font-size: var(--t-h2);
-  line-height: 1.04;
+  line-height: 0.9;
   letter-spacing: -0.005em;
-  text-align: center;
-  text-wrap: balance;
-  margin-inline: auto;
-  max-width: 24ch;
 }
-.section-title--left { text-align: left; margin-inline: 0; }
 
-/* lead paragraph under a title */
+/* lead paragraph under a title — sentence case body copy */
 .section-lead {
-  margin: var(--s4) auto 0;
+  margin-top: var(--s4);
   max-width: 60ch;
-  text-align: center;
   font-size: var(--t-lead);
   font-weight: 400;
   color: var(--fg-2);
 }
-.section-lead--left { text-align: left; margin-inline: 0; }
 
-/* buttons — sharp, sentence case. the primary is one of red's three jobs. */
+/* buttons — square, sentence case, tracked. red is one of its three jobs. */
 .btn {
   display: inline-flex; align-items: center; gap: 10px;
   font-family: var(--f-mono);
-  font-size: 0.95rem; font-weight: 500;
-  letter-spacing: 0; text-transform: none;
+  font-size: 0.85rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--on-red); background: var(--red);
-  padding: 13px 26px; border-radius: var(--r-chip);
+  padding: 14px 26px;
   transition: background var(--dur-1) var(--ease-out);
 }
-.btn:hover { background: #d8253e; }
+.btn:hover { background: #970f1a; }
 .btn-ghost {
   color: var(--fg); background: transparent;
   box-shadow: inset 0 0 0 1px var(--line);
@@ -107,16 +86,22 @@ body::before {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
 
-/* wordmark — one of red's three jobs. solid, no gradient. */
+/* the display headline's one red portion — never used outside a
+   phero-title's second line, a scoreline interpunct, or a CTA. */
+.accent { color: var(--red); }
+
+/* wordmark — inherits context (paper text in the inverted nav band,
+   ink everywhere else). not a dedicated accent color this pass. */
 .wordmark {
   font-family: var(--f-display);
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
   letter-spacing: -0.005em; line-height: 1; white-space: nowrap;
-  color: var(--red);
+  color: currentColor;
 }
 
-/* belt-and-suspenders: re-assert our ink ground if a webview forces dark */
+/* belt-and-suspenders: re-assert our paper ground if a webview forces dark */
 @media (prefers-color-scheme: dark) {
   :root { color-scheme: only light; }
-  html, body { background: var(--ink-0) !important; color: var(--paper) !important; }
+  html, body { background: var(--paper) !important; color: var(--ink) !important; }
 }
