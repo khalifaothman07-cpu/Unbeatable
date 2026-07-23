@@ -26,8 +26,13 @@
    JetBrains Mono, tracked >=0.16em. Photography is grayscale via
    CSS filter on img/video (never baked into the asset files),
    hard-edged (radius 0), captioned "FIG. 00 — …" in tracked caps.
-   The old film-grain overlay is gone — grit now comes from the
-   photography and hard edges, not noise. Cards are gone from
+   UPDATE (same pass, KO's call): the paper ground read too close to
+   white, and KO asked the grain back — --paper deepened to #E2DDCC
+   (was #EAE7E0), and base.css's body::before grain overlay is back
+   (static SVG noise, ~5% opacity, mix-blend-mode:multiply so it
+   darkens instead of washing out — different from v11's overlay
+   blend). Grit is now photography + hard edges + this texture
+   together, not photography alone. Cards are gone from
    record.html (arenas) and games.html (games) — both are now
    asymmetric full-width rows/dockets, never a 3-equal-cards grid.
    Signature: index.html's hero — a huge uppercase name headline

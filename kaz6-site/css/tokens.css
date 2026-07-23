@@ -11,9 +11,11 @@
   color-scheme: only light;
 
   /* ground — cool-leaning bone/greige. NOT #F5F5F7 (Apple gray),
-     NOT #F4F1EA (warm cream). Grit comes from photography, not tint. */
-  --paper:   #eae7e0;
-  --paper-2: #e2ded4;                 /* raised fill — awaiting states, hairline panels */
+     NOT #F4F1EA (warm cream). Deepened per KO (read as too close to
+     white) + a static grain texture in base.css carries the rest of
+     the grit, alongside the photography. */
+  --paper:   #e2ddcc;
+  --paper-2: #d9d3bf;                 /* raised fill — awaiting states, hairline panels */
   --ink:     #141414;
   --ink-2:   rgba(20, 20, 20, 0.62);  /* secondary text */
   --ink-3:   rgba(20, 20, 20, 0.4);   /* tertiary / labels — "40% ink" */
