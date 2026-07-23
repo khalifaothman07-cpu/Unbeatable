@@ -32,9 +32,22 @@
    (static SVG noise, ~5% opacity, mix-blend-mode:multiply so it
    darkens instead of washing out — different from v11's overlay
    blend). Grit is now photography + hard edges + this texture
-   together, not photography alone. Cards are gone from
-   record.html (arenas) and games.html (games) — both are now
-   asymmetric full-width rows/dockets, never a 3-equal-cards grid.
+   together, not photography alone.
+
+   BUG FIX (same pass): KO reported ghosted scrolled-past content
+   flashing above the fixed nav on iOS Safari (visible in the status-
+   bar strip during the address-bar collapse animation) — root cause
+   was the parent's <meta viewport> missing viewport-fit=cover (the
+   game subsites already had it). Fixed: added viewport-fit=cover to
+   all six parent pages, and nav.css now pads .nav's top with
+   env(safe-area-inset-top) so its solid fill extends under the
+   notch/Dynamic Island instead of leaving a gap; .nav-spacer grows
+   to match. Don't strip viewport-fit=cover or the safe-area padding
+   without re-checking this on a real notched iPhone first.
+
+   Cards are gone from record.html (arenas) and games.html (games) —
+   both are now asymmetric full-width rows/dockets, never a
+   3-equal-cards grid.
    Signature: index.html's hero — a huge uppercase name headline
    overlapping a hard-edged grayscale image block, with the
    scorewall (.scorewall, renderHeroScores() in render.js) as the
