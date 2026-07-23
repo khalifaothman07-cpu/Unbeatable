@@ -96,7 +96,7 @@
   font-size: var(--t-label); letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--fg-2); white-space: nowrap; padding-inline: var(--s4);
 }
-.marq-item::after { content: ""; width: 4px; height: 4px; background: var(--fg-3); margin-left: var(--s8); }
+.marq-item::after { content: ""; width: 4px; height: 4px; background: var(--fg-3); margin-left: var(--s2); }
 .marq-item:last-child::after { display: none; }
 
 /* ── DOCKET — arenas (record.html). an asymmetric hairline-divided
