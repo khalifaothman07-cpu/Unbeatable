@@ -31,6 +31,13 @@
   box-shadow: 0 1px 0 var(--line);
   padding-block: 12px;
 }
+.golf .nav-left { display: flex; align-items: center; gap: var(--s3); }
+.golf .nav-back {
+  font-family: var(--f-mono); font-size: var(--t-micro); font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2);
+  transition: color var(--dur-1) var(--ease-out);
+}
+.golf .nav-back:hover { color: var(--ink); }
 .golf .nav-mark { display: inline-flex; font-size: 1.15rem; color: var(--ink); }
 .golf .nav-links { display: flex; align-items: center; gap: var(--s4); }
 .golf .nav-link {

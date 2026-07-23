@@ -1,5 +1,8 @@
 /* ============================================================
-   nav.css  ·  persistent top nav (v11: solid ink, no glass)
+   nav.css  ·  the one inverted band (v12 MASTHEAD)
+   Permanently solid ink — not a scroll-triggered flip. The
+   hysteresis scroll handler in main.js still runs (required);
+   it now just adds a hairline/shadow on scroll, not a background.
    ============================================================ */
 .progress {
   position: fixed; top: 0; left: 0; right: 0; height: 2px;
@@ -10,32 +13,28 @@
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  gap: var(--s3); padding: 16px var(--gutter); color: var(--fg);
-  transition: background var(--dur-1) var(--ease-out),
-    box-shadow var(--dur-1) var(--ease-out);
+  gap: var(--s3); padding: 16px var(--gutter);
+  background: var(--band-bg); color: var(--band-fg);
+  transition: box-shadow var(--dur-1) var(--ease-out);
 }
-/* geometry never changes on scroll — animating nav padding wobbles on iOS.
-   color/background only, no blur: a solid ink bar, not frosted glass. */
-.nav.scrolled {
-  background: var(--ink-0);
-  box-shadow: 0 1px 0 var(--line);
-}
+/* geometry never changes on scroll — animating nav padding wobbles on iOS */
+.nav.scrolled { box-shadow: 0 1px 0 var(--band-line); }
 .nav-mark { display: inline-flex; font-size: 1.2rem; }
 .nav-links { display: flex; align-items: center; gap: var(--s4); }
 .nav-link {
-  font-family: var(--f-mono); font-size: 0.9rem; font-weight: 500;
-  color: var(--fg-2);
+  font-family: var(--f-mono); font-size: 0.8rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--band-fg-2);
   transition: color var(--dur-1) var(--ease-out);
 }
-.nav-link:hover, .nav-link[aria-current="page"] { color: var(--fg); }
+.nav-link:hover, .nav-link[aria-current="page"] { color: var(--band-fg); }
 .nav-link[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1.5px; }
 @media (max-width: 680px) { .nav-links .nav-link:not(.nav-cta) { display: none; } }
 .nav-cta {
   color: var(--on-red); background: var(--red);
-  padding: 9px 18px; border-radius: var(--r-chip);
+  padding: 9px 18px;
   transition: background var(--dur-1) var(--ease-out);
 }
-.nav-cta:hover { color: var(--on-red); background: #d8253e; }
+.nav-cta:hover { color: var(--on-red); background: #970f1a; }
 
 /* spacer so fixed nav never overlaps page content */
 .nav-spacer { height: 76px; }

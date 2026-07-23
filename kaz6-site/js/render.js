@@ -68,44 +68,48 @@ function renderHeroScores(){
   mounts.forEach(el=>{el.innerHTML=html;});
 }
 
-/* GAME CARDS */
-function coverHTML(g){
-  var m=g.media;
-  if(!m||!m.src) return '<div class="game-cover"><span class="await">Awaiting cover</span></div>';
+/* GAMES — asymmetric alternating rows (.stack), never a card grid.
+   Each row's image crop ratio is set in CSS via :nth-child, not here.
+   Figure numbers are the row's own index — a genuine sequence. */
+function coverHTML(g, fig){
+  var m=g.media, cap='FIG. '+fig+' — '+esc(m&&m.alt||g.title);
+  if(!m||!m.src) return '<div class="stack-media"><span class="await">Awaiting cover</span></div>';
   if(m.type==="video"){
-    return '<div class="game-cover"><video src="'+esc(m.src)+'"'+(m.poster?' poster="'+esc(m.poster)+'"':"")+' muted loop playsinline autoplay'
-      +' onerror="this.outerHTML=\'&lt;span class=&quot;await&quot;&gt;Awaiting cover&lt;/span&gt;\'"></video></div>';
+    return '<div class="stack-media"><video src="'+esc(m.src)+'"'+(m.poster?' poster="'+esc(m.poster)+'"':"")+' muted loop playsinline autoplay'
+      +' onerror="this.outerHTML=\'&lt;span class=&quot;await&quot;&gt;Awaiting cover&lt;/span&gt;\'"></video>'
+      +'<span class="stack-cap">'+cap+'</span></div>';
   }
-  return '<div class="game-cover"><img src="'+esc(m.src)+'" alt="'+esc(m.alt||"")+'" loading="lazy"'
-    +' onerror="this.outerHTML=\'&lt;span class=&quot;await&quot;&gt;Awaiting cover&lt;/span&gt;\'"></div>';
+  return '<div class="stack-media"><img src="'+esc(m.src)+'" alt="'+esc(m.alt||"")+'" loading="lazy"'
+    +' onerror="this.outerHTML=\'&lt;span class=&quot;await&quot;&gt;Awaiting cover&lt;/span&gt;\'">'
+    +'<span class="stack-cap">'+cap+'</span></div>';
 }
 function renderGames(){
-  fill("games", SITE.games.map(function(g){
+  fill("games", SITE.games.map(function(g,i){
+    var fig=String(i).padStart(2,"0");
     var play=(g.live&&g.url)
       ? '<a class="play-btn" href="'+esc(g.url)+'" data-game="'+esc(g.id)+'">Play '+PLAY+'</a>'
       : '<span class="play-btn" aria-disabled="true">Soon</span>';
     var tags=g.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
-    return '<article class="game-card">'+coverHTML(g)
-      +'<div class="game-body"><div class="game-top">'
-      +'<span class="game-score">'+splitScore(g.score)+'</span>'
-      +'<span class="game-status">Live</span></div>'
-      +'<h3 class="game-title">'+esc(g.title)+'</h3>'
-      +'<div class="game-scorelabel">'+esc(g.scoreLabel)+'</div>'
-      +'<p class="game-desc">'+esc(g.desc)+'</p>'
-      +'<div class="card-tags">'+tags+'</div>'
-      +'<div class="game-foot">'+play+'</div></div></article>';
+    return '<article class="stack-row">'+coverHTML(g,fig)
+      +'<div class="stack-body">'
+      +'<div class="stack-score">'+splitScore(g.score)+'</div>'
+      +'<h3 class="stack-title">'+esc(g.title)+'</h3>'
+      +'<div class="stack-scorelabel">'+esc(g.scoreLabel)+'</div>'
+      +'<p class="stack-desc">'+esc(g.desc)+'</p>'
+      +'<div class="stack-tags">'+tags+'</div>'
+      +'<div class="stack-foot">'+play+'</div></div></article>';
   }).join(""));
 }
 
-/* ARENA CARDS */
+/* ARENAS — asymmetric hairline docket (record.html), never a card grid */
 function renderArenas(){
   fill("arenas", SITE.arenas.map(function(a){
     var tags=a.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
-    return '<article class="card">'
-      +'<span class="card-k">'+esc(a.role)+'</span>'
-      +'<h3 class="card-title">'+esc(a.title)+'</h3>'
-      +'<p class="card-desc">'+esc(a.desc)+'</p>'
-      +'<div class="card-tags">'+tags+'</div></article>';
+    return '<article class="docket-row">'
+      +'<span class="docket-k">'+esc(a.role)+'</span>'
+      +'<h3 class="docket-title">'+esc(a.title)+'</h3>'
+      +'<p class="docket-desc">'+esc(a.desc)+'</p>'
+      +'<div class="docket-tags">'+tags+'</div></article>';
   }).join(""));
 }
 

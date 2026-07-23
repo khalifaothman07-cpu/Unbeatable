@@ -45,6 +45,7 @@
     app.innerHTML = `
       <section class="screen intro">
         <div class="introWrap motif-fairway">
+          <a class="kaz6-home" href="../../index.html">← KAZ6</a>
           <p class="eyebrow">KAZ6 Studio \u00b7 Golf</p>
           <h1 class="wordmark">18 Decisions</h1>
           <p class="tagline">Eighteen holes, fourteen clubs, one decision a shot. Chase the green or play the percentages \u2014 then live with the bounce.</p>
@@ -275,6 +276,7 @@
     };
     app.innerHTML = `
       <section class="screen card">
+        <a class="kaz6-home" href="../../index.html">← KAZ6</a>
         <p class="eyebrow">${G.holes === 9 ? "Front nine" : "Full round"} complete</p>
         ${isBest ? '<div class="bestTag">New best round</div>' : ""}
         <div class="cardFinal ${tp < 0 ? "under" : tp > 0 ? "over" : ""}">${fmtPar(tp)}</div>

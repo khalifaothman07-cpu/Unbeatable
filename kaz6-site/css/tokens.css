@@ -1,63 +1,72 @@
 /* ============================================================
-   tokens.css  ·  KAZ6 system "v11 — COURTROOM"
-   Bold / gritty / refined. A case being made, not a portfolio
-   on display. Deep ink ground (not a UI gray), one owned accent
-   (Bahrain red — exactly three jobs, see below), a condensed
-   display face with real spine, a mono register for every label
-   and ledger. Change a value here; it propagates everywhere.
+   tokens.css  ·  KAZ6 system "v12 — MASTHEAD"
+   Editorial brutalist. Print logic, not UI logic: architecture-
+   firm monograph, not portfolio-on-display. Bone/greige paper
+   ground (cool, not Apple-gray, not warm cream), near-black ink,
+   one owned accent (deep red — exactly three jobs, see below),
+   one inverted band (the nav — used once, not everywhere), zero
+   rounded corners. Change a value here; it propagates everywhere.
    ============================================================ */
 :root {
   color-scheme: only light;
 
-  /* ground — matte ink, a courtroom at night, not a dark UI theme */
-  --ink-0: #0b0b0d;   /* page ground */
-  --ink-1: #17171a;   /* raised surface — panels, footer, cards */
-  --ink-2: #212125;   /* nested / hovered surface */
-  --paper:   #efeee9;                 /* primary text — warm off-white, never stark white */
-  --paper-2: rgba(239, 238, 233, 0.64); /* secondary text */
-  --paper-3: rgba(239, 238, 233, 0.4);  /* tertiary / labels */
-  --hair:    rgba(239, 238, 233, 0.14); /* hairlines */
+  /* ground — cool-leaning bone/greige. NOT #F5F5F7 (Apple gray),
+     NOT #F4F1EA (warm cream). Deepened per KO (read as too close to
+     white) + a static grain texture in base.css carries the rest of
+     the grit, alongside the photography. */
+  --paper:   #e2ddcc;
+  --paper-2: #d9d3bf;                 /* raised fill — awaiting states, hairline panels */
+  --ink:     #141414;
+  --ink-2:   rgba(20, 20, 20, 0.62);  /* secondary text */
+  --ink-3:   rgba(20, 20, 20, 0.4);   /* tertiary / labels — "40% ink" */
+  --hair:    rgba(20, 20, 20, 0.16);  /* hairline rules */
 
-  --bg:   var(--ink-0);
-  --fg:   var(--paper);
-  --fg-2: var(--paper-2);
-  --fg-3: var(--paper-3);
+  --bg:   var(--paper);
+  --fg:   var(--ink);
+  --fg-2: var(--ink-2);
+  --fg-3: var(--ink-3);
   --line: var(--hair);
 
-  /* raised surfaces — footer, panels, cards. one shade up from ground,
-     no separate light/dark flip needed now that the whole site is ink */
-  --raised:      var(--ink-1);
-  --footer-bg:   var(--ink-1);
-  --footer-fg:   var(--paper);
-  --footer-fg-2: var(--paper-2);
-  --footer-fg-3: var(--paper-3);
+  /* the ONE inverted band — the nav, permanently. not a light/dark
+     flip used elsewhere (footer stays paper — see footer.css). */
+  --band-bg:   var(--ink);
+  --band-fg:   var(--paper);
+  --band-fg-2: rgba(234, 231, 224, 0.66);
+  --band-line: rgba(234, 231, 224, 0.18);
+
+  --footer-bg:   var(--paper);
+  --footer-fg:   var(--ink);
+  --footer-fg-2: var(--ink-2);
+  --footer-fg-3: var(--ink-3);
   --footer-line: var(--hair);
 
-  /* THE one accent — Bahrain red, deepened off the flag's #CE1126 so it
-     sits on ink instead of vibrating like a UI alert. Exactly three jobs,
-     nowhere else: the wordmark, the interpunct in every scoreline (38·0),
-     primary CTAs. */
-  --red:     #c41f36;
-  --on-red:  var(--paper);  /* text sitting on a red CTA — paper on red clears WCAG AA (~5:1); near-black on this red does not (~3.4:1) */
+  /* THE one accent — deep red. Exactly three jobs, nowhere else: a
+     portion of display headlines (the second line of a phero-title),
+     the interpunct in every scoreline (38·0), primary CTAs. Contrast
+     checked both directions against paper: ~5.04:1, clears WCAG AA. */
+  --red:    #c1121f;
+  --on-red: var(--paper);
 
-  /* type — Inter carries body copy. Big Shoulders Display is the display
-     face: condensed with real editorial weight at 6rem+, and — unlike
-     Space Grotesk or Archivo — not already the default portfolio choice.
-     JetBrains Mono runs every label, tag and ledger figure: a case-file
-     register, tabular figures, under the display face's noise. */
-  --f-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  /* type — Saira Condensed carries every display headline: a tight
+     condensed grotesk with real structural weight at huge sizes,
+     distinct from the Space Grotesk / Archivo / Anton default-
+     portfolio trio. Set in CSS uppercase (data.js copy stays sentence
+     case). Inter is the neutral body grotesk. JetBrains Mono runs
+     every tracked label, caption and tabular scoreline figure — a
+     case-file register under the display face's weight. */
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
   --f-body:    "Inter", -apple-system, system-ui, sans-serif;
   --f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  --t-hero:  clamp(3.4rem, 10vw, 8rem);
-  --t-h2:    clamp(2rem, 5vw, 3.6rem);
-  --t-h3:    1.4rem;
+  --t-hero:  clamp(3.6rem, 12vw, 9.5rem);
+  --t-h2:    clamp(2.4rem, 7vw, 5rem);
+  --t-h3:    clamp(1.4rem, 3vw, 1.9rem);
   --t-lead:  clamp(1.0625rem, 1.6vw, 1.25rem);
   --t-body:  1.0625rem;
   --t-label: 0.8125rem;
   --t-micro: 0.75rem;
-  --t-num:   clamp(2.6rem, 6.4vw, 4.5rem);     /* ledger / stat numerals */
-  --t-score: clamp(3.8rem, 9.5vw, 7.5rem);     /* the signature scoreline size */
+  --t-num:   clamp(2.6rem, 6.4vw, 4.5rem);     /* ledger numerals */
+  --t-score: clamp(4rem, 11vw, 9rem);          /* the signature scoreline size */
 
   /* 8-point spacing */
   --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
@@ -67,21 +76,21 @@
   --maxw:   1200px;
   --gutter: clamp(20px, 5vw, 64px);
 
-  /* sharp / barely-rounded — an editorial system, not soft rounded-everything */
-  --r-chip:  4px;
-  --r-card:  6px;
-  --r-media: 6px;
+  /* border-radius: 0. everywhere. always. */
+  --r-chip:  0;
+  --r-card:  0;
+  --r-media: 0;
 
-  /* motion — one orchestrated moment (the index hero), everything else
-     static. what's left is quick and quiet, not a scroll-reveal utility. */
-  --dur-1: 0.3s;
-  --dur-2: 0.6s;
+  /* motion — one orchestrated moment (the index hero), everything
+     else static. what's left is quick, not a scroll-reveal utility. */
+  --dur-1: 0.2s;
+  --dur-2: 0.5s;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* belt-and-suspenders: iOS webviews sometimes force-dark on top of a
-   declared light color-scheme; re-assert so OUR ink ground always wins
-   rather than an arbitrary system-dark substitute. */
+   declared light color-scheme; re-assert so OUR paper ground always
+   wins rather than an arbitrary system-dark substitute. */
 @media (prefers-color-scheme: dark) {
   :root { color-scheme: only light; }
 }

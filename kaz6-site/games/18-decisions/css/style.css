@@ -185,6 +185,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .intro{display:flex;padding:0;}
 .introWrap{margin:auto;width:100%;max-width:560px;padding:clamp(1.7rem,5vw,2.7rem);border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--elev),#0e0f13);}
 .introWrap .eyebrow{font-family:var(--fmono);font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;color:var(--low);}
+.kaz6-home{display:inline-block;margin-bottom:.9rem;font-family:var(--fmono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--low);text-decoration:none;transition:color .15s;}
+.kaz6-home:hover{color:var(--ink);}
+.card .kaz6-home{margin-bottom:.7rem;}
 .wordmark{font-family:var(--fdisp);font-weight:700;font-size:clamp(2.4rem,9vw,3.6rem);letter-spacing:-.025em;margin:.55rem 0 .95rem;color:var(--ink);}
 .tagline{color:var(--mid);font-size:1.02rem;line-height:1.55;max-width:46ch;}
 .specStrip{font-family:var(--fmono);font-size:.66rem;letter-spacing:.1em;color:var(--low);margin:1.5rem 0;padding:.7rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}

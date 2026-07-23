@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/nav.css" />
@@ -19,17 +19,27 @@
   <div class="progress" id="progress"></div>
   <nav class="nav" id="nav"></nav>
 
-  <!-- HERO — the case opens with the record, not the introduction -->
+  <!-- HERO — the headline against an offset image block, then the
+       scorewall underneath it. the one signature moment on the site. -->
   <header class="phero">
     <div class="wrap">
       <div class="phero-top">
         <span class="phero-status" data-field="role">Debate · Strategy games — Bahrain</span>
         <span class="phero-loc">Manama · 26.22°N 50.58°E</span>
       </div>
-      <h1 class="phero-title">Khalifa<br>Othman</h1>
+
+      <div class="hero-row">
+        <h1 class="phero-title">Khalifa<br><span class="accent">Othman</span></h1>
+        <div class="hero-media">
+          <img src="assets/media/hero.jpg" alt="Khalifa Othman"
+               onerror="this.closest('.hero-media').classList.add('awaiting')" />
+          <span class="hero-media-cap">FIG. 00 — Khalifa Othman</span>
+        </div>
+      </div>
+
       <p class="phero-lead" data-field="tagline"></p>
 
-      <!-- SCOREWALL — the signature moment. everything around it stays quiet. -->
+      <!-- SCOREWALL — the signature. everything around it stays quiet. -->
       <div class="scorewall" data-render="hero-scores" aria-label="Games, by the score"></div>
 
       <div class="phero-actions">
@@ -47,8 +57,8 @@
   <!-- ROUTES — the multi-page map -->
   <section class="section">
     <div class="wrap">
-      <p class="eyebrow eyebrow--left">Where to look</p>
-      <h2 class="section-title section-title--left">Five ways in</h2>
+      <p class="eyebrow">Where to look</p>
+      <h2 class="section-title">Five ways in</h2>
       <nav class="routes" data-render="routes" aria-label="Site sections"></nav>
     </div>
   </section>
@@ -58,7 +68,7 @@
     <div class="wrap">
       <p class="eyebrow">The record</p>
       <h2 class="section-title">By the numbers</h2>
-      <div class="ledger ledger--center" data-render="stats"></div>
+      <div class="ledger" data-render="stats"></div>
     </div>
   </section>
 
