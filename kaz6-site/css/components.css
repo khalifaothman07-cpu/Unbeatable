@@ -87,6 +87,14 @@
   font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--paper); background: rgba(20, 20, 20, 0.74); padding: 5px 11px;
 }
+/* narrow: a short awaiting panel leaves no room between its centred
+   mark and the caption pinned to the bottom — the two collide. Reserve
+   the caption's band so the mark centres in the space above it. Only
+   an issue once the panel gets short; desktop centring is left alone. */
+@media (max-width: 860px) {
+  .feature-panel.awaiting .feature-mark { padding-bottom: var(--s10); }
+  .feature-cap { right: var(--s3); }
+}
 
 /* ── MARQUEE — static tracked-caps keyword strip, no loop ── */
 .marquee { border-block: 1px solid var(--line); padding-block: var(--s3); overflow: clip; }
@@ -111,6 +119,13 @@
 .docket { margin-top: var(--s10); border-top: 1px solid var(--line); }
 .docket-row { padding-block: var(--s6); border-bottom: 1px solid var(--line); max-width: 68ch; }
 .docket-row:nth-child(even) { margin-left: clamp(0px, 10vw, 140px); }
+/* the alternating step is a desktop device — it needs room either side
+   to read as deliberate. In a single narrow column it just looks like
+   one row (and its hairline rule) is misaligned against its neighbours,
+   and squeezes that row's title onto an extra line. Collapse flush. */
+@media (max-width: 860px) {
+  .docket-row:nth-child(even) { margin-left: 0; }
+}
 .docket-k {
   display: block; font-family: var(--f-mono); font-size: var(--t-micro);
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); margin-bottom: var(--s2);
@@ -175,6 +190,13 @@
 }
 .ledger .lead-dots { flex: 1; min-width: var(--s3); border-bottom: 2px dotted var(--fg-3); transform: translateY(-0.35em); }
 .ledger .k { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-2); text-align: right; max-width: 30ch; }
+/* narrow: the wrapped label eats the row, so the leader collapses to a
+   stub floating between two gaps — it stops reading as a leader at all.
+   Drop it and let the row sit as a clean numeral-left / label-right pair. */
+@media (max-width: 640px) {
+  .ledger .lead-dots { display: none; }
+  .ledger .k { margin-left: auto; }
+}
 
 /* ── LINK ROWS — socials ── */
 .links-list { margin-top: var(--s5); border-top: 1px solid var(--line); }
