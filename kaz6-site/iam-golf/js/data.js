@@ -39,8 +39,17 @@
    IAM GOLF's own copy/branding (the KAZ6 link is navigation, not a brand
    mention). `parent` and `studioUrl` content fields stay deleted — the
    nav link is markup+CSS only, not a data field.
-   PRICING is PUBLIC: full kit 850–900 BD, BD only (raised from 500–700
-   to match true sale price). "exactly 50%" softened to "roughly half" —
+   PRICING is PUBLIC: full kit 850–900 BD (raised from 500–700 to match
+   true sale price). CURRENCY — the old "BD only" rule is now RELAXED
+   (per KO): a picker above the price ledger converts the ledger's
+   `range` rows into SAR/AED/QAR/OMR/KWD/USD. BD is still the only
+   currency of sale — conversions are labelled indicative, a caveat
+   line appears whenever you're off BD, the "Sold in: BD" ledger row is
+   permanent, and the footer price summary stays in BD regardless of
+   the picker. Rates live in IAM.currency and are peg-derived, NOT a
+   live feed (static site: no API to go stale silently); update that
+   one list if a peg moves. Never present a converted figure as a
+   quote. "exactly 50%" softened to "roughly half" —
    literal 50% only holds vs a full-MSRP top-tier new bag, so the precise
    claim was dropped to stay defensible. ½ monument kept as slogan.
    Sourcing cost, landed cost, and per-unit margin stay INTERNAL — NEVER
@@ -97,14 +106,40 @@ const IAM = {
     },
   ],
 
-  /* --- The price rule (public, per KO) -------------------------------- */
+  /* --- Currency selector ----------------------------------------------
+     BD is the currency of sale — every other option is an INDICATIVE
+     conversion shown for reference only, never a quote. Rates are
+     derived from the Gulf pegs rather than a live feed (this is a
+     static site — no API, no key, nothing to go stale silently):
+     1 BHD = 2.65957 USD is a hard peg held since 2001, and SAR/AED/QAR/
+     OMR are themselves USD-pegged, so these hold steady. KWD tracks an
+     undisclosed basket, so it drifts a little — flagged as indicative
+     like the rest. `per` = units of that currency per 1 BD.
+     If a peg ever moves, this list is the only thing to update. */
+  currency: {
+    label: "Show prices in",
+    note: "Indicative conversion only — orders are quoted and settled in BD.",
+    options: [
+      { code: "BHD", label: "BD",  per: 1,      sale: true },
+      { code: "SAR", label: "SAR", per: 9.9734 },
+      { code: "AED", label: "AED", per: 9.7673 },
+      { code: "QAR", label: "QAR", per: 9.6808 },
+      { code: "OMR", label: "OMR", per: 1.0226 },
+      { code: "KWD", label: "KWD", per: 0.8151 },
+      { code: "USD", label: "USD", per: 2.6596 },
+    ],
+  },
+
+  /* --- The price rule (public, per KO) --------------------------------
+     Rows carrying `range` are converted by the currency selector above;
+     rows with a plain `v` are shown as-is in every currency. */
   pricing: {
     headline: "Half of retail",
-    sub: "Every kit priced at roughly half of what the same clubs cost new. All prices in BD. Buy a single club or a full kit.",
+    sub: "Every kit priced at roughly half of what the same clubs cost new. Buy a single club or a full kit.",
     ledger: [
       { k: "Single club", v: "≈ half of new" },
-      { k: "Full kit", v: "850–900 BD" },
-      { k: "Currency", v: "BD only" },
+      { k: "Full kit", range: [850, 900] },
+      { k: "Sold in", v: "BD" },
     ],
     includes: [
       "Mint pre-owned set",

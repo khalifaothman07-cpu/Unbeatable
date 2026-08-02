@@ -40,6 +40,51 @@ function renderPillars() {
     .join("");
 }
 
+/* --- CURRENCY -------------------------------------------------------
+   BD is the currency of sale; everything else is an indicative
+   conversion. State is a plain variable — it deliberately resets on
+   reload rather than persisting (no localStorage in this build). */
+let activeCurrency = (IAM.currency && IAM.currency.options[0]) || null;
+
+function currencyByCode(code) {
+  if (!IAM.currency) return null;
+  return IAM.currency.options.find((o) => o.code === code) || null;
+}
+
+/* exposed for main.js — render layer owns the state, main.js owns events */
+function setCurrency(code) {
+  const next = currencyByCode(code);
+  if (!next) return;
+  activeCurrency = next;
+  renderPricing();
+}
+
+/* Round to something a human would read off a price list. BD and OMR
+   sit near parity so they keep their precision; the rest are big
+   enough numbers that trailing digits would imply false accuracy. */
+function roundAmount(n, cur) {
+  if (cur.per <= 1.2) return Math.round(n);
+  return Math.round(n / 5) * 5;
+}
+
+function formatAmount(range, cur) {
+  const parts = range.map((v) => roundAmount(v * cur.per, cur).toLocaleString("en-US"));
+  const span = parts[0] === parts[1] ? parts[0] : parts[0] + "–" + parts[1];
+  return span + " " + cur.label;
+}
+
+function renderCurrencyPicker() {
+  const host = document.getElementById("price-currency");
+  const c = IAM.currency;
+  if (!host || !c) return;
+  const opts = c.options
+    .map((o) => `<option value="${esc(o.code)}"${o.code === activeCurrency.code ? " selected" : ""}>${esc(o.label)}</option>`)
+    .join("");
+  host.innerHTML = `
+    <label class="cur-label" for="cur-select">${esc(c.label)}</label>
+    <select class="cur-select" id="cur-select">${opts}</select>`;
+}
+
 /* --- PRICING (the ledger) ------------------------------------------- */
 function renderPricing() {
   const p = IAM.pricing;
@@ -56,15 +101,24 @@ function renderPricing() {
   const ledger = document.getElementById("price-ledger");
   if (ledger) {
     ledger.innerHTML = p.ledger
-      .map(
-        (r) => `
+      .map((r) => {
+        const v = r.range && activeCurrency ? formatAmount(r.range, activeCurrency) : r.v;
+        return `
         <div class="row">
           <span class="k">${esc(r.k)}</span>
           <span class="lead-dots" aria-hidden="true"></span>
-          <span class="v">${esc(r.v)}</span>
-        </div>`
-      )
+          <span class="v">${esc(v)}</span>
+        </div>`;
+      })
       .join("");
+  }
+
+  /* the conversion caveat only earns its place once you're off BD */
+  const note = document.getElementById("price-cur-note");
+  if (note && IAM.currency) {
+    const converted = activeCurrency && !activeCurrency.sale;
+    note.textContent = converted ? IAM.currency.note : "";
+    note.hidden = !converted;
   }
 
   const inc = document.getElementById("price-includes");
@@ -167,7 +221,11 @@ function renderFooter() {
   const fr = document.getElementById("foot-rule");
   if (fr && IAM.pricing && IAM.pricing.ledger) {
     fr.innerHTML = IAM.pricing.ledger
-      .map((row) => `<li><span class="k">${esc(row.k)}:</span> ${esc(row.v)}</li>`)
+      .map((row) => {
+        /* footer stays in BD — it's a static summary, not the live picker */
+        const v = row.range ? formatAmount(row.range, currencyByCode("BHD")) : row.v;
+        return `<li><span class="k">${esc(row.k)}:</span> ${esc(v)}</li>`;
+      })
       .join("");
   }
 }
@@ -193,6 +251,7 @@ function renderAll() {
   renderBrands();
   renderKitPlate();
   renderPillars();
+  renderCurrencyPicker();
   renderPricing();
   renderReferral();
   renderFollowMedia();
