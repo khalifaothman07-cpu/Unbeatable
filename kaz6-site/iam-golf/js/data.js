@@ -155,14 +155,20 @@ const IAM = {
     local: "The cleaning brush is function, not filler — Gulf play is hard on gear.",
   },
 
-  /* --- Referral (PUBLIC CTA only — no economics on this page) --------- */
+  /* --- Referral (PUBLIC CTA only — no economics on this page) ---------
+     amountBD is the real offer; {amount} in `body` is substituted with
+     it, converted to whatever the pricing picker is set to. When that
+     isn't BD, `anchor` is appended to the terms so the BD original
+     stays visible — a discount is a commitment, so the currency it's
+     actually honoured in must never be ambiguous. */
   referral: {
     headline: "Bring a friend into the game",
-    amount: "50 BD",
+    amountBD: 50,
     body:
-      "Refer another golfer and you both get 50 BD off your next order — a thank-you for sending real players our way.",
+      "Refer another golfer and you both get {amount} off your next order — a thank-you for sending real players our way.",
     terms:
       "One use per referred customer · valid 90 days · applies to a future order, not the first purchase.",
+    anchor: "The offer is 50 BD — other currencies are indicative.",
   },
 
   /* --- The kit, on camera (drop-in: assets/media/kit.jpg) ------------ */

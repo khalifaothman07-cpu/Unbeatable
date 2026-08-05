@@ -57,6 +57,7 @@ function setCurrency(code) {
   if (!next) return;
   activeCurrency = next;
   renderPricing();
+  renderReferral();   /* the referral discount tracks the same currency */
 }
 
 /* Round to something a human would read off a price list. BD and OMR
@@ -196,13 +197,18 @@ function renderReferral() {
   const host = document.getElementById("referral");
   const r = IAM.referral;
   if (!host || !r) return;
+  /* the discount follows the pricing picker, so it never reads
+     "2,260–2,395 USD" upstairs and "50 BD off" down here */
+  const cur = activeCurrency || currencyByCode("BHD");
+  const amount = formatAmount([r.amountBD, r.amountBD], cur);
+  const terms = cur && !cur.sale && r.anchor ? r.terms + " · " + r.anchor : r.terms;
   host.innerHTML = `
     <div class="ref-grid">
-      <span class="ref-amount">${esc(r.amount)}</span>
+      <span class="ref-amount">${esc(amount)}</span>
       <div class="ref-copy">
         <h2 class="ref-head">${esc(r.headline)}</h2>
-        <p class="ref-body">${esc(r.body)}</p>
-        <p class="ref-terms">${esc(r.terms)}</p>
+        <p class="ref-body">${esc(r.body).replace("{amount}", esc(amount))}</p>
+        <p class="ref-terms">${esc(terms)}</p>
       </div>
     </div>`;
 }
