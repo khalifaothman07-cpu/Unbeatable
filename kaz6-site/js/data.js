@@ -111,11 +111,19 @@
    scholarship) — confirm with KO before adding any enrollment
    claim to the site.
 
+   CONTACT — RESOLVED (per KO): there is NO email address. The dead
+   contact@kaz6.com field was deleted from SITE rather than replaced;
+   it had never been rendered, so nothing on the page changed. Reach
+   is via DM, Instagram first (@k.a.z6official). Do NOT re-add an
+   `email` field or a mailto: link anywhere — an address that drops
+   mail is worse than no address. IAM GOLF already follows the same
+   rule ("only the real channel — no invented email/phone").
+
    OPEN (KO's calls):
    • football game INTERNALS still read "La Liga"/"Champions
      League" (fan-game disclaimers present) — rebrand or keep
-   • kaz6.com placeholder domain (~5 files at deploy time) ·
-     contact@kaz6.com mailbox is dead
+   • kaz6.com placeholder domain still in iam-golf canonical +
+     og:image (2 refs) — swap at go-live
    • originals owed: hero/portrait (603px stand-ins), iam-golf
      kit.jpg · Othello cast-photo consent before launch
    • espana/europa covers: real stadium crops in assets/media
@@ -145,7 +153,8 @@ const SITE = {
   role: "Debate · Strategy games — Bahrain",
   tagline:
     "Competitive debater who builds strategy games — and argues a case the same way I build one: structure first, every counter anticipated.",
-  email: "contact@kaz6.com",
+  /* no email by design — contact is by DM, Instagram first. see the
+     CONTACT note above before adding one back. */
 
   meta: {
     place: "Manama, Bahrain",
