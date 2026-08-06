@@ -114,11 +114,21 @@ function renderPricing() {
       .join("");
   }
 
-  /* the conversion caveat only earns its place once you're off BD */
+  /* the conversion caveat only earns its place once you're off BD.
+     when the rate came from the daily build rather than the committed
+     peg, date it — an undated "indicative" figure tells you nothing
+     about how stale it might be. */
   const note = document.getElementById("price-cur-note");
   if (note && IAM.currency) {
     const converted = activeCurrency && !activeCurrency.sale;
-    note.textContent = converted ? IAM.currency.note : "";
+    let txt = converted ? IAM.currency.note : "";
+    if (converted && IAM.currency.asOf) {
+      const d = new Date(IAM.currency.asOf);
+      if (!isNaN(d)) {
+        txt += " Rates as of " + d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + ".";
+      }
+    }
+    note.textContent = txt;
     note.hidden = !converted;
   }
 

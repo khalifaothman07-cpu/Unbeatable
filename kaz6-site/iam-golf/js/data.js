@@ -46,10 +46,19 @@
    currency of sale — conversions are labelled indicative, a caveat
    line appears whenever you're off BD, the "Sold in: BD" ledger row is
    permanent, and the footer price summary stays in BD regardless of
-   the picker. Rates live in IAM.currency and are peg-derived, NOT a
-   live feed (static site: no API to go stale silently); update that
-   one list if a peg moves. Never present a converted figure as a
-   quote. "exactly 50%" softened to "roughly half" —
+   the picker. RATES ARE NOW LIVE-FED: a daily Netlify build runs
+   scripts/fetch-live.mjs, which writes iam-golf/js/live.js, and the
+   overlay at the bottom of this file applies those onto the peg
+   values in IAM.currency. Those pegs are the FALLBACK and must stay
+   correct by hand — if the fetch fails, returns a wrong shape, or
+   returns a rate outside its sanity band, it is skipped and the pegs
+   carry the site. Verified: with live.js absent the page falls back
+   with no JS error and shows the caveat UNDATED (an undated
+   indicative figure is honest; a wrongly dated one is not). Never
+   present a converted figure as a quote. The referral discount tracks
+   the same picker but keeps a "the offer is 50 BD" anchor, because a
+   discount is a commitment rather than a reference price.
+   "exactly 50%" softened to "roughly half" —
    literal 50% only holds vs a full-MSRP top-tier new bag, so the precise
    claim was dropped to stay defensible. ½ monument kept as slogan.
    Sourcing cost, landed cost, and per-unit margin stay INTERNAL — NEVER
@@ -108,14 +117,18 @@ const IAM = {
 
   /* --- Currency selector ----------------------------------------------
      BD is the currency of sale — every other option is an INDICATIVE
-     conversion shown for reference only, never a quote. Rates are
-     derived from the Gulf pegs rather than a live feed (this is a
-     static site — no API, no key, nothing to go stale silently):
-     1 BHD = 2.65957 USD is a hard peg held since 2001, and SAR/AED/QAR/
-     OMR are themselves USD-pegged, so these hold steady. KWD tracks an
-     undisclosed basket, so it drifts a little — flagged as indicative
-     like the rest. `per` = units of that currency per 1 BD.
-     If a peg ever moves, this list is the only thing to update. */
+     conversion shown for reference only, never a quote.
+
+     The `per` values below (units per 1 BD) are the PEG-DERIVED
+     FALLBACK: 1 BHD = 2.65957 USD is a hard peg held since 2001, and
+     SAR/AED/QAR/OMR are themselves USD-pegged, so those are exact and
+     effectively permanent. KWD tracks an undisclosed basket, so it is
+     the only one that genuinely drifts.
+
+     A daily Netlify build overlays live rates on top of these (see
+     scripts/fetch-live.mjs → iam-golf/js/live.js). If that fetch fails
+     or returns something implausible it is skipped, and these values
+     carry the site — which is why they must stay correct by hand. */
   currency: {
     label: "Show prices in",
     note: "Indicative conversion only — orders are quoted and settled in BD.",
@@ -201,3 +214,23 @@ const IAM = {
   disclaimer:
     "IAM GOLF is an independent reseller. Not affiliated with, authorised by, or endorsed by TaylorMade, Titleist, Callaway, or Ping. All trademarks belong to their respective owners.",
 };
+
+/* --- LIVE RATE OVERLAY ------------------------------------------------
+   live.js (generated at build time, loaded just before this file) may
+   define window.IAM_LIVE. Overlay any rate it carries onto the pegs
+   above. Every value is re-validated here rather than trusted: live.js
+   is a build artifact, but it is also just a file on disk, and a bad
+   number here would misprice the product. Anything that fails keeps its
+   committed peg, so the worst case is a stale-but-correct rate.        */
+(function overlayLiveRates() {
+  var live = typeof window !== "undefined" ? window.IAM_LIVE : null;
+  if (!live || !live.rates || !IAM.currency) return;
+  var applied = 0;
+  IAM.currency.options.forEach(function (o) {
+    var r = live.rates[o.code];
+    if (typeof r !== "number" || !isFinite(r) || r <= 0) return;
+    o.per = r;
+    applied++;
+  });
+  if (applied) IAM.currency.asOf = live.sourceUpdatedAt || live.fetchedAt || null;
+})();

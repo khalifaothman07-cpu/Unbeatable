@@ -150,6 +150,9 @@
     </div>
   </footer>
 
+  <!-- live.js is generated at build time and must load before data.js,
+       which overlays its rates onto the committed pegs -->
+  <script src="js/live.js"></script>
   <script src="js/data.js"></script>
   <script src="js/render.js"></script>
   <script src="js/main.js"></script>

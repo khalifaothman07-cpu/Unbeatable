@@ -71,7 +71,23 @@
    current system. If another pass is requested, propose it fresh
    rather than assuming another pendulum swing back to v11/v10.
 
-   STRUCTURE (static, framework-free, Netlify drag-drop):
+   BUILD STEP — the old "no build step / drag-drop" rule NO LONGER
+   HOLDS (per KO: the site must stay live and fresh). The repo is
+   git-connected to Netlify and netlify.toml now runs
+   `node scripts/fetch-live.mjs` before publish, which bakes live FX
+   rates into iam-golf/js/live.js. netlify/functions/daily-rebuild.mjs
+   is a scheduled function that pokes a build hook once a day so the
+   rates refresh without a push. Still true: zero npm dependencies,
+   zero framework, pages are plain HTML/CSS/JS and open fine over
+   file://. The fetch is fail-soft by design — it never fails a build
+   and never overwrites good data with bad. NOTE the new failure mode
+   a build step introduces: a broken build now means no deploy at all,
+   so keep that script dependency-free and defensive.
+   MANUAL SETUP still owed: create a Netlify build hook and expose it
+   as the BUILD_HOOK_URL env var, or the daily refresh silently no-ops
+   (it logs a warning rather than pretending it worked).
+
+   STRUCTURE (static, framework-free, git-connected Netlify build):
    /              six pages, shared css/ + js/
    /games/espana/ /games/europa/ /games/18-decisions/ — bundled
      self-contained subsites, edit in place, linked from data.js.
