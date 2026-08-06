@@ -1,2 +1,9 @@
 [build]
   publish = "kaz6-site"
+  # Bakes live FX rates into iam-golf/js/live.js before publish.
+  # The script never fails the build — on any error it leaves the
+  # committed file alone and the site falls back to the pegs in data.js.
+  command = "node scripts/fetch-live.mjs"
+
+[functions]
+  directory = "netlify/functions"

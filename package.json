@@ -1,0 +1,13 @@
+{
+  "name": "kaz6-site",
+  "private": true,
+  "type": "module",
+  "description": "KAZ6 — static site. No framework and no dependencies; this file exists so Netlify runs the build-time live-data fetch on Node.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/fetch-live.mjs",
+    "fetch-live": "node scripts/fetch-live.mjs"
+  }
+}

@@ -39,8 +39,26 @@
    IAM GOLF's own copy/branding (the KAZ6 link is navigation, not a brand
    mention). `parent` and `studioUrl` content fields stay deleted — the
    nav link is markup+CSS only, not a data field.
-   PRICING is PUBLIC: full kit 850–900 BD, BD only (raised from 500–700
-   to match true sale price). "exactly 50%" softened to "roughly half" —
+   PRICING is PUBLIC: full kit 850–900 BD (raised from 500–700 to match
+   true sale price). CURRENCY — the old "BD only" rule is now RELAXED
+   (per KO): a picker above the price ledger converts the ledger's
+   `range` rows into SAR/AED/QAR/OMR/KWD/USD. BD is still the only
+   currency of sale — conversions are labelled indicative, a caveat
+   line appears whenever you're off BD, the "Sold in: BD" ledger row is
+   permanent, and the footer price summary stays in BD regardless of
+   the picker. RATES ARE NOW LIVE-FED: a daily Netlify build runs
+   scripts/fetch-live.mjs, which writes iam-golf/js/live.js, and the
+   overlay at the bottom of this file applies those onto the peg
+   values in IAM.currency. Those pegs are the FALLBACK and must stay
+   correct by hand — if the fetch fails, returns a wrong shape, or
+   returns a rate outside its sanity band, it is skipped and the pegs
+   carry the site. Verified: with live.js absent the page falls back
+   with no JS error and shows the caveat UNDATED (an undated
+   indicative figure is honest; a wrongly dated one is not). Never
+   present a converted figure as a quote. The referral discount tracks
+   the same picker but keeps a "the offer is 50 BD" anchor, because a
+   discount is a commitment rather than a reference price.
+   "exactly 50%" softened to "roughly half" —
    literal 50% only holds vs a full-MSRP top-tier new bag, so the precise
    claim was dropped to stay defensible. ½ monument kept as slogan.
    Sourcing cost, landed cost, and per-unit margin stay INTERNAL — NEVER
@@ -97,14 +115,44 @@ const IAM = {
     },
   ],
 
-  /* --- The price rule (public, per KO) -------------------------------- */
+  /* --- Currency selector ----------------------------------------------
+     BD is the currency of sale — every other option is an INDICATIVE
+     conversion shown for reference only, never a quote.
+
+     The `per` values below (units per 1 BD) are the PEG-DERIVED
+     FALLBACK: 1 BHD = 2.65957 USD is a hard peg held since 2001, and
+     SAR/AED/QAR/OMR are themselves USD-pegged, so those are exact and
+     effectively permanent. KWD tracks an undisclosed basket, so it is
+     the only one that genuinely drifts.
+
+     A daily Netlify build overlays live rates on top of these (see
+     scripts/fetch-live.mjs → iam-golf/js/live.js). If that fetch fails
+     or returns something implausible it is skipped, and these values
+     carry the site — which is why they must stay correct by hand. */
+  currency: {
+    label: "Show prices in",
+    note: "Indicative conversion only — orders are quoted and settled in BD.",
+    options: [
+      { code: "BHD", label: "BD",  per: 1,      sale: true },
+      { code: "SAR", label: "SAR", per: 9.9734 },
+      { code: "AED", label: "AED", per: 9.7673 },
+      { code: "QAR", label: "QAR", per: 9.6808 },
+      { code: "OMR", label: "OMR", per: 1.0226 },
+      { code: "KWD", label: "KWD", per: 0.8151 },
+      { code: "USD", label: "USD", per: 2.6596 },
+    ],
+  },
+
+  /* --- The price rule (public, per KO) --------------------------------
+     Rows carrying `range` are converted by the currency selector above;
+     rows with a plain `v` are shown as-is in every currency. */
   pricing: {
     headline: "Half of retail",
-    sub: "Every kit priced at roughly half of what the same clubs cost new. All prices in BD. Buy a single club or a full kit.",
+    sub: "Every kit priced at roughly half of what the same clubs cost new. Buy a single club or a full kit.",
     ledger: [
       { k: "Single club", v: "≈ half of new" },
-      { k: "Full kit", v: "850–900 BD" },
-      { k: "Currency", v: "BD only" },
+      { k: "Full kit", range: [850, 900] },
+      { k: "Sold in", v: "BD" },
     ],
     includes: [
       "Mint pre-owned set",
@@ -120,14 +168,20 @@ const IAM = {
     local: "The cleaning brush is function, not filler — Gulf play is hard on gear.",
   },
 
-  /* --- Referral (PUBLIC CTA only — no economics on this page) --------- */
+  /* --- Referral (PUBLIC CTA only — no economics on this page) ---------
+     amountBD is the real offer; {amount} in `body` is substituted with
+     it, converted to whatever the pricing picker is set to. When that
+     isn't BD, `anchor` is appended to the terms so the BD original
+     stays visible — a discount is a commitment, so the currency it's
+     actually honoured in must never be ambiguous. */
   referral: {
     headline: "Bring a friend into the game",
-    amount: "50 BD",
+    amountBD: 50,
     body:
-      "Refer another golfer and you both get 50 BD off your next order — a thank-you for sending real players our way.",
+      "Refer another golfer and you both get {amount} off your next order — a thank-you for sending real players our way.",
     terms:
       "One use per referred customer · valid 90 days · applies to a future order, not the first purchase.",
+    anchor: "The offer is 50 BD — other currencies are indicative.",
   },
 
   /* --- The kit, on camera (drop-in: assets/media/kit.jpg) ------------ */
@@ -160,3 +214,23 @@ const IAM = {
   disclaimer:
     "IAM GOLF is an independent reseller. Not affiliated with, authorised by, or endorsed by TaylorMade, Titleist, Callaway, or Ping. All trademarks belong to their respective owners.",
 };
+
+/* --- LIVE RATE OVERLAY ------------------------------------------------
+   live.js (generated at build time, loaded just before this file) may
+   define window.IAM_LIVE. Overlay any rate it carries onto the pegs
+   above. Every value is re-validated here rather than trusted: live.js
+   is a build artifact, but it is also just a file on disk, and a bad
+   number here would misprice the product. Anything that fails keeps its
+   committed peg, so the worst case is a stale-but-correct rate.        */
+(function overlayLiveRates() {
+  var live = typeof window !== "undefined" ? window.IAM_LIVE : null;
+  if (!live || !live.rates || !IAM.currency) return;
+  var applied = 0;
+  IAM.currency.options.forEach(function (o) {
+    var r = live.rates[o.code];
+    if (typeof r !== "number" || !isFinite(r) || r <= 0) return;
+    o.per = r;
+    applied++;
+  });
+  if (applied) IAM.currency.asOf = live.sourceUpdatedAt || live.fetchedAt || null;
+})();

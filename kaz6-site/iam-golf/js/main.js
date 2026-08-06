@@ -8,6 +8,16 @@
 (function () {
   renderAll();
 
+  /* currency picker — render.js owns the state and the re-render, this
+     just forwards the choice. Delegated off the container so it survives
+     renderPricing() replacing the ledger underneath it. */
+  const curHost = document.getElementById("price-currency");
+  if (curHost) {
+    curHost.addEventListener("change", (e) => {
+      if (e.target && e.target.id === "cur-select") setCurrency(e.target.value);
+    });
+  }
+
   /* scroll-reveal */
   const reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && reveals.length) {
