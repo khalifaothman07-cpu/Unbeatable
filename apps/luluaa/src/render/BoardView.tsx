@@ -178,14 +178,23 @@ function TileArt({ tile }: { tile: Tile }) {
   }
 }
 
-function TileShape({ tile, cx, cy, hasShamal }: { tile: Tile; cx: number; cy: number; hasShamal: boolean }) {
+function TileShape({
+  tile, cx, cy, hasShamal, targetable, onPick,
+}: {
+  tile: Tile; cx: number; cy: number; hasShamal: boolean;
+  targetable?: boolean; onPick?: (id: string) => void;
+}) {
   const pts = hexCorners({ x: 0, y: 0 }, HEX_SIZE * GAP)
     .map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`)
     .join(" ");
   const hot = isHot(tile.token);
 
   return (
-    <g transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)})`}>
+    <g
+      transform={`translate(${cx.toFixed(2)} ${cy.toFixed(2)})`}
+      onClick={targetable && onPick ? () => onPick(tile.id) : undefined}
+      style={targetable ? { cursor: "pointer" } : undefined}
+    >
       <title>
         {TERRAIN_LABEL[tile.terrain]}
         {tile.token !== null ? ` · ${tile.token}` : " · produces nothing"}
@@ -203,6 +212,12 @@ function TileShape({ tile, cx, cy, hasShamal }: { tile: Tile; cx: number; cy: nu
 
       {/* inner bevel */}
       <polygon points={pts} fill="none" stroke="#ffffff" strokeOpacity={0.22} strokeWidth={1.2} transform="scale(0.94)" />
+
+      {targetable && (
+        <polygon points={pts} fill="#ffffff" opacity={0.28} stroke="#ffffff" strokeWidth={3}>
+          <animate attributeName="opacity" values="0.14;0.4;0.14" dur="1.4s" repeatCount="indefinite" />
+        </polygon>
+      )}
 
       {hasShamal && <ShamalToken />}
 
@@ -239,9 +254,17 @@ function TileShape({ tile, cx, cy, hasShamal }: { tile: Tile; cx: number; cy: nu
   );
 }
 
-export function BoardView({ board }: { board: Board }) {
+export function BoardView({
+  board, shamalTile, onTile, tileTargets, children,
+}: {
+  board: Board;
+  shamalTile?: string;
+  onTile?: (id: string) => void;
+  tileTargets?: Set<string>;
+  children?: React.ReactNode;
+}) {
   const placed = board.tiles.map((tile) => ({ tile, ...axialToPixel(tile.hex, HEX_SIZE) }));
-  const shamalId = board.tiles.find((t) => t.terrain === "sabkha")?.id;
+  const shamalId = shamalTile ?? board.tiles.find((t) => t.terrain === "sabkha")?.id;
 
   const xs = placed.map((p) => p.x);
   const ys = placed.map((p) => p.y);
@@ -358,8 +381,17 @@ export function BoardView({ board }: { board: Board }) {
       />
 
       {placed.map(({ tile, x, y }) => (
-        <TileShape key={tile.id} tile={tile} cx={x} cy={y} hasShamal={tile.id === shamalId} />
+        <TileShape
+          key={tile.id}
+          tile={tile}
+          cx={x}
+          cy={y}
+          hasShamal={tile.id === shamalId}
+          targetable={!!tileTargets?.has(tile.id)}
+          onPick={onTile}
+        />
       ))}
+      {children}
     </svg>
   );
 }
