@@ -194,3 +194,9 @@ body {
 /* clickable spots need a fat invisible hit area on touch */
 .hit { stroke-linecap: round; }
 svg .hit:hover { opacity: .9; }
+
+.seatctl { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; border: 1px solid rgba(42,33,26,0.18); padding: 5px 8px; background: rgba(255,255,255,0.5); }
+.tag2 { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border: 1px solid rgba(42,33,26,0.25); }
+.tag2.remote { background: var(--turquoise); color: var(--pearl); border-color: var(--turquoise); }
+.code { font-family: ui-monospace, monospace; letter-spacing: .18em; color: var(--terracotta); font-weight: 700; }
+.input { font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .1em; padding: 8px 10px; border: 1px solid rgba(42,33,26,0.28); background: rgba(255,255,255,0.7); color: var(--ink); }

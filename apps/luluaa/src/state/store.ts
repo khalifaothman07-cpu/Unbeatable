@@ -7,6 +7,7 @@
    ========================================================================= */
 
 import { create } from "zustand";
+import { createRoom, fetchSnapshot, makeRoomCode, pushSnapshot, remoteConfigured, subscribeRoom, type Snapshot } from "./sync";
 import { generateBoard, freshSeed, shuffle, makeRng } from "../game/board";
 import { buildGeometry, type Geometry } from "../game/geometry";
 import { DEFAULT_BOARD, RESOURCE_LABEL, TERRAIN_YIELD, type Board, type BoardConfig, type Resource } from "../game/types";
@@ -66,6 +67,9 @@ function buildDeck(rng: () => number): DhowCard[] {
 /* snake draft: 0,1,2,3,3,2,1,0 */
 const snake = (n: number) => [...Array.from({ length: n }, (_, i) => i), ...Array.from({ length: n }, (_, i) => n - 1 - i)];
 
+export type SeatType = "local" | "remote";
+export interface Seat { type: SeatType; code: string | null; claimed: boolean }
+
 export interface GameToggles { gentleShamal: boolean; calmTides: boolean; privacyScreen: boolean }
 
 interface GameState {
@@ -95,6 +99,13 @@ interface GameState {
   playedCardThisTurn: boolean;
   handRevealed: boolean;
 
+  /* --- table / seats (spec §9) --- */
+  seats: Seat[];
+  roomCode: string | null;
+  /** which seat THIS device controls; null = host holding all local seats */
+  mySeat: number | null;
+  syncing: boolean;
+
   newGame: (config?: BoardConfig, toggles?: GameToggles) => void;
   roll: () => void;
   setPending: (p: PendingBuild) => void;
@@ -109,6 +120,14 @@ interface GameState {
   stealFrom: (playerId: number) => void;
   endTurn: () => void;
   revealHand: () => void;
+  openSeat: (seatId: number) => Promise<void>;
+  closeSeat: (seatId: number) => void;
+  joinRoom: (code: string, seatId: number) => Promise<boolean>;
+  startSync: () => void;
+  snapshot: () => Snapshot;
+  applySnapshot: (snap: Snapshot) => void;
+  publish: () => void;
+  lastPushedAt: string | null;
 }
 
 const say = (log: string[], msg: string) => [msg, ...log].slice(0, 60);
@@ -170,7 +189,21 @@ export function legalShamalTiles(s: GameState): string[] {
   }));
 }
 
-export const useGame = create<GameState>((set, get) => ({
+export const useGame = create<GameState>((rawSet, get) => {
+  /* One choke point: any state change that isn't purely local UI gets
+     published. Sprinkling publish() through 15 actions guarantees someone
+     forgets one and a seat silently desyncs. */
+  const LOCAL_ONLY = new Set(["handRevealed", "pending", "syncing", "mySeat", "lastPushedAt"]);
+  const set: typeof rawSet = ((partial: object, replace?: boolean) => {
+    (rawSet as (p: object, r?: boolean) => void)(partial, replace);
+    const keys = Object.keys(partial ?? {});
+    if (keys.length && !keys.every((k) => LOCAL_ONLY.has(k))) {
+      const st = get();
+      if (st.roomCode && st.syncing) st.publish();
+    }
+  }) as typeof rawSet;
+
+  return ({
   ...(() => {
     const board = generateBoard(DEFAULT_BOARD, freshSeed());
     return {
@@ -199,6 +232,11 @@ export const useGame = create<GameState>((set, get) => ({
       discardTargets: {} as Record<number, number>,
       playedCardThisTurn: false,
       handRevealed: false,
+      seats: [0,1,2,3].map(() => ({ type: "local" as SeatType, code: null, claimed: false })),
+      roomCode: null,
+      mySeat: null,
+      syncing: false,
+      lastPushedAt: null,
     };
   })(),
 
@@ -230,10 +268,103 @@ export const useGame = create<GameState>((set, get) => ({
       discardTargets: {},
       playedCardThisTurn: false,
       handRevealed: false,
+      seats: [0,1,2,3].map(() => ({ type: "local" as SeatType, code: null, claimed: false })),
+      roomCode: null,
+      mySeat: null,
+      syncing: false,
+      lastPushedAt: null,
     });
   },
 
   revealHand: () => set({ handRevealed: true }),
+
+  /* --- TABLE / SEATS -----------------------------------------------------
+     Flipping the first seat to remote is what creates the row; until then
+     the game is purely local and never touches the network. */
+  openSeat: async (seatId: number) => {
+    const s = get();
+    if (!remoteConfigured) {
+      set({ log: say(s.log, "Online seats aren't configured on this build.") });
+      return;
+    }
+    const code = s.roomCode ?? makeRoomCode();
+    const seats = s.seats.map((x, i) => i === seatId ? { ...x, type: "remote" as SeatType, code } : x);
+    const first = !s.roomCode;
+    set({ seats, roomCode: code, syncing: true, mySeat: s.mySeat ?? -1,
+          log: say(s.log, `Seat ${seatId + 1} opened online — room code ${code}.`) });
+    if (first) await createRoom(code, get().snapshot());
+    else await pushSnapshot(code, get().snapshot());
+    get().startSync();
+  },
+
+  closeSeat: (seatId: number) => {
+    const s = get();
+    const seats = s.seats.map((x, i) => i === seatId ? { ...x, type: "local" as SeatType, claimed: false } : x);
+    set({ seats, log: say(s.log, `Seat ${seatId + 1} is local again.`) });
+    if (s.roomCode) void pushSnapshot(s.roomCode, get().snapshot());
+  },
+
+  /** Join from another device: pull the room, then follow it. */
+  joinRoom: async (code: string, seatId: number) => {
+    if (!remoteConfigured) return false;
+    const snap = await fetchSnapshot(code.toUpperCase());
+    if (!snap) return false;
+    get().applySnapshot(snap);
+    set({ roomCode: code.toUpperCase(), mySeat: seatId, syncing: true });
+    get().startSync();
+    return true;
+  },
+
+  startSync: () => {
+    const s = get();
+    if (!s.roomCode || (get() as unknown as { _unsub?: () => void })._unsub) return;
+    const unsub = subscribeRoom(s.roomCode, (snap) => {
+      const cur = get();
+      /* ignore our own echo — the writer already has this state */
+      if (snap.updatedAt === cur.lastPushedAt) return;
+      cur.applySnapshot(snap);
+    });
+    (get() as unknown as { _unsub?: () => void })._unsub = unsub;
+  },
+
+  /** The serialisable slice. Board travels as a seed, not as tiles. */
+  snapshot: (): Snapshot => {
+    const s = get();
+    return {
+      v: 1,
+      seed: s.board.seed,
+      rows: s.board.config.rows,
+      updatedAt: new Date().toISOString(),
+      state: {
+        players: s.players, buildings: s.buildings, routes: s.routes,
+        shamalTile: s.shamalTile, current: s.current, phase: s.phase,
+        setupOrder: s.setupOrder, setupIndex: s.setupIndex, setupStage: s.setupStage,
+        lastSetupVertex: s.lastSetupVertex, dice: s.dice, deck: s.deck, log: s.log,
+        winner: s.winner, toggles: s.toggles, turnNo: s.turnNo, turnsTaken: s.turnsTaken,
+        caravanLeft: s.caravanLeft, discardQueue: s.discardQueue, discardTargets: s.discardTargets,
+        playedCardThisTurn: s.playedCardThisTurn, seats: s.seats,
+      },
+    };
+  },
+
+  applySnapshot: (snap: Snapshot) => {
+    const s = get();
+    /* rebuild the board from its seed rather than trusting shipped tiles */
+    const board = s.board.seed === snap.seed
+      ? s.board
+      : generateBoard({ ...DEFAULT_BOARD, rows: snap.rows }, snap.seed);
+    const geo = board === s.board ? s.geo : buildGeometry(board);
+    set({ board, geo, ...(snap.state as object), pending: null, handRevealed: false, lastPushedAt: snap.updatedAt });
+  },
+
+  /** Push after any local mutation, when the table has remote seats. */
+  publish: () => {
+    const s = get();
+    if (!s.roomCode || !s.syncing) return;
+    const snap = s.snapshot();
+    set({ lastPushedAt: snap.updatedAt });
+    void pushSnapshot(s.roomCode, snap);
+  },
 
   setPending: (p) => set({ pending: get().pending === p ? null : p }),
 
@@ -569,6 +700,7 @@ export const useGame = create<GameState>((set, get) => ({
       log: say(s.log, `${s.players[next].name} to roll.`),
     });
   },
-}));
+});
+});
 
 export { longestHolder, navigatorHolder };

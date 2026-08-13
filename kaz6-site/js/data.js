@@ -119,10 +119,28 @@
    full placement legality, 4:1 bank trade, the full 25-card dhow
    deck, the Shamal (discard-on-7, move, steal), longest route and
    Master Navigator bonuses, and the win at 10 points.
-   STILL TODO: remote seats + Supabase sync (spec §9 — the seatType
-   model is designed but unbuilt, everything is local today),
-   player-to-player trading, and trade posts/ports (bank is 4:1 only,
-   so the 9 harbour points are generated but do nothing yet).
+   ONLINE SEATS are now built (spec §9). Each seat is independently
+   local or remote and any mix is valid. Opening the FIRST remote seat
+   is what creates the Supabase row — until then the game makes zero
+   network calls and works with Supabase unreachable (lazy activation,
+   §9.4). What syncs is a SNAPSHOT: board seed + rows + mutable state,
+   never the derived tiles/geometry, so a reconnect rebuilds an
+   identical board from the seed. Backend lives in KO's own Supabase
+   project ngtpeamcaxdtghimdspz, table public.luluaa_games (jsonb
+   snapshot keyed by room_code, realtime enabled, updated_at trigger).
+   RLS is permissive for anon on THAT TABLE ONLY — the room code is the
+   shared secret, per §9.7. Credentials sit in apps/luluaa/.env and are
+   COMMITTED on purpose: it is the publishable key, it is already inside
+   the committed bundle, and omitting it would silently produce rebuilds
+   with online play disabled. NEVER put the service_role key there.
+   VERIFICATION GAP — read before trusting it: the Supabase REST contract
+   was verified directly (upsert/select/update/trigger/RLS all pass), and
+   local play was regression-tested, but the BROWSER-to-Supabase leg was
+   never exercised: this sandbox blocks outbound HTTPS from the browser
+   even though the shell can reach it. Two-device sync is therefore
+   UNTESTED end to end. Test it for real before relying on it.
+   STILL TODO: player-to-player trading, and trade posts/ports (bank is
+   4:1 only, so the 9 harbour points are generated but do nothing yet).
    GOTCHA worth keeping: Gentle Shamal deadlocks the opening if you
    don't implement its fallback — at game start EVERY seat is on 2
    points, so every occupied tile is sheltered and the 7 can never
