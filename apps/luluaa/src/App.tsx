@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { BoardView } from "./render/BoardView";
 import { BuildingLayer, RouteLayer } from "./render/Pieces";
+import { SeatBar } from "./render/SeatBar";
 import { RESOURCE_LABEL, type Resource } from "./game/types";
 import {
   COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
@@ -71,6 +72,12 @@ export function App() {
     Object.values(s.buildings).filter((b) => b.player === s.current && b.type === type).length;
   const routeCount = Object.values(s.routes).filter((r) => r === s.current).length;
 
+  /* On a remote device you only ever drive your own seat. The host, with
+     all-local seats, drives whoever is up. */
+  const myTurn = s.mySeat === null || s.mySeat < 0
+    ? true
+    : (s.phase === "setup" ? s.setupOrder[s.setupIndex] === s.mySeat : s.current === s.mySeat);
+
   const hideHand = s.toggles.privacyScreen && !s.handRevealed && s.phase !== "setup" && s.phase !== "over";
 
   const banner = (() => {
@@ -80,6 +87,7 @@ export function App() {
     if (s.phase === "discard") return `${s.players[s.discardQueue[0]].name} must discard down to ${s.discardTargets[s.discardQueue[0]]}`;
     if (s.phase === "moveShamal") return "Move the Shamal — pick a tile";
     if (s.phase === "steal") return "Take a card — pick a seat";
+    if (!myTurn) return `Waiting for ${me.name}…`;
     if (s.pending) return `Placing: ${s.pending}. Pick a highlighted spot, or press again to cancel.`;
     return `${me.name} — build, trade, then end turn`;
   })();
@@ -110,10 +118,10 @@ export function App() {
         board={s.board}
         shamalTile={s.shamalTile}
         onTile={s.clickTile}
-        tileTargets={tileTargets}
+        tileTargets={myTurn ? tileTargets : new Set()}
       >
-        <RouteLayer geo={s.geo} routes={s.routes} legal={edgeTargets} onPick={s.clickEdge} />
-        <BuildingLayer geo={s.geo} buildings={s.buildings} legal={vertexTargets} onPick={s.clickVertex} />
+        <RouteLayer geo={s.geo} routes={s.routes} legal={myTurn ? edgeTargets : new Set()} onPick={s.clickEdge} />
+        <BuildingLayer geo={s.geo} buildings={s.buildings} legal={myTurn ? vertexTargets : new Set()} onPick={s.clickVertex} />
       </BoardView>
 
       {/* ---- hand ---- */}
@@ -164,14 +172,14 @@ export function App() {
       )}
 
       {/* ---- actions ---- */}
-      {s.phase === "roll" && (
+      {s.phase === "roll" && myTurn && (
         <div className="panel">
           <button className="btn" onClick={s.roll}>Roll 2d6</button>
           {s.dice && <span className="dice">{s.dice[0]} + {s.dice[1]} = {s.dice[0] + s.dice[1]}</span>}
         </div>
       )}
 
-      {s.phase === "main" && (
+      {s.phase === "main" && myTurn && (
         <>
           <div className="panel">
             <div className="panel-head">
@@ -264,6 +272,8 @@ export function App() {
           <button className="btn" onClick={() => s.newGame()}>Play again</button>
         </div>
       )}
+
+      <SeatBar />
 
       <div className="panel">
         <div className="panel-head"><span>Log</span>
