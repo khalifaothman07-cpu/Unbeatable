@@ -7,6 +7,7 @@
    ========================================================================= */
 
 import { create } from "zustand";
+import * as fx from "./feedback";
 import { createRoom, fetchSnapshot, makeRoomCode, pushSnapshot, remoteConfigured, subscribeRoom, type Snapshot } from "./sync";
 import { generateBoard, freshSeed, shuffle, makeRng } from "../game/board";
 import { buildGeometry, type Geometry } from "../game/geometry";
@@ -66,6 +67,15 @@ function buildDeck(rng: () => number): DhowCard[] {
 
 /* snake draft: 0,1,2,3,3,2,1,0 */
 const snake = (n: number) => [...Array.from({ length: n }, (_, i) => i), ...Array.from({ length: n }, (_, i) => n - 1 - i)];
+
+/** A standing offer from the active seat to the rest of the table. */
+export interface TradeOffer {
+  from: number;
+  give: Partial<Record<Resource, number>>;
+  want: Partial<Record<Resource, number>>;
+  /** seats that have declined; purely informational */
+  declined: number[];
+}
 
 export type SeatType = "local" | "remote";
 export interface Seat { type: SeatType; code: string | null; claimed: boolean }
@@ -128,6 +138,11 @@ interface GameState {
   applySnapshot: (snap: Snapshot) => void;
   publish: () => void;
   lastPushedAt: string | null;
+  offer: TradeOffer | null;
+  proposeTrade: (give: Partial<Record<Resource, number>>, want: Partial<Record<Resource, number>>) => void;
+  cancelTrade: () => void;
+  acceptTrade: (accepter: number) => void;
+  declineTrade: (decliner: number) => void;
 }
 
 const say = (log: string[], msg: string) => [msg, ...log].slice(0, 60);
@@ -194,8 +209,13 @@ export const useGame = create<GameState>((rawSet, get) => {
      published. Sprinkling publish() through 15 actions guarantees someone
      forgets one and a seat silently desyncs. */
   const LOCAL_ONLY = new Set(["handRevealed", "pending", "syncing", "mySeat", "lastPushedAt"]);
+  /* Guard against the echo loop: applying a received snapshot also calls
+     set(), which would publish it straight back out, and two clients would
+     ping-pong forever. Nothing publishes while we are applying. */
+  let applying = false;
   const set: typeof rawSet = ((partial: object, replace?: boolean) => {
     (rawSet as (p: object, r?: boolean) => void)(partial, replace);
+    if (applying) return;
     const keys = Object.keys(partial ?? {});
     if (keys.length && !keys.every((k) => LOCAL_ONLY.has(k))) {
       const st = get();
@@ -237,6 +257,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       mySeat: null,
       syncing: false,
       lastPushedAt: null,
+      offer: null as TradeOffer | null,
     };
   })(),
 
@@ -273,6 +294,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       mySeat: null,
       syncing: false,
       lastPushedAt: null,
+      offer: null,
     });
   },
 
@@ -342,19 +364,24 @@ export const useGame = create<GameState>((rawSet, get) => {
         lastSetupVertex: s.lastSetupVertex, dice: s.dice, deck: s.deck, log: s.log,
         winner: s.winner, toggles: s.toggles, turnNo: s.turnNo, turnsTaken: s.turnsTaken,
         caravanLeft: s.caravanLeft, discardQueue: s.discardQueue, discardTargets: s.discardTargets,
-        playedCardThisTurn: s.playedCardThisTurn, seats: s.seats,
+        playedCardThisTurn: s.playedCardThisTurn, seats: s.seats, offer: s.offer,
       },
     };
   },
 
   applySnapshot: (snap: Snapshot) => {
+    applying = true;
     const s = get();
     /* rebuild the board from its seed rather than trusting shipped tiles */
     const board = s.board.seed === snap.seed
       ? s.board
       : generateBoard({ ...DEFAULT_BOARD, rows: snap.rows }, snap.seed);
     const geo = board === s.board ? s.geo : buildGeometry(board);
-    set({ board, geo, ...(snap.state as object), pending: null, handRevealed: false, lastPushedAt: snap.updatedAt });
+    try {
+      set({ board, geo, ...(snap.state as object), pending: null, handRevealed: false, lastPushedAt: snap.updatedAt });
+    } finally {
+      applying = false;
+    }
   },
 
   /** Push after any local mutation, when the table has remote seats. */
@@ -374,6 +401,7 @@ export const useGame = create<GameState>((rawSet, get) => {
     const d1 = 1 + Math.floor(Math.random() * 6);
     const d2 = 1 + Math.floor(Math.random() * 6);
     const total = d1 + d2;
+    fx.diceRoll();
 
     /* Calm Tides: a 7 in a player's first two turns is rerolled */
     if (total === 7 && s.toggles.calmTides && s.turnsTaken[s.current] < 2) {
@@ -386,6 +414,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       const over = s.players.filter((p) => handCount(p.hand) >= 8).map((p) => p.id);
       const targets: Record<number, number> = {};
       over.forEach((id) => { targets[id] = Math.ceil(handCount(s.players[id].hand) / 2); });
+      fx.loss();
       set({
         dice: [d1, d2],
         phase: over.length ? "discard" : "moveShamal",
@@ -414,6 +443,7 @@ export const useGame = create<GameState>((rawSet, get) => {
         gained.push(`${players[b.player].name} +${n} ${RESOURCE_LABEL[res]}`);
       }
     }
+    if (gained.length) fx.gain(); else fx.tap();
     set({
       dice: [d1, d2],
       players,
@@ -446,6 +476,7 @@ export const useGame = create<GameState>((rawSet, get) => {
         }
         bonus = got.length ? ` and collects ${got.map((r) => RESOURCE_LABEL[r]).join(", ")}` : "";
       }
+      fx.place();
       set({
         buildings, players, setupStage: "route", lastSetupVertex: v,
         log: say(s.log, `${s.players[pid].name} places a barasti${bonus}. Now a connected trade route.`),
@@ -462,6 +493,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       if (!canAfford(p.hand, COST.barasti)) return;
       if (!canPlaceBarasti(v, s.current, s.buildings, s.routes, s.geo, false)) return;
       const players = s.players.map((x, i) => i === s.current ? { ...x, hand: pay(x.hand, COST.barasti) } : x);
+      fx.place();
       set({
         buildings: { ...s.buildings, [v]: { player: s.current, type: "barasti" } },
         players, pending: null,
@@ -477,6 +509,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       if (!canAfford(p.hand, COST.qasr)) return;
       if (!canUpgradeQasr(v, s.current, s.buildings)) return;
       const players = s.players.map((x, i) => i === s.current ? { ...x, hand: pay(x.hand, COST.qasr) } : x);
+      fx.place();
       set({
         buildings: { ...s.buildings, [v]: { player: s.current, type: "qasr" } },
         players, pending: null,
@@ -495,6 +528,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       const touches = s.lastSetupVertex && (edge.a === s.lastSetupVertex || edge.b === s.lastSetupVertex);
       if (!touches || s.routes[e] !== undefined) return;
 
+      fx.place();
       const routes = { ...s.routes, [e]: pid };
       const nextIndex = s.setupIndex + 1;
       const done = nextIndex >= s.setupOrder.length;
@@ -523,6 +557,7 @@ export const useGame = create<GameState>((rawSet, get) => {
     if (!isCaravan && !canAfford(p.hand, COST.route)) return;
     if (!canPlaceRoute(e, s.current, s.buildings, s.routes, s.geo)) return;
 
+    fx.place();
     const players = isCaravan ? s.players : s.players.map((x, i) => i === s.current ? { ...x, hand: pay(x.hand, COST.route) } : x);
     const left = isCaravan ? s.caravanLeft - 1 : 0;
     set({
@@ -579,6 +614,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       if (i === s.current) return { ...p, hand: { ...p.hand, [taken]: p.hand[taken] + 1 } };
       return p;
     });
+    fx.loss();
     set({ players, phase: "main", log: say(s.log, `${s.players[s.current].name} takes a card from ${s.players[victim].name}.`) });
   },
 
@@ -663,6 +699,71 @@ export const useGame = create<GameState>((rawSet, get) => {
     }
   },
 
+  /* --- PLAYER-TO-PLAYER TRADING -------------------------------------
+     The active seat posts one standing offer; anyone who can cover it may
+     accept. Both sides are re-checked at accept time, because the offer
+     may have been posted before a 7 emptied someone's hand. */
+  proposeTrade: (give, want) => {
+    const s = get();
+    if (s.phase !== "main") return;
+    const p = s.players[s.current];
+    const gives = (Object.keys(give) as Resource[]).filter((r) => (give[r] ?? 0) > 0);
+    const wants = (Object.keys(want) as Resource[]).filter((r) => (want[r] ?? 0) > 0);
+    if (!gives.length || !wants.length) return;
+    /* a resource on both sides is a no-op dressed up as a deal — reject it
+       rather than let someone post "1 Wood for 1 Wood" */
+    if (gives.some((r) => wants.includes(r))) { fx.nope(); return; }
+    if (!gives.every((r) => p.hand[r] >= (give[r] ?? 0))) { fx.nope(); return; }
+    set({
+      offer: { from: s.current, give, want, declined: [] },
+      log: say(s.log, `${p.name} offers ${gives.map((r) => `${give[r]} ${RESOURCE_LABEL[r]}`).join(" + ")} for ${wants.map((r) => `${want[r]} ${RESOURCE_LABEL[r]}`).join(" + ")}.`),
+    });
+  },
+
+  cancelTrade: () => {
+    const s = get();
+    if (!s.offer) return;
+    set({ offer: null, log: say(s.log, "Offer withdrawn.") });
+  },
+
+  declineTrade: (decliner) => {
+    const s = get();
+    if (!s.offer || s.offer.declined.includes(decliner)) return;
+    set({ offer: { ...s.offer, declined: [...s.offer.declined, decliner] } });
+  },
+
+  acceptTrade: (accepter) => {
+    const s = get();
+    const o = s.offer;
+    if (!o || accepter === o.from) return;
+    const from = s.players[o.from];
+    const to = s.players[accepter];
+
+    /* re-validate BOTH sides now — hands move between offer and accept */
+    const giveKeys = Object.keys(o.give) as Resource[];
+    const wantKeys = Object.keys(o.want) as Resource[];
+    if (!giveKeys.every((r) => from.hand[r] >= (o.give[r] ?? 0))) {
+      fx.nope();
+      set({ offer: null, log: say(s.log, "Offer lapsed — the offering seat no longer holds it.") });
+      return;
+    }
+    if (!wantKeys.every((r) => to.hand[r] >= (o.want[r] ?? 0))) {
+      fx.nope();
+      set({ log: say(s.log, `${to.name} can't cover that offer.`) });
+      return;
+    }
+
+    const players = s.players.map((x) => ({ ...x, hand: { ...x.hand } }));
+    giveKeys.forEach((r) => { players[o.from].hand[r] -= o.give[r] ?? 0; players[accepter].hand[r] += o.give[r] ?? 0; });
+    wantKeys.forEach((r) => { players[accepter].hand[r] -= o.want[r] ?? 0; players[o.from].hand[r] += o.want[r] ?? 0; });
+
+    fx.gain();
+    set({
+      players, offer: null,
+      log: say(s.log, `${to.name} accepts ${from.name}'s offer.`),
+    });
+  },
+
   bankTrade: (give, get_) => {
     const s = get();
     if (s.phase !== "main" || give === get_) return;
@@ -680,6 +781,7 @@ export const useGame = create<GameState>((rawSet, get) => {
     /* win is checked on your own turn, hidden pearls included */
     const total = totalScore(s, s.current);
     if (total >= WIN_POINTS) {
+      fx.fanfare();
       set({ phase: "over", winner: s.current, log: say(s.log, `${s.players[s.current].name} reaches ${total} points and wins.`) });
       return;
     }
@@ -695,6 +797,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       caravanLeft: 0,
       playedCardThisTurn: false,
       handRevealed: false,
+      offer: null,
       turnNo: s.turnNo + 1,
       turnsTaken,
       log: say(s.log, `${s.players[next].name} to roll.`),

@@ -82,15 +82,35 @@ body {
   margin: 28px 0 20px;
 }
 
+/* PRESS PHYSICS
+   A button should feel like it takes the weight of a finger and gives it
+   back. Three things do that: a raised resting state, a real travel on
+   :active, and a snap back that is faster than the push down (0.16s out,
+   0.04s in) — the asymmetry is what reads as springy rather than laggy.
+   touch-action/tap-highlight kill the 300ms delay and the grey iOS flash,
+   which otherwise arrive between the press and the response and make the
+   whole thing feel dead. */
 .btn {
   font-family: ui-monospace, monospace;
   font-size: 0.78rem; font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--pearl); background: var(--terracotta);
   border: 0; border-radius: var(--r); padding: 12px 22px;
-  cursor: pointer; transition: background 0.2s;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 0 rgba(28, 23, 18, 0.34), 0 3px 7px rgba(28, 23, 18, 0.16);
+  transition: background 0.2s, transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.16s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .btn:hover { background: #8f4c31; }
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 rgba(28, 23, 18, 0.34), 0 1px 2px rgba(28, 23, 18, 0.2);
+  transition-duration: 0.04s;
+}
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .seg { display: flex; border: 1px solid rgba(42, 33, 26, 0.2); border-radius: var(--r); overflow: hidden; }
 .segBtn {
@@ -181,9 +201,19 @@ body {
 .btn.tiny { font-size: .64rem; padding: 6px 9px; letter-spacing: .05em; background: var(--ink); }
 .btn.tiny:hover { background: #000; }
 .btn.on { background: var(--ink); }
-.btn:disabled { opacity: .34; cursor: not-allowed; }
+.btn:disabled { opacity: .34; cursor: not-allowed; box-shadow: none; transform: none; }
 .btn:disabled:hover { background: var(--terracotta); }
 .btn.tiny:disabled:hover { background: var(--ink); }
+
+/* a quieter button for withdraw/decline/clear — same physics, no colour claim */
+.btn.ghost {
+  background: transparent; color: var(--ink-soft);
+  border: 1px solid rgba(42, 33, 26, 0.28);
+  box-shadow: 0 1px 0 rgba(28, 23, 18, 0.18);
+}
+.btn.ghost:hover { background: rgba(255, 255, 255, 0.6); color: var(--ink); }
+.btn.ghost:active:not(:disabled) { box-shadow: none; }
+.btn.ghost:disabled:hover { background: transparent; }
 
 .trade { display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap; font-family: ui-monospace, monospace; font-size: .68rem; text-transform: uppercase; }
 .dice { font-family: ui-monospace, monospace; font-size: .78rem; color: var(--ink-soft); }
@@ -200,3 +230,67 @@ svg .hit:hover { opacity: .9; }
 .tag2.remote { background: var(--turquoise); color: var(--pearl); border-color: var(--turquoise); }
 .code { font-family: ui-monospace, monospace; letter-spacing: .18em; color: var(--terracotta); font-weight: 700; }
 .input { font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .1em; padding: 8px 10px; border: 1px solid rgba(42,33,26,0.28); background: rgba(255,255,255,0.7); color: var(--ink); }
+
+/* ================= TRADING ================= */
+.trade-leg {
+  font-family: ui-monospace, monospace; font-size: .64rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-soft);
+  margin: 12px 0 7px;
+}
+.trade-leg:first-of-type { margin-top: 2px; }
+
+/* all five resources should sit on one line on a laptop and wrap cleanly on
+   a phone, so the box is sized tight and the row is a 5-up grid that
+   collapses to 2-up rather than leaving one orphan on its own line */
+.trade-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+@media (max-width: 720px) { .trade-row { grid-template-columns: repeat(2, 1fr); } }
+
+.stepper {
+  display: flex; align-items: center; gap: 4px;
+  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.5);
+  padding: 4px 5px;
+  font-family: ui-monospace, monospace; font-size: .66rem;
+  text-transform: uppercase; letter-spacing: .02em;
+  transition: border-color .16s, background .16s;
+}
+/* a resource actually in the basket earns the accent — the rest stay quiet */
+.stepper.on { border-color: var(--terracotta); background: rgba(255,255,255,0.85); }
+.stepper-label { flex: 1; min-width: 0; }
+.stepper-n { min-width: 1.1em; text-align: center; font-size: .8rem; }
+
+.step {
+  flex: none; width: 24px; height: 24px; line-height: 1;
+  font-size: 1rem; font-family: ui-monospace, monospace;
+  color: var(--pearl); background: var(--ink);
+  border: 0; border-radius: var(--r); cursor: pointer;
+  box-shadow: 0 2px 0 rgba(28,23,18,0.3);
+  transition: transform .16s cubic-bezier(0.2,0.9,0.3,1.4), box-shadow .16s ease, opacity .16s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.step:active:not(:disabled) { transform: translateY(2px); box-shadow: none; transition-duration: .04s; }
+.step:disabled { opacity: .22; cursor: not-allowed; box-shadow: none; }
+.step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.panel--offer { border-color: var(--terracotta); background: rgba(255,255,255,0.66); box-shadow: inset 3px 0 0 var(--terracotta); }
+.offer-line {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-size: .86rem; line-height: 1.5; margin-bottom: 11px;
+}
+.offer-line .dot { width: 11px; height: 11px; border: 1px solid rgba(28,23,18,0.5); }
+
+.answer {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .74rem;
+  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.5);
+  padding: 5px 8px;
+}
+
+.head { position: relative; }
+.sound-toggle { position: absolute; top: 0; right: 0; }
+
+/* Motion is the one channel a reduced-motion reader has opted out of, so the
+   travel goes but the flat/pressed state stays — the button still changes
+   under the finger, just without the spring. */
+@media (prefers-reduced-motion: reduce) {
+  .btn:active:not(:disabled), .step:active:not(:disabled) { transform: none; }
+}

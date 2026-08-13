@@ -1,7 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BoardView } from "./render/BoardView";
 import { BuildingLayer, RouteLayer } from "./render/Pieces";
 import { SeatBar } from "./render/SeatBar";
+import { TradePanel } from "./render/TradePanel";
+import * as fx from "./state/feedback";
 import { RESOURCE_LABEL, type Resource } from "./game/types";
 import {
   COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
@@ -20,6 +22,20 @@ function costText(c: Partial<Record<Resource, number>>) {
 export function App() {
   const s = useGame();
   const me = s.players[s.phase === "setup" ? s.setupOrder[s.setupIndex] : s.current];
+  const [muted, setMuted] = useState(fx.isMuted());
+
+  /* One listener for every button on the page rather than a call at each
+     onClick: the click sound belongs to the act of pressing, not to any
+     particular action, and pointerdown fires before the state change so the
+     sound lands with the finger instead of after the re-render. */
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      const el = (e.target as HTMLElement | null)?.closest?.("button");
+      if (el && !(el as HTMLButtonElement).disabled) fx.tap();
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
 
   /* ---- legal targets, recomputed from the rules (never guessed) ---- */
   const vertexTargets = useMemo(() => {
@@ -99,6 +115,13 @@ export function App() {
       <header className="head">
         <p className="eyebrow">Isle of Pearls</p>
         <h1 className="wordmark">LU&rsquo;LU&rsquo;A</h1>
+        <button
+          className="btn tiny ghost sound-toggle"
+          aria-pressed={!muted}
+          onClick={() => { const m = !muted; fx.setMuted(m); setMuted(m); }}
+        >
+          Sound {muted ? "off" : "on"}
+        </button>
       </header>
 
       <div className="scoreboard">
@@ -170,6 +193,10 @@ export function App() {
           </div>
         </div>
       )}
+
+      {/* ---- player-to-player trade: visible to everyone, since anyone at
+             the table may be the one answering an offer ---- */}
+      <TradePanel />
 
       {/* ---- actions ---- */}
       {s.phase === "roll" && myTurn && (
