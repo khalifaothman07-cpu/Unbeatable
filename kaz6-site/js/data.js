@@ -101,11 +101,35 @@
 
    CONTENT TRUTHS (verified — never inflate):
    18 WSC debate medals · 5 MUN Best Council · 300K+ @k.a.z6 ·
-   3 games shipped. Othello: Shakespeare, the NARRATOR (not the
+   4 games SHIPPED (LU'LU'A became playable and was counted in). Othello: Shakespeare, the NARRATOR (not the
    lead) — wrote his own speech, memorized it in two weeks,
    designed his own costume. IAM GOLF price line: "roughly half
    of retail" (never "exactly 50%"). Games: España 38·0 / Europa
    13·0 / 18 Decisions; no external game URLs remain.
+
+   LU'LU'A — the fourth game, NOW PLAYABLE and counted as shipped.
+   Source: /apps/luluaa (React+TS+Vite, the only npm-dependent thing
+   in the repo). Built output is COMMITTED to kaz6-site/games/luluaa/
+   and Netlify does NOT build it — that is the whole point: a broken
+   game build must never block the site's deploy. Rebuild deliberately
+   with `cd apps/luluaa && npm run build`, then COMMIT the output, or
+   the live site keeps serving the previous bundle.
+   PLAYABLE NOW (local pass-and-play, 4 seats on one device): snake
+   setup draft, dice + production, barasti/qasr/route building with
+   full placement legality, 4:1 bank trade, the full 25-card dhow
+   deck, the Shamal (discard-on-7, move, steal), longest route and
+   Master Navigator bonuses, and the win at 10 points.
+   STILL TODO: remote seats + Supabase sync (spec §9 — the seatType
+   model is designed but unbuilt, everything is local today),
+   player-to-player trading, and trade posts/ports (bank is 4:1 only,
+   so the 9 harbour points are generated but do nothing yet).
+   GOTCHA worth keeping: Gentle Shamal deadlocks the opening if you
+   don't implement its fallback — at game start EVERY seat is on 2
+   points, so every occupied tile is sheltered and the 7 can never
+   resolve. legalShamalTiles() + settleShamal() handle it by sending
+   the Shamal back to the sabkha with no steal. Don't remove that.
+   18 unit tests cover generation + rules; run `npm test` there
+   before touching either.
    Education: on-site copy uses law-as-ambition framing. KO's
    profile states law student (foundation yr, ASU, partial
    scholarship) — confirm with KO before adding any enrollment
@@ -171,7 +195,7 @@ const SITE = {
     { file: "index.html",     label: "Home",     n: "00", home: true, desc: "" },
     { file: "about.html",     label: "About",    n: "01", desc: "The person behind the record, and the thread through all of it." },
     { file: "record.html",    label: "Record",   n: "02", desc: "Debate, Model UN, and an audience — the verifiable numbers." },
-    { file: "games.html",     label: "Games",    n: "03", desc: "Three strategy games. Draft, manage, and chase a perfect run." },
+    { file: "games.html",     label: "Games",    n: "03", desc: "Four strategy games, three of them live. Draft, manage, and chase a perfect run." },
     { file: "ventures.html",  label: "Ventures", n: "04", desc: "IAM GOLF — premium pre-owned clubs, delivered across the Gulf." },
     { file: "contact.html",   label: "Contact",  n: "05", desc: "Socials and a direct line." },
   ],
@@ -187,7 +211,7 @@ const SITE = {
     { value: "300K+", label: "Followers · @k.a.z6" },
     { value: "18",    label: "Debate medals · World Scholars Cup" },
     { value: "5",     label: "MUN Best Council Awards" },
-    { value: "3",     label: "Strategy games shipped" },
+    { value: "4",     label: "Strategy games shipped" },
   ],
 
   about: [
@@ -240,6 +264,17 @@ const SITE = {
       tags: ["Strategy", "Golf", "Risk · Reward"], live: true,
       url: "games/18-decisions/index.html",
       media: { type: "video", src: "assets/media/decisions-loop.mp4", poster: "assets/media/decisions-poster.jpg", alt: "On the range" },
+    },
+    {
+      /* Now genuinely playable end-to-end (local pass-and-play, 4 seats):
+         setup draft, dice + production, building, bank trade, dhow cards,
+         the Shamal, and the win at 10. Online seats are still to come, so
+         the tag says "local play". */
+      id: "luluaa", title: "LU'LU'A", score: "10", scoreLabel: "Points to win",
+      desc: "Isle of Pearls — a Bahrain-themed trading and settlement game for four. Dive the pearl banks, run dhow routes, and build from barasti to qasr while the Shamal blows across the board. Pass-and-play on one device.",
+      tags: ["Strategy", "Board game", "4 player"], live: true,
+      url: "games/luluaa/index.html",
+      media: { type: "image", src: "assets/media/luluaa-cover.jpg", alt: "A dealt LU'LU'A board" },
     },
   ],
 
