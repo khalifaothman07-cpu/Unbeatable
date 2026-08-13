@@ -101,11 +101,30 @@
 
    CONTENT TRUTHS (verified — never inflate):
    18 WSC debate medals · 5 MUN Best Council · 300K+ @k.a.z6 ·
-   3 games shipped. Othello: Shakespeare, the NARRATOR (not the
+   3 games SHIPPED. Othello: Shakespeare, the NARRATOR (not the
    lead) — wrote his own speech, memorized it in two weeks,
    designed his own costume. IAM GOLF price line: "roughly half
    of retail" (never "exactly 50%"). Games: España 38·0 / Europa
    13·0 / 18 Decisions; no external game URLs remain.
+
+   LU'LU'A — a FOURTH game, deliberately NOT counted as shipped.
+   Source: /apps/luluaa (React+TS+Vite, the only npm-dependent
+   thing in the repo). Built output is COMMITTED to
+   kaz6-site/games/luluaa/ and Netlify does NOT build it — that is
+   the whole point: a broken game build must never block the site's
+   deploy. Rebuild deliberately with `cd apps/luluaa && npm run
+   build`, then commit the output.
+   Status: board generation only (octagon layout, terrain +
+   pip-weighted token shuffle, 6/8 adjacency repair, seeded so a
+   seed rebuilds an identical board). 17 unit tests cover the
+   spec's hard constraints — run `npm test` there before touching
+   generation. Placement, trading, dhow cards, the Shamal, the
+   Table/seat model and Supabase sync are all still TODO.
+   Because it isn't playable it carries live:false + status
+   "In development": it renders a "Preview" link rather than
+   "Play", is EXCLUDED from the home scorewall, and does NOT move
+   the "3 games shipped" stat. Flip live:true and bump that stat
+   to 4 only when it is genuinely playable — not before.
    Education: on-site copy uses law-as-ambition framing. KO's
    profile states law student (foundation yr, ASU, partial
    scholarship) — confirm with KO before adding any enrollment
@@ -171,7 +190,7 @@ const SITE = {
     { file: "index.html",     label: "Home",     n: "00", home: true, desc: "" },
     { file: "about.html",     label: "About",    n: "01", desc: "The person behind the record, and the thread through all of it." },
     { file: "record.html",    label: "Record",   n: "02", desc: "Debate, Model UN, and an audience — the verifiable numbers." },
-    { file: "games.html",     label: "Games",    n: "03", desc: "Three strategy games. Draft, manage, and chase a perfect run." },
+    { file: "games.html",     label: "Games",    n: "03", desc: "Four strategy games, three of them live. Draft, manage, and chase a perfect run." },
     { file: "ventures.html",  label: "Ventures", n: "04", desc: "IAM GOLF — premium pre-owned clubs, delivered across the Gulf." },
     { file: "contact.html",   label: "Contact",  n: "05", desc: "Socials and a direct line." },
   ],
@@ -240,6 +259,18 @@ const SITE = {
       tags: ["Strategy", "Golf", "Risk · Reward"], live: true,
       url: "games/18-decisions/index.html",
       media: { type: "video", src: "assets/media/decisions-loop.mp4", poster: "assets/media/decisions-poster.jpg", alt: "On the range" },
+    },
+    {
+      /* live:false ON PURPOSE — board generation is done, the game is not.
+         It renders as "In development" with a Preview link, is excluded
+         from the home scorewall, and does NOT count toward the "3 games
+         shipped" stat. Flip live:true only when it is actually playable. */
+      id: "luluaa", title: "LU'LU'A", score: "10", scoreLabel: "Points to win",
+      desc: "Isle of Pearls — a Bahrain-themed trading and settlement game for four. Dive the pearl banks, run dhow routes, and build from barasti to qasr while the Shamal blows across the board.",
+      tags: ["Strategy", "Board game", "4 player"], live: false,
+      status: "In development",
+      url: "games/luluaa/index.html",
+      media: { type: "image", src: "assets/media/luluaa-cover.jpg", alt: "A dealt LU'LU'A board" },
     },
   ],
 

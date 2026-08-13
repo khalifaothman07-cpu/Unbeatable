@@ -60,7 +60,9 @@ function renderMarquee(){
 function renderHeroScores(){
   var mounts=document.querySelectorAll('[data-render="hero-scores"]');
   if(!mounts.length) return;
-  var html=SITE.games.map(function(g,i){
+  /* shipped games only — the hero is the record, and an unfinished build
+     doesn't belong in it. it still gets its full row on games.html. */
+  var html=SITE.games.filter(function(g){return g.live;}).map(function(g,i){
     return '<div class="scoreline" style="--i:'+i+'">'
       +'<span class="scoreline-v">'+splitScore(g.score)+'</span>'
       +'<span class="scoreline-k">'+esc(g.title)+'</span></div>';
@@ -86,15 +88,24 @@ function coverHTML(g, fig){
 function renderGames(){
   fill("games", SITE.games.map(function(g,i){
     var fig=String(i).padStart(2,"0");
-    var play=(g.live&&g.url)
-      ? '<a class="play-btn" href="'+esc(g.url)+'" data-game="'+esc(g.id)+'">Play '+PLAY+'</a>'
-      : '<span class="play-btn" aria-disabled="true">Soon</span>';
+    /* three states, not two: shipped and playable, in-development but
+       viewable, or nothing to show yet. calling an unfinished build
+       "Play" would overstate it; hiding it entirely would be worse. */
+    var play;
+    if(g.url&&g.live){
+      play='<a class="play-btn" href="'+esc(g.url)+'" data-game="'+esc(g.id)+'">Play '+PLAY+'</a>';
+    }else if(g.url){
+      play='<a class="play-btn play-btn--wip" href="'+esc(g.url)+'" data-game="'+esc(g.id)+'">Preview '+PLAY+'</a>';
+    }else{
+      play='<span class="play-btn" aria-disabled="true">Soon</span>';
+    }
+    var status=g.live?"":'<span class="stack-status">'+esc(g.status||"In development")+'</span>';
     var tags=g.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join("");
     return '<article class="stack-row">'+coverHTML(g,fig)
       +'<div class="stack-body">'
       +'<div class="stack-score">'+splitScore(g.score)+'</div>'
       +'<h3 class="stack-title">'+esc(g.title)+'</h3>'
-      +'<div class="stack-scorelabel">'+esc(g.scoreLabel)+'</div>'
+      +'<div class="stack-scorelabel">'+esc(g.scoreLabel)+status+'</div>'
       +'<p class="stack-desc">'+esc(g.desc)+'</p>'
       +'<div class="stack-tags">'+tags+'</div>'
       +'<div class="stack-foot">'+play+'</div></div></article>';
