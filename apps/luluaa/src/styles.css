@@ -360,14 +360,46 @@ svg .hit:hover { opacity: .9; }
 .seatctl.mine { border-color: var(--terracotta); background: rgba(255,255,255,0.85); }
 .tag2.local { background: rgba(255,255,255,0.6); }
 
-.invite { margin-top: 12px; border-top: 1px solid rgba(42,33,26,0.14); padding-top: 11px; }
-.invite .muted { margin-bottom: 8px; }
+.invite-lead { margin-top: 12px; border-top: 1px solid rgba(42,33,26,0.14); padding-top: 11px; }
+.invite { margin-top: 9px; }
+.invite .row { margin-bottom: 4px; }
+
+/* the raw link is the fallback, not the offer — it sits last and quiet, but
+   stays selectable for anyone who wants to paste it somewhere themselves */
 .invite-url {
-  flex: 1 1 260px; min-width: 0;
-  font-family: ui-monospace, monospace; font-size: .66rem;
-  padding: 8px 10px; border: 1px solid rgba(42,33,26,0.22);
-  background: rgba(255,255,255,0.7); color: var(--ink);
+  display: block; width: 100%; margin-top: 8px;
+  font-family: ui-monospace, monospace; font-size: .62rem;
+  padding: 7px 9px; border: 1px solid rgba(42,33,26,0.16);
+  background: rgba(255,255,255,0.55); color: var(--ink-soft);
   overflow-x: auto; white-space: nowrap;
+  user-select: all; -webkit-user-select: all;
 }
+.invite-code {
+  margin-top: 10px; font-size: .84rem; color: var(--ink-soft);
+}
+.invite-code b {
+  font-family: ui-monospace, monospace; letter-spacing: .18em;
+  color: var(--terracotta); font-size: 1rem;
+}
+
+/* An <a> styled as a button still has to sit on the same baseline as real
+   buttons, which anchors don't do on their own. */
+a.btn { display: inline-block; text-decoration: none; line-height: 1; }
+a.btn.small { padding: 9px 13px; }
+
+.qr-wrap {
+  margin-top: 12px; padding: 12px;
+  border: 1px solid rgba(42,33,26,0.16);
+  background: rgba(255,255,255,0.6);
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+}
+/* Physical size matters more than styling here: below roughly 150px a
+   phone camera starts failing to lock on across a table. */
+.qr {
+  width: min(220px, 62vw); height: auto; display: block;
+  border: 6px solid #fff;
+  box-shadow: 0 2px 10px rgba(28,23,18,0.16);
+}
+.qr-wrap .muted { text-align: center; font-size: .78rem; }
 
 select.input { max-width: 46vw; }

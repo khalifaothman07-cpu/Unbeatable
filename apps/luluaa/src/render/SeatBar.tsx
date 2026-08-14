@@ -15,6 +15,7 @@
 import { useEffect, useState } from "react";
 import { fetchRoom, remoteConfigured } from "../state/sync";
 import { useGame, type Seat } from "../state/store";
+import { InviteCard } from "./InviteCard";
 
 /** The URL a friend opens to land straight on the seat picker. */
 function joinLink(code: string) {
@@ -36,7 +37,6 @@ export function SeatBar() {
   const [joinCode, setJoinCode] = useState("");
   const [joinSeat, setJoinSeat] = useState<number | null>(null);
   const [msg, setMsg] = useState("");
-  const [copied, setCopied] = useState(false);
   /* seats the room says are open, for a device that has a code but no game */
   const [roomSeats, setRoomSeats] = useState<Seat[] | null>(null);
   const [roomClaims, setRoomClaims] = useState<Record<string, boolean>>({});
@@ -130,34 +130,20 @@ export function SeatBar() {
 
       {/* ---- host: hand out the link ---- */}
       {anyRemote && s.roomCode && !joined && (
-        <div className="invite">
-          <p className="muted">
+        <>
+          <p className="muted invite-lead">
             Send this to whoever is taking an open seat. Same wifi or not — it goes over the internet, so
             anyone with the link can sit down.
           </p>
-          <div className="row">
-            <code className="invite-url">{joinLink(s.roomCode)}</code>
-            <button
-              className="btn tiny"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(joinLink(s.roomCode!));
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1600);
-                } catch {
-                  setMsg("Couldn't copy — select the link above.");
-                }
-              }}
-            >
-              {copied ? "Copied" : "Copy link"}
-            </button>
-            <span className="muted">or read out the code <b>{s.roomCode}</b></span>
-          </div>
-        </div>
+          <InviteCard url={joinLink(s.roomCode)} code={s.roomCode} />
+        </>
       )}
 
-      {/* ---- joiner: take a seat ---- */}
-      {remoteConfigured && !joined && (
+      {/* ---- joiner: take a seat ----
+             Hidden once this device is hosting a room: the host is the
+             table, so offering them a box to type a code into is just
+             something else to misread. */}
+      {remoteConfigured && !joined && !s.roomCode && (
         <div className="row" style={{ marginTop: 10 }}>
           <input
             className="input"
