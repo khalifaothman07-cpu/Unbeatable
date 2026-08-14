@@ -39,8 +39,27 @@
   padding: 9px 18px;
   transition: background var(--dur-1) var(--ease-out);
 }
-.nav-cta:hover { color: var(--on-red); background: #970f1a; }
+.nav-cta:hover { color: var(--on-red); background: var(--red); filter: brightness(0.86); }
 
 /* spacer so fixed nav never overlaps page content — grows with the
    same safe-area allowance the nav's own padding-top uses */
 .nav-spacer { height: calc(76px + env(safe-area-inset-top, 0px)); }
+
+/* The theme control reads as one of the nav's tracked labels, not a widget
+   bolted on: same mono register, same tracking, a hairline box so it is
+   visibly pressable without becoming a second CTA competing with Contact. */
+.nav-theme {
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--band-fg-2);
+  border: 1px solid var(--band-line);
+  padding: 5px 10px;
+  margin-left: var(--s1);
+  transition: color var(--dur-1), border-color var(--dur-1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.nav-theme:hover { color: var(--band-fg); border-color: var(--band-fg); }
+.nav-theme:active { transform: translateY(1px); }

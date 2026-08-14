@@ -14,6 +14,19 @@
   <link rel="stylesheet" href="css/nav.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/footer.css" />
+  <meta name="theme-color" content="#e2ddcc" />
+  <!-- Applies a saved theme BEFORE first paint. This is a multi-page site,
+       so without it a saved Dark flashes bone-white for a frame on every
+       single navigation. "auto" needs no script — the CSS media query in
+       tokens.css already covers it. -->
+  <script>
+    try {
+      var t = localStorage.getItem("kaz6.theme");
+      var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#181815" : "#e2ddcc");
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
 </head>
 <body>
   <div class="progress" id="progress"></div>

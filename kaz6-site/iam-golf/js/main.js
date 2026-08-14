@@ -8,6 +8,49 @@
 (function () {
   renderAll();
 
+  /* ---- THEME ------------------------------------------------------------
+     Same three states and the same storage key as the parent site, so a
+     choice made on KAZ6 carries into IAM GOLF and back. A copy of the
+     apply step runs inline in <head> before first paint; this half owns
+     the button and the system-change listener. */
+  (function theme() {
+    const KEY = "kaz6.theme";
+    const ORDER = ["auto", "light", "dark"];
+    const LABEL = { auto: "Auto", light: "Light", dark: "Dark" };
+    let t = "auto";
+    try {
+      const v = localStorage.getItem(KEY);
+      if (ORDER.indexOf(v) >= 0) t = v;
+    } catch (e) { /* storage off */ }
+
+    function apply() {
+      const root = document.documentElement;
+      if (t === "auto") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", t);
+      const bg = getComputedStyle(root).getPropertyValue("--paper").trim();
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta && bg) meta.setAttribute("content", bg);
+      const btn = document.getElementById("themeBtn");
+      if (btn) btn.textContent = LABEL[t];
+    }
+
+    apply();
+    const btn = document.getElementById("themeBtn");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        t = ORDER[(ORDER.indexOf(t) + 1) % ORDER.length];
+        try { localStorage.setItem(KEY, t); } catch (e) { /* storage off */ }
+        apply();
+      });
+    }
+    if (window.matchMedia) {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      const onChange = function () { if (t === "auto") apply(); };
+      if (mq.addEventListener) mq.addEventListener("change", onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
+  })();
+
   /* currency picker — render.js owns the state and the re-render, this
      just forwards the choice. Delegated off the container so it survives
      renderPricing() replacing the ledger underneath it. */

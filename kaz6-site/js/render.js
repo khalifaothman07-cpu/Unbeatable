@@ -20,8 +20,13 @@ function renderNav(){
     var cur=p.file===here?' aria-current="page"':"";
     return '<a class="nav-link" href="'+esc(p.file)+'"'+cur+'>'+esc(p.label)+'</a>';
   }).join("");
+  /* The theme control lives in the nav so it exists on every page from one
+     place. It is a button, not a link, and carries its state in the label
+     rather than an icon nobody has to guess at. */
+  var theme='<button class="nav-theme" id="themeBtn" type="button" aria-live="polite"'
+    +' title="Light, dark, or follow your device">Auto</button>';
   nav.innerHTML='<a class="nav-mark wordmark" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
-    +'<div class="nav-links">'+links+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
+    +'<div class="nav-links">'+links+theme+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
 }
 
 /* FOOTER (single) */

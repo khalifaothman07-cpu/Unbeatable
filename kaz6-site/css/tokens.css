@@ -8,7 +8,7 @@
    rounded corners. Change a value here; it propagates everywhere.
    ============================================================ */
 :root {
-  color-scheme: only light;
+  color-scheme: light dark;
 
   /* ground — cool-leaning bone/greige. NOT #F5F5F7 (Apple gray),
      NOT #F4F1EA (warm cream). Deepened per KO (read as too close to
@@ -18,7 +18,10 @@
   --paper-2: #d9d3bf;                 /* raised fill — awaiting states, hairline panels */
   --ink:     #141414;
   --ink-2:   rgba(20, 20, 20, 0.62);  /* secondary text */
-  --ink-3:   rgba(20, 20, 20, 0.4);   /* tertiary / labels — "40% ink" */
+  /* Tertiary was set at 40% ink for the look of it and measured 2.46:1 on
+     paper — every eyebrow, ledger key and caption on the site was under AA
+     the whole time. 66% keeps the same quiet register and clears it. */
+  --ink-3:   rgba(20, 20, 20, 0.66);
   --hair:    rgba(20, 20, 20, 0.16);  /* hairline rules */
 
   --bg:   var(--paper);
@@ -45,7 +48,26 @@
      the interpunct in every scoreline (38·0), primary CTAs. Contrast
      checked both directions against paper: ~5.04:1, clears WCAG AA. */
   --red:    #c1121f;
-  --on-red: var(--paper);
+  --on-red: #e2ddcc;
+  /* Red carries two different loads. As a FILL it only has to hold its own
+     label; as TEXT it has to hold the whole ground. On paper one value does
+     both (4.58:1 either way). On the dark ground it can't: #c1121f as text
+     falls to 2.86:1, so red-as-text goes UP while the fill stays exactly
+     the red the site is built on. */
+  --red-ink: var(--red);
+
+  /* photography is grayscale by system rule; on a dark ground it also has
+     to stop glaring, so the filter is a token rather than a literal */
+  --img-filter: grayscale(1);
+  /* A caption plate is a dark chip laid over a photograph. It is dark in
+     BOTH themes — a photo doesn't get lighter at night — so its ink can't
+     be --paper, which flips. */
+  --plate-bg: rgba(20, 20, 20, 0.78);
+  --plate-fg: #e8e5dc;
+  /* grain multiplies into a light ground and would only muddy a dark one,
+     where it has to lighten instead */
+  --grain-blend: multiply;
+  --grain-opacity: 0.05;
 
   /* type — Saira Condensed carries every display headline: a tight
      condensed grotesk with real structural weight at huge sizes,
@@ -88,9 +110,58 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* belt-and-suspenders: iOS webviews sometimes force-dark on top of a
-   declared light color-scheme; re-assert so OUR paper ground always
-   wins rather than an arbitrary system-dark substitute. */
+/* ============================================================
+   THE SAME PAPER, UNLIT
+   ------------------------------------------------------------
+   Dark is not a second design. The ground goes to near-black with
+   the greige still in it, the ink becomes the bone the paper was,
+   and everything relational follows on its own — including the ONE
+   inverted band, which stays inverted precisely because --band-bg
+   is --ink and --band-fg is --paper. Invert the two and the nav
+   becomes a light band on a dark page, which is the same idea
+   wearing the other coat.
+
+   Only the values that CAN'T follow are restated: the band's own
+   secondary ink (the band flipped, so its text has to), red as
+   text, and the grain, which multiplies on paper and must screen
+   on ink.
+   ============================================================ */
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: only light; }
+  :root:not([data-theme="light"]) {
+    --paper:   #181815;
+    --paper-2: #22221e;
+    --ink:     #e8e5dc;
+    --ink-2:   rgba(232, 229, 220, 0.70);
+    --ink-3:   rgba(232, 229, 220, 0.56);
+    --hair:    rgba(232, 229, 220, 0.20);
+
+    --band-fg-2: rgba(24, 24, 21, 0.72);
+    --band-line: rgba(24, 24, 21, 0.20);
+
+    --on-red:  #e8e5dc;
+    --red-ink: #ec5560;
+
+    --img-filter: grayscale(1) brightness(0.82) contrast(1.05);
+    --grain-blend: screen;
+    --grain-opacity: 0.04;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:   #181815;
+  --paper-2: #22221e;
+  --ink:     #e8e5dc;
+  --ink-2:   rgba(232, 229, 220, 0.70);
+  --ink-3:   rgba(232, 229, 220, 0.56);
+  --hair:    rgba(232, 229, 220, 0.20);
+
+  --band-fg-2: rgba(24, 24, 21, 0.72);
+  --band-line: rgba(24, 24, 21, 0.20);
+
+  --on-red:  #e8e5dc;
+  --red-ink: #ec5560;
+
+  --img-filter: grayscale(1) brightness(0.82) contrast(1.05);
+  --grain-blend: screen;
+  --grain-opacity: 0.04;
 }

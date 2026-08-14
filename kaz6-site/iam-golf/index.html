@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light" />
   <meta name="theme-color" content="#f7f6f3" />
   <title>IAM GOLF — Premium pre-owned clubs, delivered across the Gulf</title>
   <meta name="description" content="IAM GOLF — premium pre-owned golf clubs hand-picked in Kuala Lumpur and delivered across the Gulf. TaylorMade, Titleist, Callaway, Ping. Roughly half the price of new, in BD. Launching 2026." />
@@ -23,6 +22,16 @@
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/media.css" />
   <link rel="stylesheet" href="css/golf.css" />
+  <!-- Applies a saved theme BEFORE first paint, and shares the key with the
+       parent site so the choice carries across both. -->
+  <script>
+    try {
+      var t = localStorage.getItem("kaz6.theme");
+      var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#121211" : "#f7f6f3");
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
 </head>
 <body class="golf">
   <div class="progress" id="progress"></div>
@@ -36,6 +45,7 @@
     <div class="nav-links">
       <a class="nav-link" href="#model">Model</a>
       <a class="nav-link" href="#pricing">Pricing</a>
+      <button class="nav-theme" id="themeBtn" type="button" title="Light, dark, or follow your device">Auto</button>
       <a class="nav-link nav-cta" href="#follow">Follow</a>
     </div>
   </nav>

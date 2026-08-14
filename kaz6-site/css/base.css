@@ -27,8 +27,8 @@ body::before {
   position: fixed; inset: 0;
   z-index: 500;
   pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: multiply;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
@@ -104,7 +104,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 /* the display headline's one red portion — never used outside a
    phero-title's second line, a scoreline interpunct, or a CTA. */
-.accent { color: var(--red); }
+.accent { color: var(--red-ink); }
 
 /* wordmark — inherits context (paper text in the inverted nav band,
    ink everywhere else). not a dedicated accent color this pass. */
@@ -116,8 +116,5 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   color: currentColor;
 }
 
-/* belt-and-suspenders: re-assert our paper ground if a webview forces dark */
-@media (prefers-color-scheme: dark) {
-  :root { color-scheme: only light; }
-  html, body { background: var(--paper) !important; color: var(--ink) !important; }
-}
+/* The ground is now declared for both schemes in tokens.css, so nothing
+   needs re-asserting here — and forcing paper would defeat dark mode. */
