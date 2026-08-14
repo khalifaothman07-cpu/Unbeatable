@@ -8,7 +8,8 @@ import { RESOURCE_LABEL, type Resource } from "./game/types";
 import {
   COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
 } from "./game/rules";
-import { DHOW_LABEL, activeSeat, drivesSeat, legalShamalTiles, publicScore, totalScore, useGame } from "./state/store";
+import { DHOW_LABEL, activeSeat, legalShamalTiles, playableSeat, publicScore, totalScore, useGame } from "./state/store";
+import { useBot } from "./state/useBot";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -23,6 +24,9 @@ export function App() {
   const s = useGame();
   const me = s.players[activeSeat(s)];
   const [muted, setMuted] = useState(fx.isMuted());
+
+  /* bot seats play themselves; the hook is a no-op when there are none */
+  useBot();
 
   /* One listener for every button on the page rather than a call at each
      onClick: the response belongs to the act of pressing, not to any
@@ -93,9 +97,9 @@ export function App() {
     Object.values(s.buildings).filter((b) => b.player === s.current && b.type === type).length;
   const routeCount = Object.values(s.routes).filter((r) => r === s.current).length;
 
-  /* One rule for every device: act only for seats this device owns. The
-     host keeps the seats still marked local; a joined phone keeps its own. */
-  const myTurn = drivesSeat(s, activeSeat(s));
+  /* One rule for every device: act only for seats this device owns, and
+     never for a bot — it drives itself. */
+  const myTurn = playableSeat(s, activeSeat(s));
 
   const hideHand = s.toggles.privacyScreen && !s.handRevealed && s.phase !== "setup" && s.phase !== "over";
 
@@ -106,6 +110,7 @@ export function App() {
     if (s.phase === "discard") return `${s.players[s.discardQueue[0]].name} must discard down to ${s.discardTargets[s.discardQueue[0]]}`;
     if (s.phase === "moveShamal") return "Move the Shamal — pick a tile";
     if (s.phase === "steal") return "Take a card — pick a seat";
+    if (s.seats[activeSeat(s)]?.type === "bot") return `${me.name} is thinking…`;
     if (!myTurn) return `Waiting for ${me.name}…`;
     if (s.pending) return `Placing: ${s.pending}. Pick a highlighted spot, or press again to cancel.`;
     return `${me.name} — build, trade, then end turn`;

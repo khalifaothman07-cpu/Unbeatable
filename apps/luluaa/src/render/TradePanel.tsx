@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import type { Resource } from "../game/types";
-import { drivesSeat, useGame } from "../state/store";
+import { playableSeat, useGame } from "../state/store";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -70,7 +70,8 @@ export function TradePanel() {
   const me = s.players[s.current];
   const offer = s.offer;
 
-  const drives = (seat: number) => drivesSeat(s, seat);
+  /* a bot answers its own offers — see useBot */
+  const drives = (seat: number) => playableSeat(s, seat);
   const myTurn = drives(s.current);
 
   const total = (b: Basket) => (Object.keys(b) as Resource[]).reduce((n, r) => n + (b[r] ?? 0), 0);
