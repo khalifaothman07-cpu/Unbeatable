@@ -8,7 +8,7 @@ import { RESOURCE_LABEL, type Resource } from "./game/types";
 import {
   COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
 } from "./game/rules";
-import { DHOW_LABEL, legalShamalTiles, publicScore, totalScore, useGame } from "./state/store";
+import { DHOW_LABEL, activeSeat, drivesSeat, legalShamalTiles, publicScore, totalScore, useGame } from "./state/store";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -21,7 +21,7 @@ function costText(c: Partial<Record<Resource, number>>) {
 
 export function App() {
   const s = useGame();
-  const me = s.players[s.phase === "setup" ? s.setupOrder[s.setupIndex] : s.current];
+  const me = s.players[activeSeat(s)];
   const [muted, setMuted] = useState(fx.isMuted());
 
   /* One listener for every button on the page rather than a call at each
@@ -88,11 +88,9 @@ export function App() {
     Object.values(s.buildings).filter((b) => b.player === s.current && b.type === type).length;
   const routeCount = Object.values(s.routes).filter((r) => r === s.current).length;
 
-  /* On a remote device you only ever drive your own seat. The host, with
-     all-local seats, drives whoever is up. */
-  const myTurn = s.mySeat === null || s.mySeat < 0
-    ? true
-    : (s.phase === "setup" ? s.setupOrder[s.setupIndex] === s.mySeat : s.current === s.mySeat);
+  /* One rule for every device: act only for seats this device owns. The
+     host keeps the seats still marked local; a joined phone keeps its own. */
+  const myTurn = drivesSeat(s, activeSeat(s));
 
   const hideHand = s.toggles.privacyScreen && !s.handRevealed && s.phase !== "setup" && s.phase !== "over";
 
