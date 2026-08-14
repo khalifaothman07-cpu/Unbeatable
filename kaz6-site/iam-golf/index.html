@@ -9,8 +9,13 @@
   <meta property="og:title" content="IAM GOLF" />
   <meta property="og:description" content="Premium pre-owned golf clubs at roughly half the price of new, delivered across the Gulf. Launching 2026." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://kaz6.com/iam-golf/assets/og.png" />
-  <link rel="canonical" href="https://kaz6.com/iam-golf/" />
+  <!-- SWAP AT GO-LIVE: these two point at the domain the site is actually
+       served from. kaz6.com has no A record, so pointing them there made
+       link previews fetch a dead host and told search engines to
+       canonicalise to a URL that doesn't answer. Change both back the day
+       kaz6.com resolves. -->
+  <meta property="og:image" content="https://kaz6.netlify.app/iam-golf/assets/og.png" />
+  <link rel="canonical" href="https://kaz6.netlify.app/iam-golf/" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="assets/brand/iamgolf-avatar-512.png" />
 

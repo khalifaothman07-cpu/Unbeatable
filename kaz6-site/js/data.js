@@ -128,8 +128,24 @@
    identical board from the seed. Backend lives in KO's own Supabase
    project ngtpeamcaxdtghimdspz, table public.luluaa_games (jsonb
    snapshot keyed by room_code, realtime enabled, updated_at trigger).
-   RLS is permissive for anon on THAT TABLE ONLY — the room code is the
-   shared secret, per §9.7. Credentials sit in apps/luluaa/.env and are
+   WHAT ANON MAY DO, exactly: select, insert, update — and nothing else.
+   There is deliberately NO delete policy and the table grant is revoked,
+   because the publishable key ships in the bundle by design and an open
+   delete meant anyone holding it could wipe every game in progress.
+   Closing a table goes through luluaa_close_room(code), which requires
+   the code a bulk wipe by definition doesn't have. Rooms also expire:
+   pg_cron runs luluaa_purge_stale(7) at 03:17 UTC, so a table nobody has
+   touched in a week clears itself instead of living forever. That purge
+   function is revoked from PUBLIC — note PUBLIC, not just anon: Postgres
+   grants EXECUTE to PUBLIC by default, so revoking from anon alone does
+   nothing and leaves a worse hole than the one being closed.
+   SELECT stays open to anon and cannot be narrowed: Realtime evaluates
+   RLS as the subscribing role, so revoking read would stop the far side
+   ever hearing about a move. The room code remains the practical secret
+   for FINDING a table, not a barrier to reading one — someone with the
+   key can still enumerate rooms. Acceptable for a friends' game; don't
+   put anything in a snapshot you wouldn't hand a stranger.
+   Credentials sit in apps/luluaa/.env and are
    COMMITTED on purpose: it is the publishable key, it is already inside
    the committed bundle, and omitting it would silently produce rebuilds
    with online play disabled. NEVER put the service_role key there.
@@ -139,15 +155,21 @@
    never exercised: this sandbox blocks outbound HTTPS from the browser
    even though the shell can reach it. Two-device sync is therefore
    UNTESTED end to end. Test it for real before relying on it.
-   STILL TODO: player-to-player trading, and trade posts/ports (bank is
-   4:1 only, so the 9 harbour points are generated but do nothing yet).
+   SHIPPED SINCE: player-to-player trading (one standing offer, both
+   hands re-checked at accept time); 9 trade posts on the coast, derived
+   from the board seed, cutting the bank rate to 3:1 generic / 2:1
+   specific; bot seats; a lobby that gates the board and holds all the
+   seat setup; light/dark; and a board that sits in the Gulf with moored
+   dhows at every post.
    GOTCHA worth keeping: Gentle Shamal deadlocks the opening if you
    don't implement its fallback — at game start EVERY seat is on 2
    points, so every occupied tile is sheltered and the 7 can never
    resolve. legalShamalTiles() + settleShamal() handle it by sending
    the Shamal back to the sabkha with no steal. Don't remove that.
-   18 unit tests cover generation + rules; run `npm test` there
-   before touching either.
+   39 tests cover generation, rules, the distance rule, QR encoding, bot
+   self-play (four bots to a winner, which is what catches deadlocks) and
+   a LIVE two-device sync suite that talks to the real Supabase and skips
+   itself when unreachable. Run `npm test` there before touching either.
    Education: on-site copy uses law-as-ambition framing. KO's
    profile states law student (foundation yr, ASU, partial
    scholarship) — confirm with KO before adding any enrollment
@@ -164,11 +186,18 @@
    OPEN (KO's calls):
    • football game INTERNALS still read "La Liga"/"Champions
      League" (fan-game disclaimers present) — rebrand or keep
-   • kaz6.com placeholder domain still in iam-golf canonical +
-     og:image (2 refs) — swap at go-live
-   • originals owed: hero/portrait (603px stand-ins), iam-golf
-     kit.jpg · Othello cast-photo consent before launch
+   • kaz6.com does not resolve (no A record). iam-golf's canonical +
+     og:image now point at kaz6.netlify.app, because aiming them at a
+     dead host broke link previews and told crawlers to canonicalise
+     to a URL that never answers. Two lines in iam-golf/index.html —
+     swap both back the day kaz6.com resolves.
+   • originals owed: hero.jpg is 508x450 and portrait.jpg 320x450 —
+     both soft on desktop; iam-golf kit.jpg; Othello cast-photo
+     consent before launch
    • espana/europa covers: real stadium crops in assets/media
+   • NETLIFY: BUILD_HOOK_URL is still unset, so the 04:00 UTC
+     scheduled function logs "not configured" and returns. FX rates
+     only refresh when something else triggers a build.
 
    BUILD / DELIVERY NORMS:
    Every iteration ships BOTH: deployable zip + ONE self-contained

@@ -44,8 +44,11 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (!reachable || !created.length) return;
+  /* anon has no delete right on the table any more — closing a room goes
+     through the function that requires its code, which is the same path the
+     app uses */
   const c = createClient(URL, KEY);
-  for (const code of created) await c.from("luluaa_games").delete().eq("room_code", code);
+  for (const code of created) await c.rpc("luluaa_close_room", { p_code: code });
 });
 
 /** A fresh, isolated copy of the store module. */

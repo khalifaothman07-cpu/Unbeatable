@@ -93,6 +93,16 @@ export async function fetchRoom(code: string): Promise<Room | null> {
   };
 }
 
+/** Close a table. Requires the code — anon has no delete right on the table
+    itself, so a bulk wipe isn't available even to someone holding the key. */
+export async function closeRoom(code: string): Promise<boolean> {
+  const c = getClient();
+  if (!c) return false;
+  const { data, error } = await c.rpc("luluaa_close_room", { p_code: code });
+  if (error) { console.warn("[sync] close failed:", error.message); return false; }
+  return data === true;
+}
+
 /** Take a seat. Atomic in the database; null means the seat was already gone. */
 export async function claimSeat(code: string, seat: number): Promise<Claims | null> {
   const c = getClient();

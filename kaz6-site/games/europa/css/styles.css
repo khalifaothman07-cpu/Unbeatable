@@ -1,4 +1,5 @@
   :root{
+  color-scheme: dark;   /* dark by design — see index.html */
     --bg:#0A0E1A;--bg2:#0F1424;--surface:#161C30;--surface2:#1E2740;--line:#2B3656;
     --gold:#EBD27A;--gold-dim:#B89F4E;--garnet:#2B5FE0;--garnet-deep:#16348F;
     --ink:#F5EEE6;--muted:#A8929E;--muted2:#7E6A78;--good:#39C16C;--bad:#E04848;--draw:#E0A92E;
