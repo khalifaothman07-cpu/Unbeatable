@@ -25,13 +25,18 @@ export function App() {
   const [muted, setMuted] = useState(fx.isMuted());
 
   /* One listener for every button on the page rather than a call at each
-     onClick: the click sound belongs to the act of pressing, not to any
-     particular action, and pointerdown fires before the state change so the
-     sound lands with the finger instead of after the re-render. */
+     onClick: the response belongs to the act of pressing, not to any
+     particular action, and pointerdown fires before the state change so it
+     lands with the finger instead of after the re-render.
+
+     Listening on the document also means it covers buttons that appear
+     later — the trade steppers, seat controls, dhow cards — without each
+     one having to remember to ask. */
   useEffect(() => {
     const onDown = (e: PointerEvent) => {
       const el = (e.target as HTMLElement | null)?.closest?.("button");
-      if (el && !(el as HTMLButtonElement).disabled) fx.tap();
+      if (!el || (el as HTMLButtonElement).disabled) return;
+      fx.press(el as HTMLElement, e.clientX, e.clientY);
     };
     document.addEventListener("pointerdown", onDown);
     return () => document.removeEventListener("pointerdown", onDown);
@@ -116,7 +121,16 @@ export function App() {
         <button
           className="btn tiny ghost sound-toggle"
           aria-pressed={!muted}
-          onClick={() => { const m = !muted; fx.setMuted(m); setMuted(m); }}
+          onClick={() => {
+            const m = !muted;
+            fx.setMuted(m);
+            setMuted(m);
+            /* Turning sound on answers a question the player can't otherwise
+               ask: iOS routes web audio through the ringer, so "I hear
+               nothing" might mean the switch on the side of the phone. A
+               confirmation chirp makes the toggle its own test. */
+            if (!m) fx.gain();
+          }}
         >
           Sound {muted ? "off" : "on"}
         </button>

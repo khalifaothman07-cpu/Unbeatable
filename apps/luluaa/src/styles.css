@@ -105,12 +105,46 @@ body {
   user-select: none;
 }
 .btn:hover { background: #8f4c31; }
-.btn:active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 0 0 rgba(28, 23, 18, 0.34), 0 1px 2px rgba(28, 23, 18, 0.2);
-  transition-duration: 0.04s;
+
+/* The pressed state is driven from JS (.pressing) as well as :active. A tap
+   can release inside a single frame, and :active alone would come and go
+   without ever being painted — the button would look inert no matter how
+   carefully it was styled. .pressing is held for ~130ms so every press is
+   actually seen. On an iPhone, where vibrate doesn't exist and the ringer
+   switch can mute the audio, this is the only feedback left, so it is sized
+   to be felt rather than merely noticed: 3px of travel, the shadow fully
+   collapsing, and a squeeze across the width. */
+.btn:active:not(:disabled),
+.btn.pressing:not(:disabled) {
+  transform: translateY(3px) scaleX(0.985);
+  box-shadow: 0 0 0 rgba(28, 23, 18, 0.34), 0 1px 2px rgba(28, 23, 18, 0.22);
+  filter: brightness(0.93);
+  transition-duration: 0.03s;
 }
 .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Ink spreading from where the finger actually landed. Short and opaque
+   enough to survive a glance, gone before it can feel decorative. */
+.btn, .step { overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.16) 45%, transparent 70%);
+  transform: scale(0.25);
+  opacity: 0.9;
+  animation: ripple 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+}
+@keyframes ripple {
+  to { transform: scale(1); opacity: 0; }
+}
+/* on the dark tiny/step buttons the light ripple would vanish */
+.btn.tiny .ripple, .step .ripple {
+  background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.12) 50%, transparent 72%);
+}
+.btn.ghost .ripple {
+  background: radial-gradient(circle, rgba(180,98,63,0.34) 0%, rgba(180,98,63,0.1) 50%, transparent 72%);
+}
 
 .seg { display: flex; border: 1px solid rgba(42, 33, 26, 0.2); border-radius: var(--r); overflow: hidden; }
 .segBtn {
@@ -267,7 +301,14 @@ svg .hit:hover { opacity: .9; }
   transition: transform .16s cubic-bezier(0.2,0.9,0.3,1.4), box-shadow .16s ease, opacity .16s;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
 }
-.step:active:not(:disabled) { transform: translateY(2px); box-shadow: none; transition-duration: .04s; }
+.step { position: relative; }
+.step:active:not(:disabled),
+.step.pressing:not(:disabled) {
+  transform: translateY(2px) scale(0.94);
+  box-shadow: none;
+  filter: brightness(1.25);
+  transition-duration: .03s;
+}
 .step:disabled { opacity: .22; cursor: not-allowed; box-shadow: none; }
 .step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
@@ -291,8 +332,13 @@ svg .hit:hover { opacity: .9; }
 /* Motion is the one channel a reduced-motion reader has opted out of, so the
    travel goes but the flat/pressed state stays — the button still changes
    under the finger, just without the spring. */
+/* Motion is the channel a reduced-motion reader opted out of, so the travel
+   and the ripple go — but the pressed state itself stays, because with no
+   haptics and possibly no sound, removing it would leave nothing at all. */
 @media (prefers-reduced-motion: reduce) {
-  .btn:active:not(:disabled), .step:active:not(:disabled) { transform: none; }
+  .btn:active:not(:disabled), .btn.pressing:not(:disabled),
+  .step:active:not(:disabled), .step.pressing:not(:disabled) { transform: none; }
+  .ripple { display: none; }
 }
 
 /* ================= ONLINE TABLE ================= */
