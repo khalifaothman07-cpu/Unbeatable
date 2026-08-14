@@ -1,24 +1,66 @@
 /* =========================================================================
    feedback.ts — tactile response
    -------------------------------------------------------------------------
-   Three channels, because no single one reaches every device: a short
-   haptic (phones), a synthesised click (everywhere, no audio files to
-   ship), and CSS press physics (see styles.css).
+   WHAT ACTUALLY REACHES AN IPHONE, which is what this file is shaped around:
 
-   Sound is generated with the Web Audio API rather than loaded — a board
-   game needs a handful of short, dry noises, and synthesising them keeps
-   the bundle free of binary assets and the page free of extra requests.
+   - navigator.vibrate has never been implemented in iOS Safari and still
+     isn't. The <input type="checkbox" switch> trick that briefly gave pages
+     access to the haptic engine was closed by Apple in iOS 26.5. We try it,
+     because it costs nothing and still works on older phones, but no part of
+     the design may depend on a phone buzzing.
+   - Web Audio on iOS is routed to the RINGER channel, so a phone on silent
+     plays nothing at all. navigator.audioSession — which Safari implements —
+     moves us to the playback channel, which the mute switch doesn't govern.
+     Older iOS needs the silent-<audio>-loop trick to do the same thing.
+   - Which leaves motion as the only channel guaranteed on every device, so
+     it has to carry the feel on its own rather than merely garnish the
+     other two. See `pressFeedback` below and .btn:active in styles.css.
 
-   Everything here is best-effort and silent on failure: audio may be
-   blocked until first gesture, and vibrate is unsupported on desktop and
-   iOS Safari. Feedback must never be load-bearing.
+   Everything here is best-effort and silent on failure. Feedback must never
+   be load-bearing.
    ========================================================================= */
 
 let ctx: AudioContext | null = null;
 let muted = false;
+let unlocked = false;
+let keepAlive: HTMLAudioElement | null = null;
 
-export function setMuted(m: boolean) { muted = m; }
+export function setMuted(m: boolean) {
+  muted = m;
+  if (m) { keepAlive?.pause(); } else { void keepAlive?.play().catch(() => {}); }
+}
 export function isMuted() { return muted; }
+
+/* A 100ms silent wav. Looping it holds iOS in an audio session that the
+   ringer switch doesn't mute, which is the only way pre-audioSession
+   iOS lets a web page make noise on a phone that's been silenced. */
+const SILENCE =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+
+/** Must be called from inside a real user gesture. Idempotent. */
+export function unlock() {
+  if (unlocked) return;
+  unlocked = true;
+  try {
+    /* Safari implements this; it is the clean way to say "this page's audio
+       is playback, not a ringtone" and survives the mute switch. */
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession) nav.audioSession.type = "playback";
+  } catch { /* not supported — fall through to the silent loop */ }
+
+  try {
+    keepAlive = new Audio(SILENCE);
+    keepAlive.loop = true;
+    keepAlive.volume = 0.001;
+    (keepAlive as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
+    if (!muted) void keepAlive.play().catch(() => {});
+  } catch { /* no <audio> — motion still carries the feel */ }
+
+  /* create and resume the context inside the gesture, so the very first
+     press makes a sound instead of the one after it */
+  const ac = audio();
+  if (ac && ac.state === "suspended") void ac.resume();
+}
 
 function audio(): AudioContext | null {
   if (muted) return null;
@@ -34,6 +76,30 @@ function audio(): AudioContext | null {
   } catch {
     return null;
   }
+}
+
+/* ---- haptics -------------------------------------------------------------
+   One hidden switch, reused. Toggling it reaches the haptic engine on iOS
+   17.4 through 26.4; everywhere else navigator.vibrate does the job and this
+   never runs. Nothing observable happens when neither path works. */
+let hapticSwitch: HTMLInputElement | null = null;
+const canVibrate = typeof navigator !== "undefined" && "vibrate" in navigator;
+
+function iosHaptic() {
+  try {
+    if (!hapticSwitch) {
+      const el = document.createElement("input");
+      el.type = "checkbox";
+      el.setAttribute("switch", "");
+      el.setAttribute("aria-hidden", "true");
+      el.tabIndex = -1;
+      el.style.cssText = "position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none";
+      document.body.appendChild(el);
+      hapticSwitch = el;
+    }
+    hapticSwitch.checked = !hapticSwitch.checked;
+    hapticSwitch.dispatchEvent(new Event("change", { bubbles: false }));
+  } catch { /* no haptics here */ }
 }
 
 interface Tone { freq: number; dur: number; type?: OscillatorType; gain?: number; sweep?: number; delay?: number }
@@ -60,7 +126,11 @@ function play(tones: Tone[]) {
 }
 
 function buzz(pattern: number | number[]) {
-  try { navigator.vibrate?.(pattern); } catch { /* unsupported — fine */ }
+  if (muted) return;
+  try {
+    if (canVibrate && navigator.vibrate(pattern)) return;
+  } catch { /* fall through */ }
+  iosHaptic();
 }
 
 /** Generic button press: the one you feel most often, so keep it dry. */
@@ -118,4 +188,42 @@ export function fanfare() {
     { freq: 1047, dur: 0.28, gain: 0.07, delay: 0.32 },
   ]);
   buzz([30, 60, 30, 60, 90]);
+}
+
+/* ---- press motion --------------------------------------------------------
+   :active alone is not enough on a phone. A quick tap can hold it for a
+   handful of milliseconds — less than a single frame at 60Hz — so the
+   button visibly does nothing, which is exactly the "I'm just pressing
+   buttons" complaint. Driving the pressed state from JS lets us hold it for
+   a minimum span, so every press registers no matter how fast the finger
+   leaves, and lets the ripple start from where the finger actually landed
+   rather than from the middle of the button. */
+
+const HOLD_MS = 130;
+
+export function pressFeedback(el: HTMLElement, x?: number, y?: number) {
+  try {
+    el.classList.remove("pressing");
+    /* reading offsetWidth restarts the animation on a rapid second tap */
+    void el.offsetWidth;
+    el.classList.add("pressing");
+    window.setTimeout(() => el.classList.remove("pressing"), HOLD_MS);
+
+    const r = el.getBoundingClientRect();
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+    const size = Math.max(r.width, r.height) * 2.2;
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${(x ?? r.left + r.width / 2) - r.left - size / 2}px`;
+    ripple.style.top = `${(y ?? r.top + r.height / 2) - r.top - size / 2}px`;
+    el.appendChild(ripple);
+    window.setTimeout(() => ripple.remove(), 460);
+  } catch { /* never let decoration break a click */ }
+}
+
+/** Everything a button press should do, in one call. */
+export function press(el: HTMLElement, x?: number, y?: number) {
+  unlock();
+  pressFeedback(el, x, y);
+  tap();
 }
