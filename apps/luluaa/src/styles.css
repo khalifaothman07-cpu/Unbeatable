@@ -2,18 +2,116 @@
    styles.css — LU'LU'A shell. Desert-sunset palette, sadu-inspired chrome.
    Self-contained: shares no CSS with the KAZ6 parent site.
    ========================================================================= */
+/* -------------------------------------------------------------------------
+   TWO GROUNDS, ONE BOARD
+   -------------------------------------------------------------------------
+   Dark mode inverts the ROOM, not the board. A physical board doesn't turn
+   into a negative of itself at night — the table it sits on goes dark and
+   the wood catches less light. So the page, panels and type flip, the board
+   art keeps its own palette, and dark mode just takes the glare off it.
+
+   Everything is expressed as tiers rather than one-off alphas: three border
+   weights, three surface levels. That is also why the interface reads as
+   more organised than it did — the same line means the same thing twice.
+   ------------------------------------------------------------------------- */
 :root {
-  color-scheme: only light;
-  --sand: #e8d9c0;
-  --sand-deep: #d9c4a3;
-  --terracotta: #b4623f;
+  color-scheme: light dark;
+
+  /* fixed brand notes — the same in both grounds */
+  --terracotta: #b4623f;      /* fills, borders, marks — the brand note */
+  --accent-fill: #9e5231;     /* the same red, dark enough to label at AA */
+  --accent-ink: #8d4326;      /* red as TEXT on the ground */
   --turquoise: #1c7d84;
   --coral-tan: #cbaa82;
   --pearl: #f4f1ea;
-  --ink: #2a211a;
-  --ink-soft: rgba(42, 33, 26, 0.62);
   --night: #1c1712;
   --r: 4px;
+
+  /* --- light ground (the default) --- */
+  --sand: #e8d9c0;
+  --sand-deep: #d9c4a3;
+  --ink: #2a211a;
+  --ink-soft: rgba(42, 33, 26, 0.72);
+  --ink-faint: rgba(42, 33, 26, 0.68);
+
+  --line:   rgba(42, 33, 26, 0.18);
+  --line-2: rgba(42, 33, 26, 0.28);
+  --line-3: rgba(42, 33, 26, 0.42);
+
+  --surface:   rgba(255, 255, 255, 0.44);
+  --surface-2: rgba(255, 255, 255, 0.64);
+  --surface-3: rgba(255, 255, 255, 0.84);
+
+  --shadow-rgb: 28, 23, 18;
+  --weave-1: rgba(180, 98, 63, 0.05);
+  --weave-2: rgba(28, 125, 132, 0.04);
+
+  --ripple-1: rgba(255, 255, 255, 0.5);
+  --ripple-2: rgba(255, 255, 255, 0.16);
+  --good: #2f7d4a;
+  --board-filter: none;
+}
+
+/* Dark is applied two ways so both the system setting and an explicit
+   choice land on the same tokens: the media query is guarded so a reader
+   who has picked Light is never overridden by their OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sand: #17120e;
+    --sand-deep: #221a14;
+    --ink: #efe6d8;
+    --ink-soft: rgba(239, 230, 216, 0.7);
+    --ink-faint: rgba(239, 230, 216, 0.6);
+
+    --line:   rgba(239, 230, 216, 0.16);
+    --line-2: rgba(239, 230, 216, 0.28);
+    --line-3: rgba(239, 230, 216, 0.44);
+
+    --surface:   rgba(255, 255, 255, 0.045);
+    --surface-2: rgba(255, 255, 255, 0.085);
+    --surface-3: rgba(255, 255, 255, 0.14);
+
+    --shadow-rgb: 0, 0, 0;
+    --weave-1: rgba(180, 98, 63, 0.07);
+    --weave-2: rgba(28, 125, 132, 0.06);
+
+    --ripple-1: rgba(255, 255, 255, 0.42);
+    --ripple-2: rgba(255, 255, 255, 0.12);
+    /* the board is the only lit thing on a dark page, so take the edge off
+       rather than let it glare in a dark room */
+    --good: #6ec98d;
+    /* on a dark ground red has to go UP to stay legible, not down */
+    --accent-fill: #a85736;
+    --accent-ink: #cc8560;
+    --board-filter: brightness(0.9) saturate(0.94);
+  }
+}
+
+:root[data-theme="dark"] {
+  --sand: #17120e;
+  --sand-deep: #221a14;
+  --ink: #efe6d8;
+  --ink-soft: rgba(239, 230, 216, 0.7);
+  --ink-faint: rgba(239, 230, 216, 0.6);
+
+  --line:   rgba(239, 230, 216, 0.16);
+  --line-2: rgba(239, 230, 216, 0.28);
+  --line-3: rgba(239, 230, 216, 0.44);
+
+  --surface:   rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.085);
+  --surface-3: rgba(255, 255, 255, 0.14);
+
+  --shadow-rgb: 0, 0, 0;
+  --weave-1: rgba(180, 98, 63, 0.07);
+  --weave-2: rgba(28, 125, 132, 0.06);
+
+  --ripple-1: rgba(255, 255, 255, 0.42);
+  --ripple-2: rgba(255, 255, 255, 0.12);
+  --good: #6ec98d;
+  --accent-fill: #a85736;
+  --accent-ink: #cc8560;
+  --board-filter: brightness(0.9) saturate(0.94);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,8 +123,8 @@ body {
   -webkit-font-smoothing: antialiased;
   /* sadu-weave geometry as a faint ground texture, not a loud border */
   background-image:
-    repeating-linear-gradient(45deg, rgba(180, 98, 63, 0.05) 0 6px, transparent 6px 12px),
-    repeating-linear-gradient(-45deg, rgba(28, 125, 132, 0.04) 0 6px, transparent 6px 12px);
+    repeating-linear-gradient(45deg, var(--weave-1) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(-45deg, var(--weave-2) 0 6px, transparent 6px 12px);
 }
 
 .shell {
@@ -71,7 +169,7 @@ body {
   margin-left: 0.16em;
   border-radius: 50%;
   background: radial-gradient(circle at 34% 30%, #ffffff, #dff3f2 42%, #8fc9c6 78%, #5fa7a4);
-  box-shadow: 0 0 0 1px rgba(28, 23, 18, 0.28);
+  box-shadow: 0 0 0 1px rgba(var(--shadow-rgb), 0.28);
   vertical-align: 0.16em;
 }
 
@@ -94,17 +192,17 @@ body {
   font-family: ui-monospace, monospace;
   font-size: 0.78rem; font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--pearl); background: var(--terracotta);
+  color: var(--pearl); background: var(--accent-fill);
   border: 0; border-radius: var(--r); padding: 12px 22px;
   cursor: pointer;
   position: relative;
-  box-shadow: 0 2px 0 rgba(28, 23, 18, 0.34), 0 3px 7px rgba(28, 23, 18, 0.16);
+  box-shadow: 0 2px 0 rgba(var(--shadow-rgb), 0.34), 0 3px 7px rgba(var(--shadow-rgb), 0.16);
   transition: background 0.2s, transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.16s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
-.btn:hover { background: #8f4c31; }
+.btn:hover { filter: brightness(1.08); }
 
 /* The pressed state is driven from JS (.pressing) as well as :active. A tap
    can release inside a single frame, and :active alone would come and go
@@ -117,7 +215,7 @@ body {
 .btn:active:not(:disabled),
 .btn.pressing:not(:disabled) {
   transform: translateY(3px) scaleX(0.985);
-  box-shadow: 0 0 0 rgba(28, 23, 18, 0.34), 0 1px 2px rgba(28, 23, 18, 0.22);
+  box-shadow: 0 0 0 rgba(var(--shadow-rgb), 0.34), 0 1px 2px rgba(var(--shadow-rgb), 0.22);
   filter: brightness(0.93);
   transition-duration: 0.03s;
 }
@@ -130,7 +228,7 @@ body {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.16) 45%, transparent 70%);
+  background: radial-gradient(circle, var(--ripple-1) 0%, var(--ripple-2) 45%, transparent 70%);
   transform: scale(0.25);
   opacity: 0.9;
   animation: ripple 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
@@ -140,25 +238,25 @@ body {
 }
 /* on the dark tiny/step buttons the light ripple would vanish */
 .btn.tiny .ripple, .step .ripple {
-  background: radial-gradient(circle, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.12) 50%, transparent 72%);
+  background: radial-gradient(circle, var(--ripple-1) 0%, var(--ripple-2) 50%, transparent 72%);
 }
 .btn.ghost .ripple {
   background: radial-gradient(circle, rgba(180,98,63,0.34) 0%, rgba(180,98,63,0.1) 50%, transparent 72%);
 }
 
-.seg { display: flex; border: 1px solid rgba(42, 33, 26, 0.2); border-radius: var(--r); overflow: hidden; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .segBtn {
   font-family: ui-monospace, monospace;
   font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
   background: transparent; color: var(--ink-soft);
   border: 0; padding: 11px 16px; cursor: pointer; transition: background 0.2s, color 0.2s;
 }
-.segBtn.on { background: var(--ink); color: var(--pearl); }
+.segBtn.on { background: var(--ink); color: var(--sand); }
 
 .board {
   width: 100%; height: auto; display: block;
   margin: 8px 0 26px;
-  filter: drop-shadow(0 10px 22px rgba(28, 23, 18, 0.14));
+  filter: var(--board-filter) drop-shadow(0 10px 22px rgba(var(--shadow-rgb), 0.4));
 }
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
@@ -166,11 +264,11 @@ body {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: ui-monospace, monospace; font-size: 0.7rem;
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft);
-  border: 1px solid rgba(42, 33, 26, 0.18); border-radius: var(--r);
-  padding: 6px 11px; background: rgba(255, 255, 255, 0.34);
+  border: 1px solid var(--line); border-radius: var(--r);
+  padding: 6px 11px; background: var(--surface);
 }
 .chip b { color: var(--ink); }
-.sw { width: 10px; height: 10px; border: 1px solid rgba(28, 23, 18, 0.4); }
+.sw { width: 10px; height: 10px; border: 1px solid var(--line-2); }
 .sw-palmGrove { background: #6f8f4a; }
 .sw-quarryFlats { background: #c3ac8a; }
 .sw-oasis { background: #a8763c; }
@@ -180,12 +278,12 @@ body {
 
 .note {
   max-width: 60ch; font-size: 0.9rem; line-height: 1.6; color: var(--ink-soft);
-  border-top: 1px solid rgba(42, 33, 26, 0.16); padding-top: 16px;
+  border-top: 1px solid var(--line); padding-top: 16px;
 }
 .seed {
   margin-top: 10px;
   font-family: ui-monospace, monospace; font-size: 0.66rem;
-  letter-spacing: 0.1em; color: rgba(42, 33, 26, 0.38);
+  letter-spacing: 0.1em; color: var(--ink-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -196,11 +294,11 @@ body {
 .scoreboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 12px; }
 .seat {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.4);
+  border: 1px solid var(--line); background: var(--surface);
   padding: 8px 11px; font-size: .82rem;
 }
-.seat.on { border-color: var(--ink); background: rgba(255,255,255,0.78); box-shadow: inset 3px 0 0 var(--terracotta); }
-.seat .dot { width: 11px; height: 11px; border: 1px solid rgba(28,23,18,0.5); }
+.seat.on { border-color: var(--ink); background: var(--surface-3); box-shadow: inset 3px 0 0 var(--terracotta); }
+.seat .dot { width: 11px; height: 11px; border: 1px solid var(--line-2); }
 .seat .pts { font-family: ui-monospace, monospace; font-weight: 700; }
 .seat .cards { font-family: ui-monospace, monospace; font-size: .68rem; color: var(--ink-soft); margin-left: auto; }
 
@@ -208,10 +306,10 @@ body {
   font-family: ui-monospace, monospace; font-size: .78rem; letter-spacing: .06em;
   text-transform: uppercase; color: var(--ink);
   border-left: 3px solid var(--terracotta); padding: 9px 12px;
-  background: rgba(255,255,255,0.45); margin-bottom: 12px;
+  background: var(--surface); margin-bottom: 12px;
 }
 
-.panel { border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.4); padding: 12px 14px; margin-bottom: 10px; }
+.panel { border: 1px solid var(--line); background: var(--surface); padding: 12px 14px; margin-bottom: 10px; }
 .panel-head {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   font-family: ui-monospace, monospace; font-size: .68rem; letter-spacing: .16em;
@@ -222,7 +320,7 @@ body {
 .res {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: ui-monospace, monospace; font-size: .74rem; text-transform: uppercase;
-  border: 1px solid rgba(42,33,26,0.18); padding: 5px 9px; background: rgba(255,255,255,0.5);
+  border: 1px solid var(--line); padding: 5px 9px; background: var(--surface);
 }
 .res b { font-size: .9rem; }
 .sw-palmWood { background: #6f8f4a; }
@@ -232,20 +330,20 @@ body {
 .sw-pearls { background: #8fc9c6; }
 
 .btn.small { font-size: .7rem; padding: 9px 13px; letter-spacing: .06em; }
-.btn.tiny { font-size: .64rem; padding: 6px 9px; letter-spacing: .05em; background: var(--ink); }
-.btn.tiny:hover { background: #000; }
-.btn.on { background: var(--ink); }
+.btn.tiny { font-size: .64rem; padding: 6px 9px; letter-spacing: .05em; background: var(--ink); color: var(--sand); }
+.btn.tiny:hover { filter: brightness(1.12); }
+.btn.on { background: var(--ink); color: var(--sand); }
 .btn:disabled { opacity: .34; cursor: not-allowed; box-shadow: none; transform: none; }
-.btn:disabled:hover { background: var(--terracotta); }
-.btn.tiny:disabled:hover { background: var(--ink); }
+.btn:disabled:hover { filter: none; }
+.btn.tiny:disabled:hover { background: var(--ink); filter: none; }
 
 /* a quieter button for withdraw/decline/clear — same physics, no colour claim */
 .btn.ghost {
   background: transparent; color: var(--ink-soft);
-  border: 1px solid rgba(42, 33, 26, 0.28);
-  box-shadow: 0 1px 0 rgba(28, 23, 18, 0.18);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 1px 0 rgba(var(--shadow-rgb), 0.18);
 }
-.btn.ghost:hover { background: rgba(255, 255, 255, 0.6); color: var(--ink); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
 .btn.ghost:active:not(:disabled) { box-shadow: none; }
 .btn.ghost:disabled:hover { background: transparent; }
 
@@ -259,11 +357,11 @@ body {
 .hit { stroke-linecap: round; }
 svg .hit:hover { opacity: .9; }
 
-.seatctl { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; border: 1px solid rgba(42,33,26,0.18); padding: 5px 8px; background: rgba(255,255,255,0.5); }
-.tag2 { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border: 1px solid rgba(42,33,26,0.25); }
+.seatctl { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; border: 1px solid var(--line); padding: 5px 8px; background: var(--surface); }
+.tag2 { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border: 1px solid var(--line-2); }
 .tag2.remote { background: var(--turquoise); color: var(--pearl); border-color: var(--turquoise); }
-.code { font-family: ui-monospace, monospace; letter-spacing: .18em; color: var(--terracotta); font-weight: 700; }
-.input { font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .1em; padding: 8px 10px; border: 1px solid rgba(42,33,26,0.28); background: rgba(255,255,255,0.7); color: var(--ink); }
+.code { font-family: ui-monospace, monospace; letter-spacing: .18em; color: var(--accent-ink); font-weight: 700; }
+.input { font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .1em; padding: 8px 10px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--ink); }
 
 /* ================= TRADING ================= */
 .trade-leg {
@@ -281,23 +379,23 @@ svg .hit:hover { opacity: .9; }
 
 .stepper {
   display: flex; align-items: center; gap: 4px;
-  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.5);
+  border: 1px solid var(--line); background: var(--surface);
   padding: 4px 5px;
   font-family: ui-monospace, monospace; font-size: .66rem;
   text-transform: uppercase; letter-spacing: .02em;
   transition: border-color .16s, background .16s;
 }
 /* a resource actually in the basket earns the accent — the rest stay quiet */
-.stepper.on { border-color: var(--terracotta); background: rgba(255,255,255,0.85); }
+.stepper.on { border-color: var(--terracotta); background: var(--surface-3); }
 .stepper-label { flex: 1; min-width: 0; }
 .stepper-n { min-width: 1.1em; text-align: center; font-size: .8rem; }
 
 .step {
   flex: none; width: 24px; height: 24px; line-height: 1;
   font-size: 1rem; font-family: ui-monospace, monospace;
-  color: var(--pearl); background: var(--ink);
+  color: var(--sand); background: var(--ink);
   border: 0; border-radius: var(--r); cursor: pointer;
-  box-shadow: 0 2px 0 rgba(28,23,18,0.3);
+  box-shadow: 0 2px 0 rgba(var(--shadow-rgb), 0.3);
   transition: transform .16s cubic-bezier(0.2,0.9,0.3,1.4), box-shadow .16s ease, opacity .16s;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
 }
@@ -312,22 +410,23 @@ svg .hit:hover { opacity: .9; }
 .step:disabled { opacity: .22; cursor: not-allowed; box-shadow: none; }
 .step:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
-.panel--offer { border-color: var(--terracotta); background: rgba(255,255,255,0.66); box-shadow: inset 3px 0 0 var(--terracotta); }
+.panel--offer { border-color: var(--terracotta); background: var(--surface-2); box-shadow: inset 3px 0 0 var(--terracotta); }
 .offer-line {
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
   font-size: .86rem; line-height: 1.5; margin-bottom: 11px;
 }
-.offer-line .dot { width: 11px; height: 11px; border: 1px solid rgba(28,23,18,0.5); }
+.offer-line .dot { width: 11px; height: 11px; border: 1px solid var(--line-2); }
 
 .answer {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: .74rem;
-  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.5);
+  border: 1px solid var(--line); background: var(--surface);
   padding: 5px 8px;
 }
 
+/* the two page-level switches sit together, out of the wordmark's way */
 .head { position: relative; }
-.sound-toggle { position: absolute; top: 0; right: 0; }
+.head-controls { position: absolute; top: 0; right: 0; display: flex; gap: 6px; }
 
 /* Motion is the one channel a reduced-motion reader has opted out of, so the
    travel goes but the flat/pressed state stays — the button still changes
@@ -353,14 +452,14 @@ svg .hit:hover { opacity: .9; }
 .link--offline { color: var(--ink-soft); }
 .link--connecting { color: #a8763c; }
 .link--connecting .link-dot { animation: pulse 1.1s ease-in-out infinite; }
-.link--live { color: #2f7d4a; }
-.link--error { color: var(--terracotta); }
+.link--live { color: var(--good); }
+.link--error { color: var(--accent-ink); }
 @keyframes pulse { 0%, 100% { opacity: .3 } 50% { opacity: 1 } }
 
-.seatctl.mine { border-color: var(--terracotta); background: rgba(255,255,255,0.85); }
-.tag2.local { background: rgba(255,255,255,0.6); }
+.seatctl.mine { border-color: var(--terracotta); background: var(--surface-3); }
+.tag2.local { background: var(--surface-2); }
 
-.invite-lead { margin-top: 12px; border-top: 1px solid rgba(42,33,26,0.14); padding-top: 11px; }
+.invite-lead { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
 .invite { margin-top: 9px; }
 .invite .row { margin-bottom: 4px; }
 
@@ -369,8 +468,8 @@ svg .hit:hover { opacity: .9; }
 .invite-url {
   display: block; width: 100%; margin-top: 8px;
   font-family: ui-monospace, monospace; font-size: .62rem;
-  padding: 7px 9px; border: 1px solid rgba(42,33,26,0.16);
-  background: rgba(255,255,255,0.55); color: var(--ink-soft);
+  padding: 7px 9px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--ink-soft);
   overflow-x: auto; white-space: nowrap;
   user-select: all; -webkit-user-select: all;
 }
@@ -379,7 +478,7 @@ svg .hit:hover { opacity: .9; }
 }
 .invite-code b {
   font-family: ui-monospace, monospace; letter-spacing: .18em;
-  color: var(--terracotta); font-size: 1rem;
+  color: var(--accent-ink); font-size: 1rem;
 }
 
 /* An <a> styled as a button still has to sit on the same baseline as real
@@ -389,8 +488,8 @@ a.btn.small { padding: 9px 13px; }
 
 .qr-wrap {
   margin-top: 12px; padding: 12px;
-  border: 1px solid rgba(42,33,26,0.16);
-  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
   display: flex; flex-direction: column; align-items: center; gap: 9px;
 }
 /* Physical size matters more than styling here: below roughly 150px a
@@ -398,7 +497,7 @@ a.btn.small { padding: 9px 13px; }
 .qr {
   width: min(220px, 62vw); height: auto; display: block;
   border: 6px solid #fff;
-  box-shadow: 0 2px 10px rgba(28,23,18,0.16);
+  box-shadow: 0 2px 10px rgba(var(--shadow-rgb), 0.16);
 }
 .qr-wrap .muted { text-align: center; font-size: .78rem; }
 
@@ -411,12 +510,12 @@ select.input { max-width: 46vw; }
    the game gets its own line instead of being inferred from the board, and
    the things you can press are sized like decisions. */
 
-.panel--lead { background: rgba(255,255,255,0.66); border-color: rgba(42,33,26,0.28); }
+.panel--lead { background: var(--surface-2); border-color: var(--line-2); }
 .lede { font-size: 1.02rem; line-height: 1.62; max-width: 62ch; }
-.lede b { color: var(--terracotta); }
+.lede b { color: var(--accent-ink); }
 
 /* collapsible rules — open the first, let the rest wait */
-.fold { border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.4); margin-bottom: 8px; }
+.fold { border: 1px solid var(--line); background: var(--surface); margin-bottom: 8px; }
 .fold-head {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: transparent; border: 0; cursor: pointer; text-align: left;
@@ -424,8 +523,8 @@ select.input { max-width: 46vw; }
   text-transform: uppercase; color: var(--ink); padding: 13px 14px;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
-.fold.on .fold-head { border-bottom: 1px solid rgba(42,33,26,0.14); }
-.fold-mark { font-size: 1.1rem; color: var(--terracotta); line-height: 1; }
+.fold.on .fold-head { border-bottom: 1px solid var(--line); }
+.fold-mark { font-size: 1.1rem; color: var(--accent-ink); line-height: 1; }
 .fold-body { padding: 13px 14px 15px; font-size: .92rem; line-height: 1.6; }
 .fold-body .muted { font-size: .88rem; line-height: 1.62; margin-top: 9px; }
 
@@ -438,12 +537,12 @@ select.input { max-width: 46vw; }
   padding: 7px 10px 7px 0; font-weight: 700;
 }
 .ref td { vertical-align: top; padding: 7px 10px 7px 0; }
-.ref tr + tr th, .ref tr + tr td { border-top: 1px solid rgba(42,33,26,0.12); }
+.ref tr + tr th, .ref tr + tr td { border-top: 1px solid var(--line); }
 .cost { display: inline-flex; flex-wrap: wrap; gap: 5px; }
 .cost-part {
   display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
   font-family: ui-monospace, monospace; font-size: .7rem;
-  border: 1px solid rgba(42,33,26,0.16); background: rgba(255,255,255,0.6); padding: 2px 5px;
+  border: 1px solid var(--line); background: var(--surface-2); padding: 2px 5px;
 }
 
 .panel--start { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
@@ -456,13 +555,13 @@ select.input { max-width: 46vw; }
 
 .banner { font-size: .82rem; }
 /* your move should look different from somebody else's */
-.banner.mine { border-left-color: var(--turquoise); background: rgba(255,255,255,0.72); color: var(--ink); font-weight: 600; }
+.banner.mine { border-left-color: var(--turquoise); background: var(--surface-2); color: var(--ink); font-weight: 600; }
 
 .shamal-line {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   font-size: .84rem; line-height: 1.5; color: var(--ink-soft);
-  border: 1px solid rgba(42,33,26,0.18); border-left: 3px solid #8d8378;
-  background: rgba(255,255,255,0.42); padding: 9px 12px; margin-bottom: 10px;
+  border: 1px solid var(--line); border-left: 3px solid #8d8378;
+  background: var(--surface); padding: 9px 12px; margin-bottom: 10px;
 }
 .shamal-line b { color: var(--ink); }
 .shamal-mark {
@@ -471,17 +570,17 @@ select.input { max-width: 46vw; }
   border: 1px solid #6d6459;
 }
 
-.res.has { border-color: rgba(42,33,26,0.4); background: rgba(255,255,255,0.85); }
-.res.has b { color: var(--terracotta); }
+.res.has { border-color: var(--line-3); background: var(--surface-3); }
+.res.has b { color: var(--accent-ink); }
 
 /* dhow cards sit with the hand and say what they do */
 .dhows { display: grid; gap: 7px; margin-top: 10px; }
 .dhow {
   display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
-  border: 1px solid rgba(42,33,26,0.18); background: rgba(255,255,255,0.5);
+  border: 1px solid var(--line); background: var(--surface);
   padding: 8px 10px; font-size: .82rem;
 }
-.dhow.ready { border-color: var(--terracotta); background: rgba(255,255,255,0.85); }
+.dhow.ready { border-color: var(--terracotta); background: var(--surface-3); }
 .dhow b { white-space: nowrap; }
 .dhow .muted { flex: 1 1 12ch; font-size: .76rem; }
 
@@ -494,8 +593,8 @@ select.input { max-width: 46vw; }
 }
 .hint { margin-top: 9px; font-size: .8rem; }
 
-.panel--turn { border-color: var(--terracotta); background: rgba(255,255,255,0.6); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.panel--urgent { border-color: var(--terracotta); background: rgba(255,255,255,0.75); box-shadow: inset 3px 0 0 var(--terracotta); }
+.panel--turn { border-color: var(--terracotta); background: var(--surface-2); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.panel--urgent { border-color: var(--terracotta); background: var(--surface-3); box-shadow: inset 3px 0 0 var(--terracotta); }
 
 /* the port badges shouldn't swallow taps meant for the board */
 .port { pointer-events: none; }
