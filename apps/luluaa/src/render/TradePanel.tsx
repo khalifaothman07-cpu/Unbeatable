@@ -14,7 +14,7 @@
 
 import { useState } from "react";
 import type { Resource } from "../game/types";
-import { useGame } from "../state/store";
+import { drivesSeat, useGame } from "../state/store";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -70,8 +70,7 @@ export function TradePanel() {
   const me = s.players[s.current];
   const offer = s.offer;
 
-  /* null/negative mySeat means "this device holds the whole table" */
-  const drives = (seat: number) => s.mySeat === null || s.mySeat < 0 || s.mySeat === seat;
+  const drives = (seat: number) => drivesSeat(s, seat);
   const myTurn = drives(s.current);
 
   const total = (b: Basket) => (Object.keys(b) as Resource[]).reduce((n, r) => n + (b[r] ?? 0), 0);
