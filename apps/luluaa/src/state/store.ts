@@ -14,7 +14,7 @@ import { buildGeometry, type Geometry } from "../game/geometry";
 import { DEFAULT_BOARD, RESOURCE_LABEL, TERRAIN_YIELD, type Board, type BoardConfig, type Resource } from "../game/types";
 import {
   COST, LIMITS, WIN_POINTS, canAfford, pay, emptyHand, handCount,
-  canPlaceBarasti, canPlaceRoute, canUpgradeQasr, longestRoute, scoreOf,
+  canPlaceBarasti, canPlaceRoute, canUpgradeQasr, longestRoute, scoreOf, tradeRate,
   type Buildings, type Hand, type Routes,
 } from "../game/rules";
 
@@ -122,6 +122,16 @@ export function playableSeat(
   return drivesSeat(s, seat) && s.seats[seat]?.type !== "bot";
 }
 
+/** Whose CARDS this device may show.
+    On a joined phone that is always your own seat — never whoever happens to
+    be playing. Reading the active seat here is what handed every player
+    everyone else's hand the moment a game went online. */
+export function visibleSeat(
+  s: Pick<GameState, "mySeat" | "phase" | "setupOrder" | "setupIndex" | "current">,
+): number {
+  return s.mySeat !== null && s.mySeat >= 0 ? s.mySeat : activeSeat(s);
+}
+
 /** The seat this device should be watching — for banners and prompts. */
 export function activeSeat(s: Pick<GameState, "phase" | "setupOrder" | "setupIndex" | "current">): number {
   return s.phase === "setup" ? s.setupOrder[s.setupIndex] : s.current;
@@ -155,6 +165,8 @@ export interface GameState {
   discardTargets: Record<number, number>;
   playedCardThisTurn: boolean;
   handRevealed: boolean;
+  /** false until someone presses Start — the table is still being set up */
+  started: boolean;
 
   /* --- table / seats (spec §9) --- */
   seats: Seat[];
@@ -183,6 +195,7 @@ export interface GameState {
   stealFrom: (playerId: number) => void;
   endTurn: () => void;
   revealHand: () => void;
+  startGame: () => void;
   setSeatType: (seatId: number, type: SeatType) => void;
   openSeat: (seatId: number) => Promise<void>;
   closeSeat: (seatId: number) => void;
@@ -315,6 +328,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       discardTargets: {} as Record<number, number>,
       playedCardThisTurn: false,
       handRevealed: false,
+      started: false,
       seats: [0,1,2,3].map(() => ({ type: "local" as SeatType, code: null })),
       roomCode: null,
       mySeat: null,
@@ -358,6 +372,7 @@ export const useGame = create<GameState>((rawSet, get) => {
       discardTargets: {},
       playedCardThisTurn: false,
       handRevealed: false,
+      started: false,
       seats: [0,1,2,3].map(() => ({ type: "local" as SeatType, code: null })),
       roomCode: null,
       mySeat: null,
@@ -371,6 +386,15 @@ export const useGame = create<GameState>((rawSet, get) => {
   },
 
   revealHand: () => set({ handRevealed: true }),
+
+  /* Leaving the lobby is a one-way door on purpose. Seat setup and "new
+     game" stay out of reach for the rest of the table's life, so a stray
+     tap during a close game can't wipe it. */
+  startGame: () => {
+    const s = get();
+    if (s.started) return;
+    set({ started: true, log: say(s.log, "Table is set. Seat 1 — place your first barasti.") });
+  },
 
   /* --- TABLE / SEATS -----------------------------------------------------
      Flipping the first seat to remote is what creates the row; until then
@@ -504,6 +528,7 @@ export const useGame = create<GameState>((rawSet, get) => {
         winner: s.winner, toggles: s.toggles, turnNo: s.turnNo, turnsTaken: s.turnsTaken,
         caravanLeft: s.caravanLeft, discardQueue: s.discardQueue, discardTargets: s.discardTargets,
         playedCardThisTurn: s.playedCardThisTurn, seats: s.seats, offer: s.offer,
+        started: s.started,
       },
     };
   },
@@ -927,10 +952,15 @@ export const useGame = create<GameState>((rawSet, get) => {
     const s = get();
     if (s.phase !== "main" || give === get_) return;
     const p = s.players[s.current];
-    if (p.hand[give] < 4) return;
+    /* the rate is whatever this seat's trade posts have earned them */
+    const rate = tradeRate(s.current, give, s.buildings, s.geo);
+    if (p.hand[give] < rate) return;
     const players = s.players.map((x, i) => i === s.current
-      ? { ...x, hand: { ...x.hand, [give]: x.hand[give] - 4, [get_]: x.hand[get_] + 1 } } : x);
-    set({ players, log: say(s.log, `${p.name} trades 4 ${RESOURCE_LABEL[give]} for 1 ${RESOURCE_LABEL[get_]}.`) });
+      ? { ...x, hand: { ...x.hand, [give]: x.hand[give] - rate, [get_]: x.hand[get_] + 1 } } : x);
+    set({
+      players,
+      log: say(s.log, `${p.name} trades ${rate} ${RESOURCE_LABEL[give]} for 1 ${RESOURCE_LABEL[get_]}${rate < 4 ? ` at a ${rate}:1 post` : ""}.`),
+    });
   },
 
   endTurn: () => {

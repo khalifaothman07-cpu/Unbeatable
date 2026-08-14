@@ -2,7 +2,7 @@
    rules.ts — costs, legality, scoring. Pure functions, no state.
    ========================================================================= */
 
-import type { Geometry } from "./geometry";
+import type { Geometry, Port } from "./geometry";
 import type { Resource } from "./types";
 
 export type Hand = Record<Resource, number>;
@@ -142,4 +142,35 @@ export function scoreOf(i: ScoreInput, includeHidden: boolean): number {
   if (i.hasNavigator) pts += 2;
   if (includeHidden) pts += i.hiddenPearls;
   return pts;
+}
+
+/**
+ * What the bank charges this seat for one card of `resource`.
+ *
+ * 4:1 by default, 3:1 from any trade post you have a building on, 2:1 from
+ * a post that deals in that specific resource. Best rate wins — a seat
+ * sitting on two posts uses whichever helps.
+ */
+export function tradeRate(
+  seat: number, resource: Resource, buildings: Buildings, geo: Geometry,
+): 2 | 3 | 4 {
+  let rate: 2 | 3 | 4 = 4;
+  for (const [v, b] of Object.entries(buildings)) {
+    if (b.player !== seat) continue;
+    for (const p of geo.vertexPorts[v] ?? []) {
+      if (p.resource === resource) return 2;          // nothing beats this
+      if (p.resource === null && rate > 3) rate = 3;
+    }
+  }
+  return rate;
+}
+
+/** Every post this seat can currently use — for showing them their options. */
+export function seatPorts(seat: number, buildings: Buildings, geo: Geometry): Port[] {
+  const out = new Map<string, Port>();
+  for (const [v, b] of Object.entries(buildings)) {
+    if (b.player !== seat) continue;
+    for (const p of geo.vertexPorts[v] ?? []) out.set(p.id, p);
+  }
+  return [...out.values()];
 }

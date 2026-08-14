@@ -20,7 +20,7 @@ import { PIPS } from "./board";
 import type { Geometry } from "./geometry";
 import { TERRAIN_YIELD, type Board, type Resource } from "./types";
 import {
-  COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
+  COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount, tradeRate,
   type Buildings, type Hand, type Routes,
 } from "./rules";
 import type { GameState } from "../state/store";
@@ -225,10 +225,12 @@ function bankMove(s: GameState, seat: number, target: Partial<Hand>):
   let give: Resource | null = null, spare = 0;
   for (const r of RESOURCES) {
     if (r === wanted) continue;
-    /* never trade away what the goal itself needs */
+    /* never trade away what the goal itself needs, and use the seat's real
+       rate — a 2:1 post makes trades worth taking that 4:1 never would */
+    const rate = tradeRate(seat, r, s.buildings, s.geo);
     const keep = target[r] ?? 0;
     const free = hand[r] - keep;
-    if (hand[r] >= 4 && free >= 4 && free > spare) { spare = free; give = r; }
+    if (hand[r] >= rate && free >= rate && free > spare) { spare = free; give = r; }
   }
   return give ? { give, want: wanted } : null;
 }

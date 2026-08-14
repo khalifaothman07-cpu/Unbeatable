@@ -36,7 +36,10 @@ export function freshSeed(): string {
   return `${buf[0].toString(36)}-${buf[1].toString(36)}`;
 }
 
-function seedToInt(seed: string): number {
+/** FNV-1a over the seed string. Exported so anything else derived from the
+    board — trade posts, for one — can take its own independent stream from
+    the same seed and still land identically on every device. */
+export function hashSeed(seed: string): number {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
@@ -199,7 +202,7 @@ export function generateBoard(config: BoardConfig = DEFAULT_BOARD, seed: string 
   /* Retry the whole board on the rare occasion repair can't converge —
      cheaper and simpler than backtracking, and effectively never hit. */
   for (let attempt = 0; attempt < 50; attempt++) {
-    const rng = makeRng(seedToInt(seed) + attempt);
+    const rng = makeRng(hashSeed(seed) + attempt);
     const terrains = shuffle(terrainBag, rng);
 
     const tiles: Tile[] = hexes.map((hex, i) => ({

@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { BoardView } from "./render/BoardView";
 import { BuildingLayer, RouteLayer } from "./render/Pieces";
-import { SeatBar } from "./render/SeatBar";
 import { TradePanel } from "./render/TradePanel";
+import { Lobby } from "./render/Lobby";
+import { InviteCard } from "./render/InviteCard";
 import * as fx from "./state/feedback";
-import { RESOURCE_LABEL, type Resource } from "./game/types";
+import { RESOURCE_LABEL, TERRAIN_LABEL, type Resource } from "./game/types";
 import {
-  COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount,
+  COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount, seatPorts, tradeRate,
 } from "./game/rules";
-import { DHOW_LABEL, activeSeat, legalShamalTiles, playableSeat, publicScore, totalScore, useGame } from "./state/store";
+import { DHOW_LABEL, activeSeat, legalShamalTiles, playableSeat, publicScore, totalScore, useGame, visibleSeat } from "./state/store";
 import { useBot } from "./state/useBot";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
@@ -20,9 +21,25 @@ function costText(c: Partial<Record<Resource, number>>) {
   return (Object.keys(c) as Resource[]).map((r) => `${c[r]} ${SHORT[r]}`).join(" + ");
 }
 
+/* Players said they couldn't tell what the cards did. Saying so on the card
+   itself beats a rules page they'd have to leave the game to read. */
+const DHOW_HELP: Record<string, string> = {
+  windbreaker: "Move the Shamal and take a card",
+  hiddenPearl: "Worth 1 point — kept secret until you win",
+  bountifulTide: "Take 2 of any one good from the bank",
+  souqCorner: "Take every card of one good from everyone",
+  caravanRoute: "Lay 2 trade routes for free",
+};
+
 export function App() {
   const s = useGame();
+  /* The seat whose TURN it is — used for prompts and the board. */
   const me = s.players[activeSeat(s)];
+  /* The seat whose CARDS this device is entitled to see. On a joined phone
+     that is always your own seat, never whoever happens to be playing:
+     showing the active seat's hand handed every player everyone else's
+     cards the moment the game went online. */
+  const mine = s.players[visibleSeat(s)];
   const [muted, setMuted] = useState(fx.isMuted());
 
   /* bot seats play themselves; the hook is a no-op when there are none */
@@ -101,7 +118,25 @@ export function App() {
      never for a bot — it drives itself. */
   const myTurn = playableSeat(s, activeSeat(s));
 
-  const hideHand = s.toggles.privacyScreen && !s.handRevealed && s.phase !== "setup" && s.phase !== "over";
+  /* The privacy screen exists for one phone being passed around. On your own
+     device the hand is yours, so there is nobody to hide it from. */
+  const ownDevice = s.mySeat !== null && s.mySeat >= 0;
+  const hideHand = !ownDevice && s.toggles.privacyScreen && !s.handRevealed
+    && s.phase !== "setup" && s.phase !== "over";
+
+  /* Where the Shamal is, in words — it moves on a 7 and the board alone
+     never made clear what that had cost anyone. */
+  const shamalTile = s.board.tiles.find((t) => t.id === s.shamalTile);
+  const shamalWhere = shamalTile
+    ? `${TERRAIN_LABEL[shamalTile.terrain]}${shamalTile.token ? ` ${shamalTile.token}` : ""}`
+    : "the sabkha";
+  const shamalHitsMe = (s.geo.tileVertices[s.shamalTile] ?? [])
+    .some((v) => s.buildings[v]?.player === mine.id);
+
+  const myPorts = seatPorts(s.current, s.buildings, s.geo);
+  const joinUrl = typeof window !== "undefined" && s.roomCode
+    ? (() => { const u = new URL(window.location.href); u.searchParams.set("room", s.roomCode!); u.hash = ""; return u.toString(); })()
+    : "";
 
   const banner = (() => {
     if (s.phase === "over") return `${s.players[s.winner!].name} wins with ${totalScore(s, s.winner!)} points`;
@@ -141,194 +176,247 @@ export function App() {
         </button>
       </header>
 
-      <div className="scoreboard">
-        {s.players.map((p) => (
-          <div key={p.id} className={`seat ${p.id === s.current && s.phase !== "setup" ? "on" : ""}`}>
-            <span className="dot" style={{ background: p.colour }} />
-            <b>{p.name}</b>
-            <span className="pts">{publicScore(s, p.id)} pts</span>
-            <span className="cards">{handCount(p.hand)}c · {p.cards.length}d</span>
+      {/* Everything about setting the table lives before the game and
+          nowhere after it — see Lobby. */}
+      {!s.started ? <Lobby /> : (
+        <>
+          <div className="scoreboard">
+            {s.players.map((p) => (
+              <div key={p.id} className={`seat ${p.id === activeSeat(s) ? "on" : ""} ${p.id === mine.id && ownDevice ? "you" : ""}`}>
+                <span className="dot" style={{ background: p.colour }} />
+                <b>{p.name}</b>
+                {s.seats[p.id]?.type === "bot" && <span className="tag2">bot</span>}
+                {p.id === mine.id && ownDevice && <span className="tag2 remote">you</span>}
+                <span className="pts">{publicScore(s, p.id)}<i>pts</i></span>
+                <span className="cards">{handCount(p.hand)} cards · {p.cards.length} dhow</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <p className="banner">{banner}</p>
+          <p className={`banner ${myTurn ? "mine" : ""}`}>{banner}</p>
 
-      <BoardView
-        board={s.board}
-        shamalTile={s.shamalTile}
-        onTile={s.clickTile}
-        tileTargets={myTurn ? tileTargets : new Set()}
-      >
-        <RouteLayer geo={s.geo} routes={s.routes} legal={myTurn ? edgeTargets : new Set()} onPick={s.clickEdge} />
-        <BuildingLayer geo={s.geo} buildings={s.buildings} legal={myTurn ? vertexTargets : new Set()} onPick={s.clickVertex} />
-      </BoardView>
+          <BoardView
+            board={s.board}
+            shamalTile={s.shamalTile}
+            onTile={s.clickTile}
+            tileTargets={myTurn ? tileTargets : new Set()}
+            ports={s.geo.ports}
+          >
+            <RouteLayer geo={s.geo} routes={s.routes} legal={myTurn ? edgeTargets : new Set()} onPick={s.clickEdge} />
+            <BuildingLayer geo={s.geo} buildings={s.buildings} legal={myTurn ? vertexTargets : new Set()} onPick={s.clickVertex} />
+          </BoardView>
 
-      {/* ---- hand ---- */}
-      {s.phase !== "setup" && s.phase !== "over" && (
-        <div className="panel">
-          <div className="panel-head">
-            <span>{me.name}&rsquo;s hand</span>
-            {hideHand && <button className="btn small" onClick={s.revealHand}>Tap to reveal</button>}
-          </div>
-          {hideHand ? (
-            <p className="muted">Hidden — pass the device to {me.name}.</p>
-          ) : (
-            <div className="hand">
-              {RESOURCES.map((r) => (
-                <span key={r} className="res">
-                  <i className={`sw sw-${r}`} />{SHORT[r]} <b>{me.hand[r]}</b>
-                </span>
-              ))}
+          {/* The Shamal was the thing players said they couldn't follow: it
+              moves, and nothing said what it had done. */}
+          {s.started && s.phase !== "over" && (
+            <p className="shamal-line">
+              <span className="shamal-mark" aria-hidden />
+              The Shamal blocks <b>{shamalWhere}</b>
+              {shamalHitsMe ? <> — including one of <b>your</b> tiles</> : <> — that tile pays nobody until it moves</>}
+            </p>
+          )}
+
+          {/* ---- hand ---- */}
+          {s.phase !== "setup" && (
+            <div className="panel">
+              <div className="panel-head">
+                <span>{ownDevice ? "Your hand" : `${mine.name}’s hand`}</span>
+                {hideHand && <button className="btn small" onClick={s.revealHand}>Tap to reveal</button>}
+              </div>
+              {hideHand ? (
+                <p className="muted">Hidden — pass the device to {mine.name}.</p>
+              ) : (
+                <>
+                  <div className="hand">
+                    {RESOURCES.map((r) => (
+                      <span key={r} className={`res ${mine.hand[r] > 0 ? "has" : ""}`}>
+                        <i className={`sw sw-${r}`} />{SHORT[r]} <b>{mine.hand[r]}</b>
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Dhow cards belong WITH the hand and are shown whether or
+                      not it's your turn — players reported not knowing they
+                      had any, because they only ever appeared mid-turn. */}
+                  {mine.cards.length > 0 && (
+                    <div className="dhows">
+                      {mine.cards.map((c) => {
+                        const playable = myTurn && s.phase === "main" && c.kind !== "hiddenPearl"
+                          && c.boughtOnTurn !== s.turnNo && !s.playedCardThisTurn;
+                        const picks = c.kind === "bountifulTide" || c.kind === "souqCorner";
+                        return (
+                          <div key={c.uid} className={`dhow ${playable ? "ready" : ""}`}>
+                            <b>{DHOW_LABEL[c.kind]}</b>
+                            <span className="muted">{DHOW_HELP[c.kind]}</span>
+                            {picks ? (
+                              <span className="row">
+                                {RESOURCES.map((r) => (
+                                  <button key={r} className="btn tiny" disabled={!playable} onClick={() => s.playDhow(c.uid, r)}>
+                                    {SHORT[r]}
+                                  </button>
+                                ))}
+                              </span>
+                            ) : c.kind !== "hiddenPearl" ? (
+                              <button className="btn tiny" disabled={!playable} onClick={() => s.playDhow(c.uid)}>Play</button>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* ---- discard ---- */}
-      {s.phase === "discard" && (
-        <div className="panel">
-          <div className="panel-head"><span>Discard</span></div>
-          <div className="row">
-            {RESOURCES.filter((r) => s.players[s.discardQueue[0]].hand[r] > 0).map((r) => (
-              <button key={r} className="btn small" onClick={() => s.discard(r)}>
-                {SHORT[r]} ({s.players[s.discardQueue[0]].hand[r]})
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ---- steal ---- */}
-      {s.phase === "steal" && (
-        <div className="panel">
-          <div className="panel-head"><span>Take from</span></div>
-          <div className="row">
-            {stealTargets.map((id) => (
-              <button key={id} className="btn small" onClick={() => s.stealFrom(id)}>{s.players[id].name}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ---- player-to-player trade: visible to everyone, since anyone at
-             the table may be the one answering an offer ---- */}
-      <TradePanel />
-
-      {/* ---- actions ---- */}
-      {s.phase === "roll" && myTurn && (
-        <div className="panel">
-          <button className="btn" onClick={s.roll}>Roll 2d6</button>
-          {s.dice && <span className="dice">{s.dice[0]} + {s.dice[1]} = {s.dice[0] + s.dice[1]}</span>}
-        </div>
-      )}
-
-      {s.phase === "main" && myTurn && (
-        <>
-          <div className="panel">
-            <div className="panel-head">
-              <span>Build</span>
-              {s.dice && <span className="dice">rolled {s.dice[0] + s.dice[1]}</span>}
-            </div>
-            <div className="row">
-              <button
-                className={`btn small ${s.pending === "route" ? "on" : ""}`}
-                disabled={!canAfford(me.hand, COST.route) || routeCount >= LIMITS.route}
-                onClick={() => s.setPending("route")}
-              >
-                Trade route · {costText(COST.route)}
-              </button>
-              <button
-                className={`btn small ${s.pending === "barasti" ? "on" : ""}`}
-                disabled={!canAfford(me.hand, COST.barasti) || built("barasti") >= LIMITS.barasti}
-                onClick={() => s.setPending("barasti")}
-              >
-                Barasti · {costText(COST.barasti)}
-              </button>
-              <button
-                className={`btn small ${s.pending === "qasr" ? "on" : ""}`}
-                disabled={!canAfford(me.hand, COST.qasr) || built("qasr") >= LIMITS.qasr}
-                onClick={() => s.setPending("qasr")}
-              >
-                Qasr · {costText(COST.qasr)}
-              </button>
-              <button
-                className="btn small"
-                disabled={!canAfford(me.hand, COST.dhow) || !s.deck.length}
-                onClick={s.buyDhow}
-              >
-                Dhow card · {costText(COST.dhow)} ({s.deck.length})
-              </button>
-            </div>
-          </div>
-
-          <div className="panel">
-            <div className="panel-head"><span>Bank · 4:1</span></div>
-            <div className="row">
-              {RESOURCES.filter((g) => me.hand[g] >= 4).map((give) => (
-                <span key={give} className="trade">
-                  <b>4 {SHORT[give]} →</b>
-                  {RESOURCES.filter((r) => r !== give).map((get) => (
-                    <button key={get} className="btn tiny" onClick={() => s.bankTrade(give, get)}>{SHORT[get]}</button>
-                  ))}
-                </span>
-              ))}
-              {!RESOURCES.some((g) => me.hand[g] >= 4) && <span className="muted">Need 4 of one kind to trade.</span>}
-            </div>
-          </div>
-
-          {me.cards.length > 0 && !hideHand && (
-            <div className="panel">
-              <div className="panel-head"><span>Dhow cards</span></div>
+          {/* ---- discard ---- */}
+          {s.phase === "discard" && (
+            <div className="panel panel--urgent">
+              <div className="panel-head">
+                <span>{s.players[s.discardQueue[0]].name} must discard</span>
+                <span className="dice">down to {s.discardTargets[s.discardQueue[0]]}</span>
+              </div>
               <div className="row">
-                {me.cards.map((c) => {
-                  const playable = c.kind !== "hiddenPearl" && c.boughtOnTurn !== s.turnNo && !s.playedCardThisTurn;
-                  if (c.kind === "bountifulTide" || c.kind === "souqCorner") {
-                    return (
-                      <span key={c.uid} className="trade">
-                        <b>{DHOW_LABEL[c.kind]} →</b>
-                        {RESOURCES.map((r) => (
-                          <button key={r} className="btn tiny" disabled={!playable} onClick={() => s.playDhow(c.uid, r)}>
-                            {SHORT[r]}
-                          </button>
-                        ))}
-                      </span>
-                    );
-                  }
-                  return (
-                    <button key={c.uid} className="btn small" disabled={!playable} onClick={() => s.playDhow(c.uid)}>
-                      {DHOW_LABEL[c.kind]}{c.kind === "hiddenPearl" ? " (1 pt, hidden)" : ""}
-                    </button>
-                  );
-                })}
+                {RESOURCES.filter((r) => s.players[s.discardQueue[0]].hand[r] > 0).map((r) => (
+                  <button key={r} className="btn small" onClick={() => s.discard(r)}>
+                    {SHORT[r]} ({s.players[s.discardQueue[0]].hand[r]})
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* ---- steal ---- */}
+          {s.phase === "steal" && (
+            <div className="panel panel--urgent">
+              <div className="panel-head"><span>Take a card from</span></div>
+              <div className="row">
+                {stealTargets.map((id) => (
+                  <button key={id} className="btn small" onClick={() => s.stealFrom(id)}>{s.players[id].name}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <TradePanel />
+
+          {/* ---- actions ---- */}
+          {s.phase === "roll" && myTurn && (
+            <div className="panel panel--turn">
+              <button className="btn" onClick={s.roll}>Roll the dice</button>
+              {s.dice && <span className="dice">{s.dice[0]} + {s.dice[1]} = {s.dice[0] + s.dice[1]}</span>}
+            </div>
+          )}
+
+          {s.phase === "main" && myTurn && (
+            <>
+              <div className="panel">
+                <div className="panel-head">
+                  <span>Build</span>
+                  {s.dice && <span className="dice">rolled {s.dice[0] + s.dice[1]}</span>}
+                </div>
+                <div className="build-row">
+                  <button
+                    className={`btn small ${s.pending === "route" ? "on" : ""}`}
+                    disabled={!canAfford(me.hand, COST.route) || routeCount >= LIMITS.route}
+                    onClick={() => s.setPending("route")}
+                  >
+                    Trade route<i>{costText(COST.route)}</i>
+                  </button>
+                  <button
+                    className={`btn small ${s.pending === "barasti" ? "on" : ""}`}
+                    disabled={!canAfford(me.hand, COST.barasti) || built("barasti") >= LIMITS.barasti}
+                    onClick={() => s.setPending("barasti")}
+                  >
+                    Barasti · 1pt<i>{costText(COST.barasti)}</i>
+                  </button>
+                  <button
+                    className={`btn small ${s.pending === "qasr" ? "on" : ""}`}
+                    disabled={!canAfford(me.hand, COST.qasr) || built("qasr") >= LIMITS.qasr}
+                    onClick={() => s.setPending("qasr")}
+                  >
+                    Qasr · 2pts<i>{costText(COST.qasr)}</i>
+                  </button>
+                  <button
+                    className="btn small"
+                    disabled={!canAfford(me.hand, COST.dhow) || !s.deck.length}
+                    onClick={s.buyDhow}
+                  >
+                    Dhow card<i>{costText(COST.dhow)} · {s.deck.length} left</i>
+                  </button>
+                </div>
+                {s.pending && (
+                  <p className="muted hint">
+                    Pick a highlighted spot on the board, or press the button again to cancel.
+                  </p>
+                )}
+              </div>
+
+              <div className="panel">
+                <div className="panel-head">
+                  <span>Bank</span>
+                  <span className="dice">
+                    {myPorts.length
+                      ? myPorts.map((p) => (p.resource ? `2:1 ${SHORT[p.resource]}` : "3:1 any")).join(" · ")
+                      : "4:1 — build on a trade post for better"}
+                  </span>
+                </div>
+                <div className="row">
+                  {RESOURCES.filter((g) => me.hand[g] >= tradeRate(s.current, g, s.buildings, s.geo)).map((give) => {
+                    const rate = tradeRate(s.current, give, s.buildings, s.geo);
+                    return (
+                      <span key={give} className="trade">
+                        <b>{rate} {SHORT[give]} →</b>
+                        {RESOURCES.filter((r) => r !== give).map((get) => (
+                          <button key={get} className="btn tiny" onClick={() => s.bankTrade(give, get)}>{SHORT[get]}</button>
+                        ))}
+                      </span>
+                    );
+                  })}
+                  {!RESOURCES.some((g) => me.hand[g] >= tradeRate(s.current, g, s.buildings, s.geo)) &&
+                    <span className="muted">Not enough of any one good to swap yet.</span>}
+                </div>
+              </div>
+
+              <div className="panel panel--turn">
+                <button className="btn" onClick={s.endTurn}>End turn</button>
+              </div>
+            </>
+          )}
+
+          {s.phase === "over" && (
+            <div className="panel panel--turn">
+              <button className="btn" onClick={() => s.newGame()}>New table</button>
+            </div>
+          )}
+
+          {/* A running table shows only what it needs: who is connected and
+              how to get back in. Seat setup is finished business. */}
+          {s.roomCode && (
+            <div className="panel">
+              <div className="panel-head">
+                <span>Table</span>
+                <span className="row" style={{ gap: 8 }}>
+                  <span className="code">room {s.roomCode}</span>
+                  {s.syncing && <span className={`link link--${s.link}`}><i className="link-dot" />{
+                    s.link === "live" ? "live" : s.link === "connecting" ? "connecting…" : s.link === "error" ? "connection lost" : "not connected"
+                  }</span>}
+                </span>
+              </div>
+              {!ownDevice && <InviteCard url={joinUrl} code={s.roomCode} />}
+            </div>
+          )}
+
           <div className="panel">
-            <button className="btn" onClick={s.endTurn}>End turn</button>
+            <div className="panel-head"><span>What just happened</span></div>
+            <ul className="log">
+              {s.log.slice(0, 7).map((l, i) => <li key={i}>{l}</li>)}
+            </ul>
           </div>
+
+          <p className="seed">seed {s.board.seed} · {RESOURCE_LABEL.pearls} are scarcest by design</p>
         </>
       )}
-
-      {s.phase === "over" && (
-        <div className="panel">
-          <button className="btn" onClick={() => s.newGame()}>Play again</button>
-        </div>
-      )}
-
-      <SeatBar />
-
-      <div className="panel">
-        <div className="panel-head"><span>Log</span>
-          <button className="btn tiny" onClick={() => s.newGame()}>New game</button>
-        </div>
-        <ul className="log">
-          {s.log.slice(0, 7).map((l, i) => <li key={i}>{l}</li>)}
-        </ul>
-      </div>
-
-      <p className="seed">seed {s.board.seed} · {RESOURCE_LABEL.pearls} are scarcest by design</p>
     </div>
   );
 }
