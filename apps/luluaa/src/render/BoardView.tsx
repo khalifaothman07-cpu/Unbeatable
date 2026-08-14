@@ -13,6 +13,7 @@
 import { axialToPixel, hexCorners } from "../game/hex";
 import { TERRAIN_LABEL, type Board, type Tile } from "../game/types";
 import { PALETTE } from "./theme";
+import type { Port } from "../game/geometry";
 
 const HEX_SIZE = 52;
 const GAP = 0.955;
@@ -219,7 +220,17 @@ function TileShape({
         </polygon>
       )}
 
-      {hasShamal && <ShamalToken />}
+      {hasShamal && (
+        <>
+          {/* The token alone was too polite: players couldn't tell the tile
+              had stopped producing. The shroud is the actual information. */}
+          <polygon points={pts} fill="#1c1712" opacity={0.55} />
+          <polygon points={pts} fill="none" stroke="#e9e6df" strokeWidth={2} strokeDasharray="5 4" opacity={0.85}>
+            <animate attributeName="stroke-dashoffset" values="0;18" dur="1.6s" repeatCount="indefinite" />
+          </polygon>
+          <ShamalToken />
+        </>
+      )}
 
       {tile.token !== null && !hasShamal && (
         <g>
@@ -254,13 +265,49 @@ function TileShape({
   );
 }
 
+/* A trade post: a jetty pushed out from the shore with its rate on it.
+   Drawn OUTSIDE the coastline, so it reads as something built on the water
+   rather than another kind of tile. */
+function TradePost({ port }: { port: Port }) {
+  const RES_FILL: Record<string, string> = {
+    palmWood: "#6f8f4a", limestone: "#c3ac8a", dates: "#a8763c",
+    fish: "#1c7d84", pearls: "#8fc9c6",
+  };
+  const out = 21;
+  const cx = port.x + port.nx * out;
+  const cy = port.y + port.ny * out;
+  const fill = port.resource ? RES_FILL[port.resource] : "#efe7d6";
+  return (
+    <g className="port">
+      {/* the mooring line back to the shore it belongs to */}
+      <line
+        x1={port.x} y1={port.y} x2={cx} y2={cy}
+        stroke="#6b4a33" strokeWidth={3} strokeLinecap="round" opacity={0.75}
+      />
+      <circle cx={cx} cy={cy} r={13} fill="#3a2b1f" opacity={0.25} />
+      <circle cx={cx} cy={cy} r={12} fill={fill} stroke="#3a2b1f" strokeWidth={1.6} />
+      <text
+        x={cx} y={cy + 3.6}
+        textAnchor="middle"
+        fontSize={10.5}
+        fontWeight={700}
+        fontFamily="ui-monospace, monospace"
+        fill={port.resource === "pearls" || port.resource === "limestone" || !port.resource ? "#2a211a" : "#fdfbf6"}
+      >
+        {port.resource ? "2:1" : "3:1"}
+      </text>
+    </g>
+  );
+}
+
 export function BoardView({
-  board, shamalTile, onTile, tileTargets, children,
+  board, shamalTile, onTile, tileTargets, ports, children,
 }: {
   board: Board;
   shamalTile?: string;
   onTile?: (id: string) => void;
   tileTargets?: Set<string>;
+  ports?: Port[];
   children?: React.ReactNode;
 }) {
   const placed = board.tiles.map((tile) => ({ tile, ...axialToPixel(tile.hex, HEX_SIZE) }));
@@ -268,7 +315,9 @@ export function BoardView({
 
   const xs = placed.map((p) => p.x);
   const ys = placed.map((p) => p.y);
-  const pad = HEX_SIZE * 1.35;
+  /* The trade posts hang off the coastline, so the frame has to leave room
+     for them or they get sliced in half by the viewBox. */
+  const pad = HEX_SIZE * 1.78;
   const minX = Math.min(...xs) - pad;
   const minY = Math.min(...ys) - pad;
   const width = Math.max(...xs) - Math.min(...xs) + pad * 2;
@@ -391,6 +440,7 @@ export function BoardView({
           onPick={onTile}
         />
       ))}
+      {ports?.map((p) => <TradePost key={p.id} port={p} />)}
       {children}
     </svg>
   );

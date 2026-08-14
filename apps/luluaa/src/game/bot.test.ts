@@ -28,6 +28,7 @@ function allBots() {
   useGame.setState({
     seats: [0, 1, 2, 3].map(() => ({ type: "bot" as const, code: null })),
   });
+  useGame.getState().startGame();
 }
 
 /**
@@ -130,6 +131,22 @@ describe("bot judgement", () => {
       offer: { from: 0, give: { pearls: 5 }, want: { palmWood: 2 }, declined: [] },
     });
     expect(offerAnswer(g(), 1)).toBe(false);
+  });
+});
+
+describe("the lobby gate", () => {
+  it("keeps bots still until the table is started", () => {
+    useGame.getState().newGame();
+    useGame.setState({ seats: [0, 1, 2, 3].map(() => ({ type: "bot" as const, code: null })) });
+    /* the store is willing — it is the driver that must wait, so this pins
+       the flag the driver reads rather than the decision itself */
+    expect(g().started).toBe(false);
+    useGame.getState().startGame();
+    expect(g().started).toBe(true);
+    /* and starting twice must not re-log or re-enter setup */
+    const before = g().log.length;
+    useGame.getState().startGame();
+    expect(g().log.length).toBe(before);
   });
 });
 

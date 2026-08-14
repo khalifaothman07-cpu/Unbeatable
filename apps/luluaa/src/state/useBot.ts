@@ -34,7 +34,10 @@ export function useBot() {
   const spent = useRef({ key: "", n: 0 });
 
   useEffect(() => {
-    if (s.phase === "over") return;
+    /* Nothing moves until the table is started. Without this, bots would
+       play out the whole opening draft behind the lobby while the host was
+       still reading the rules. */
+    if (!s.started || s.phase === "over") return;
 
     /* A bot may owe an answer to someone else's trade offer even when it is
        not its turn, so look for that before falling back to whose turn it

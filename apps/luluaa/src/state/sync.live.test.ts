@@ -228,3 +228,36 @@ describe("two devices on one table", () => {
     guest.getState().stopSync();
   }, 40000);
 });
+
+describe("a joined device only ever sees its own cards", () => {
+  it("shows your seat's hand, not whoever is playing", async () => {
+    if (!reachable) return;
+
+    const host = await newClient();
+    const guest = await newClient();
+    const { visibleSeat } = await import("./store");
+
+    await host.getState().openSeat(1);
+    const code = host.getState().roomCode!;
+    created.push(code);
+    expect(await guest.getState().joinRoom(code, 1)).toBe(true);
+
+    /* seat 2 is the guest's; seat 1 is up. The hand on their screen must be
+       their own, or the game leaks every hand to every device. */
+    expect(guest.getState().mySeat).toBe(1);
+    expect(visibleSeat(guest.getState())).toBe(1);
+
+    /* and it stays theirs as the turn moves around the table */
+    for (const current of [1, 2, 3, 0]) {
+      guest.setState({ current });
+      expect(visibleSeat(guest.getState()), `guest peeked at seat ${current}`).toBe(1);
+    }
+
+    /* the host holds the whole table on one device, so it does follow the
+       active seat — that is pass-and-play, and the privacy screen covers it */
+    expect(visibleSeat(host.getState())).toBe(host.getState().current);
+
+    host.getState().stopSync();
+    guest.getState().stopSync();
+  }, 40000);
+});
