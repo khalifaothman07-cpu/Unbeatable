@@ -115,14 +115,26 @@ export function SeatBar() {
           <span key={i} className={`seatctl ${i === s.mySeat ? "mine" : ""}`}>
             <b>Seat {i + 1}</b>
             <span className={`tag2 ${seat.type}`}>
-              {i === s.mySeat ? "you" : seat.type === "remote" ? (taken(i) ? "taken" : "open") : "this device"}
+              {i === s.mySeat ? "you"
+                : seat.type === "bot" ? "bot"
+                : seat.type === "remote" ? (taken(i) ? "taken" : "open")
+                : "this device"}
             </span>
-            {remoteConfigured && !joined && (
-              seat.type === "local" ? (
-                <button className="btn tiny" onClick={() => void s.openSeat(i)}>Open online</button>
-              ) : (
-                <button className="btn tiny ghost" onClick={() => s.closeSeat(i)}>Make local</button>
-              )
+            {!joined && (
+              <>
+                {seat.type === "bot" ? (
+                  <button className="btn tiny ghost" onClick={() => s.setSeatType(i, "local")}>Take over</button>
+                ) : (
+                  <button className="btn tiny ghost" onClick={() => s.setSeatType(i, "bot")}>Add bot</button>
+                )}
+                {remoteConfigured && seat.type !== "bot" && (
+                  seat.type === "local" ? (
+                    <button className="btn tiny" onClick={() => void s.openSeat(i)}>Open online</button>
+                  ) : (
+                    <button className="btn tiny ghost" onClick={() => s.closeSeat(i)}>Make local</button>
+                  )
+                )}
+              </>
             )}
           </span>
         ))}

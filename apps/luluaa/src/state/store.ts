@@ -77,7 +77,10 @@ export interface TradeOffer {
   declined: number[];
 }
 
-export type SeatType = "local" | "remote";
+/* A seat is played from this device, from someone else's device, or by the
+   machine. Bots are driven by the host, for the same reason only one device
+   may drive any seat: two drivers means two publishers and a lost move. */
+export type SeatType = "local" | "remote" | "bot";
 /* No `claimed` here on purpose: who holds a seat is server-owned state in
    the room's `claims` column, not something a device asserts in a snapshot
    it publishes. See joinRoom. */
@@ -101,9 +104,22 @@ export function drivesSeat(
   s: Pick<GameState, "roomCode" | "mySeat" | "seats">,
   seat: number,
 ): boolean {
+  const type = s.seats[seat]?.type;
   if (!s.roomCode) return true;
-  if (s.mySeat === null || s.mySeat < 0) return s.seats[seat]?.type === "local";
+  /* the host runs its own seats and every bot; a joined device runs only
+     the one seat it took */
+  if (s.mySeat === null || s.mySeat < 0) return type === "local" || type === "bot";
   return s.mySeat === seat;
+}
+
+/** Whether a PERSON at this device may act for a seat. A bot seat is driven
+    by this device but played by nobody, so the board must stay untouchable
+    while it thinks — otherwise the host can reach in and move its pieces. */
+export function playableSeat(
+  s: Pick<GameState, "roomCode" | "mySeat" | "seats">,
+  seat: number,
+): boolean {
+  return drivesSeat(s, seat) && s.seats[seat]?.type !== "bot";
 }
 
 /** The seat this device should be watching — for banners and prompts. */
@@ -113,7 +129,7 @@ export function activeSeat(s: Pick<GameState, "phase" | "setupOrder" | "setupInd
 
 export interface GameToggles { gentleShamal: boolean; calmTides: boolean; privacyScreen: boolean }
 
-interface GameState {
+export interface GameState {
   board: Board;
   geo: Geometry;
   players: Player[];
@@ -167,6 +183,7 @@ interface GameState {
   stealFrom: (playerId: number) => void;
   endTurn: () => void;
   revealHand: () => void;
+  setSeatType: (seatId: number, type: SeatType) => void;
   openSeat: (seatId: number) => Promise<void>;
   closeSeat: (seatId: number) => void;
   joinRoom: (code: string, seatId: number) => Promise<boolean>;
@@ -387,6 +404,24 @@ export const useGame = create<GameState>((rawSet, get) => {
     if (first) set({ rev: 1 });
     set({ log: say(get().log, `Seat ${seatId + 1} opened online — room code ${code}.`) });
     get().startSync();
+  },
+
+  /* Swap a seat between a person at this device and a bot. Deliberately
+     refuses to touch a seat someone has joined online — pulling the chair
+     out from under a player mid-game is not something a stray tap should
+     be able to do. */
+  setSeatType: (seatId, type) => {
+    const s = get();
+    const cur = s.seats[seatId]?.type;
+    if (cur === type) return;
+    if (cur === "remote" || type === "remote") return;
+    const seats = s.seats.map((x, i) => i === seatId ? { ...x, type } : x);
+    set({
+      seats,
+      log: say(s.log, type === "bot"
+        ? `Seat ${seatId + 1} is played by a bot.`
+        : `Seat ${seatId + 1} is yours again.`),
+    });
   },
 
   closeSeat: (seatId: number) => {
