@@ -4,6 +4,7 @@
    with a glass HUD over a canvas field.
    ========================================================================= */
 :root{
+  color-scheme: dark;   /* dark by design — see index.html */
   --bg:#0c0d10; --elev:#14161c; --elev2:#191c23; --line:#262833; --line-soft:#1c1f27;
   --ink:#eceef2; --mid:#a6abb6; --low:#6c7180;
   --green:#36b15f; --volt:#d8ff3e; --volt-ink:#0c1500; --gold:#e6c15a; --bad:#e0683f;
