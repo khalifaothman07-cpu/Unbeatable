@@ -6,6 +6,23 @@
   <title>LU'LU'A — Isle of Pearls</title>
   <meta name="description" content="LU'LU'A (Pearl) — a Bahrain-themed trading and settlement game. Dive for pearls, run dhow routes, and build from barasti to qasr." />
   <link rel="icon" href="/games/luluaa/favicon.svg" />
+  <meta name="theme-color" content="#e8d9c0" />
+  <!-- Runs before the first paint. Without it a saved Dark choice on a
+       light-preference phone flashes cream for a frame every time the game
+       is opened, which is the one thing dark mode exists to prevent. The
+       "auto" case needs no script: the CSS media query already covers it. -->
+  <script>
+    try {
+      var t = localStorage.getItem("luluaa.theme");
+      if (t === "dark" || t === "light") {
+        document.documentElement.setAttribute("data-theme", t);
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute("content", t === "dark" ? "#17120e" : "#e8d9c0");
+      } else if (matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#17120e");
+      }
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
 </head>
 <body>
   <div id="root"></div>

@@ -11,6 +11,7 @@ import {
 } from "./game/rules";
 import { DHOW_LABEL, activeSeat, legalShamalTiles, playableSeat, publicScore, totalScore, useGame, visibleSeat } from "./state/store";
 import { useBot } from "./state/useBot";
+import { useTheme } from "./state/useTheme";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -41,6 +42,7 @@ export function App() {
      cards the moment the game went online. */
   const mine = s.players[visibleSeat(s)];
   const [muted, setMuted] = useState(fx.isMuted());
+  const { theme, cycle, ground } = useTheme();
 
   /* bot seats play themselves; the hook is a no-op when there are none */
   useBot();
@@ -158,22 +160,31 @@ export function App() {
       <header className="head">
         <p className="eyebrow">Isle of Pearls</p>
         <h1 className="wordmark">LU&rsquo;LU&rsquo;A</h1>
-        <button
-          className="btn tiny ghost sound-toggle"
-          aria-pressed={!muted}
-          onClick={() => {
-            const m = !muted;
-            fx.setMuted(m);
-            setMuted(m);
-            /* Turning sound on answers a question the player can't otherwise
-               ask: iOS routes web audio through the ringer, so "I hear
-               nothing" might mean the switch on the side of the phone. A
-               confirmation chirp makes the toggle its own test. */
-            if (!m) fx.gain();
-          }}
-        >
-          Sound {muted ? "off" : "on"}
-        </button>
+        <div className="head-controls">
+          <button
+            className="btn tiny ghost"
+            title={theme === "auto" ? `Following your device (${ground})` : `Always ${theme}`}
+            onClick={cycle}
+          >
+            {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+          </button>
+          <button
+            className="btn tiny ghost"
+            aria-pressed={!muted}
+            onClick={() => {
+              const m = !muted;
+              fx.setMuted(m);
+              setMuted(m);
+              /* Turning sound on answers a question the player can't otherwise
+                 ask: iOS routes web audio through the ringer, so "I hear
+                 nothing" might mean the switch on the side of the phone. A
+                 confirmation chirp makes the toggle its own test. */
+              if (!m) fx.gain();
+            }}
+          >
+            Sound {muted ? "off" : "on"}
+          </button>
+        </div>
       </header>
 
       {/* Everything about setting the table lives before the game and
