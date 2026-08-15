@@ -184,8 +184,11 @@
    rule ("only the real channel — no invented email/phone").
 
    OPEN (KO's calls):
-   • football game INTERNALS still read "La Liga"/"Champions
-     League" (fan-game disclaimers present) — rebrand or keep
+   • football games are now generically named (per KO): "La Liga" and
+     "Champions League" are gone from both — España reads "the Spanish
+     league", Europa "the European cup". Club names stay: naming the
+     record holders is factual reference, a competition brand is not.
+     The fan-game disclaimers remain load-bearing — keep them verbatim.
    • kaz6.com does not resolve (no A record). iam-golf's canonical +
      og:image now point at kaz6.netlify.app, because aiming them at a
      dead host broke link previews and told crawlers to canonicalise

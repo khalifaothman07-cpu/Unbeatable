@@ -1,5 +1,5 @@
 /*
- * 38-0 La Liga — match database
+ * 38-0 España — match database
  * Real clubs/players used descriptively. Ratings are an independent interpretation.
  * line = GK | DEF | MID | ATT ; player = [name, line, rating]
  */
