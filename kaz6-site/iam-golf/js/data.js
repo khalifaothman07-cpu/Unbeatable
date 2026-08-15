@@ -19,8 +19,8 @@
    IAM has ~no photos → ONE intentional dark feature panel (reversed
    mark when empty), photo-OPTIONAL model cards, honest awaiting states.
    featureMedia/pillars[].img/followMedia now hold real Pexels photos
-   (feature/pillar-01..03/follow.jpg, web-compressed ~1MB total). KIT
-   plate stays AWAITING — no matte-black-box shot yet (kit.jpg pending).
+   (feature/pillar-01..03/follow.jpg, web-compressed ~1MB total). Every
+   media slot on the page now has a real image behind it.
    NOTE: pillar-02 (Titleist ball) + follow (Callaway bag) show third-
    party logos — kept under nominative use / first-sale, backed by the
    footer disclaimer; swap to grayscale/awaiting if KO objects. A 6th
@@ -72,8 +72,11 @@
    WORDMARK: now REAL TEXT (Archivo 900, .wordmark) — the constructed
    SVG mark was retired (its M ran the centre-V to the baseline and read
    as two split humps; KO rejected it). Favicon SVG is separate/kept.
-   MEDIA: kit plate renders under pricing; awaiting-state until
-   assets/media/kit.jpg is dropped in. Favicon is now LOCAL
+   MEDIA: the kit plate was REMOVED (per KO) — there is no kit photo and
+   an "awaiting asset" hatch under pricing reads as an unfinished site
+   rather than a considered one. If a matte-black-box shot ever exists,
+   it comes back as a new block, not by restoring a placeholder.
+   Favicon is now LOCAL
    (assets/favicon.svg) — never point at the parent's.
    META: canonical/og still use the placeholder domain (go-live swap list);
    visible page carries zero parent traces.
@@ -182,14 +185,6 @@ const IAM = {
     terms:
       "One use per referred customer · valid 90 days · applies to a future order, not the first purchase.",
     anchor: "The offer is 50 BD — other currencies are indicative.",
-  },
-
-  /* --- The kit, on camera (drop-in: assets/media/kit.jpg) ------------ */
-  kitMedia: {
-    type: "image",
-    src: "assets/media/kit.jpg",
-    alt: "The kit — matte-black box",
-    cap: "FIG. 01 · The kit",
   },
 
   /* --- Why it exists -------------------------------------------------- */

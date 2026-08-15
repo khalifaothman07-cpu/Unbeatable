@@ -138,23 +138,6 @@ function renderPricing() {
   }
 }
 
-/* --- KIT PLATE (media) ---------------------------------------------- */
-function renderKitPlate() {
-  const host = document.getElementById("kit-plate");
-  const m = IAM.kitMedia;
-  if (!host || !m) return;
-  const inner = m.src
-    ? `<img class="plate-media" src="${esc(m.src)}" alt="${esc(m.alt || "")}" loading="lazy"
-         onerror="this.closest('.plate').classList.add('awaiting')">`
-    : "";
-  host.innerHTML = `
-    <figure class="plate${m.src ? "" : " awaiting"}" style="margin-top:var(--s8)">
-      <div class="plate-frame">${inner}<span class="plate-await">Awaiting asset · ${esc(m.src || "")}</span></div>
-      <figcaption class="plate-cap"><span>${esc(m.cap || "")}</span><span class="plate-alt">${esc(m.alt || "")}</span></figcaption>
-    </figure>`;
-}
-
-
 /* --- FOLLOW REEL IMAGE --------------------------------------------- */
 function renderFollowMedia() {
   const host = document.getElementById("follow-media");
@@ -265,7 +248,6 @@ function renderStaticBits() {
 function renderAll() {
   renderFeature();
   renderBrands();
-  renderKitPlate();
   renderPillars();
   renderCurrencyPicker();
   renderPricing();
