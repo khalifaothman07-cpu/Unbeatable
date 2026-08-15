@@ -260,7 +260,6 @@
   font-size: var(--t-label); letter-spacing: 0.02em; color: var(--ink-2); max-width: 60ch;
 }
 .golf .price-note + .price-note { margin-top: var(--s1); }
-.golf #kit-plate { margin-top: var(--s8); }
 
 /* ── WHY — centered engraved statement ───────────────────── */
 .golf .why-copy {
