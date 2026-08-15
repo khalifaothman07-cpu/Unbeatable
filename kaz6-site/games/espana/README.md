@@ -1,6 +1,6 @@
-# 38–0 · La Liga
+# 38–0 · España
 
-> Build the ultimate all-time La Liga XI, then simulate a 38-game season and chase a perfect, unbeaten **38–0**.
+> Build the ultimate all-time Spanish league XI, then simulate a 38-game season and chase a perfect, unbeaten **38–0**.
 
 An independent, fan-made football draft game. Spin a generator to land on a real Spanish club and season, draft one player from that squad, build your XI position by position across a formation of your choice, then play out a full 38-game campaign against a realistic league. No build step, no dependencies — just static HTML, CSS, and JavaScript.
 
@@ -16,7 +16,7 @@ An independent, fan-made football draft game. Spin a generator to land on a real
 - **Two rating modes** — *season-accurate* (the player's rating in that exact era) or *all-time peak* (their best rating found anywhere in the database).
 - **Re-rolls** — discard a squad you don't like (8 per run).
 - **Hard mode** — hide ratings while drafting.
-- **History-calibrated simulation** — outcomes track real La Liga; even a flawless XI lands near the all-time ceiling (~100 pts / 32 wins), and 38–0 is the lightning strike it should be.
+- **History-calibrated simulation** — outcomes track the real Spanish league; even a flawless XI lands near the all-time ceiling (~100 pts / 32 wins), and 38–0 is the lightning strike it should be.
 - **Post-season player stats** — appearances, goals, assists, clean sheets, average rating, and a Player of the Season.
 - **No duplicate players** — each footballer can be used once per XI, even across different eras.
 

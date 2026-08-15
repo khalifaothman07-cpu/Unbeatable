@@ -1,5 +1,5 @@
 /*
- * 38-0 La Liga — game logic (generator, draft, formations, simulation, stats)
+ * 38-0 España — game logic (generator, draft, formations, simulation, stats)
  * Requires data.js to be loaded first (defines CLUBS and OPPONENTS).
  */
 
@@ -249,8 +249,8 @@ function renderResults(matches,f){
   const v=document.getElementById('verdict');let cls='',tag='',title='',sub='';
   if(f.W===38){cls='perfect';tag='The Impossible';title='38 – 0';sub='A perfect, flawless, unbeaten season. You are immortal.';}
   else if(f.L===0){cls='invincible';tag='Unbeaten';title='Invincibles';sub=`${f.W} wins, ${f.D} draws, zero defeats.`;}
-  else if(f.pos===1){cls='champ';tag='Campeones de Liga';title='Champions';sub='Top of the table — you’ve won La Liga.';}
-  else if(f.pos<=4){cls='champ';tag=`Finished ${ordinal(f.pos)}`;title='Top Four';sub='Champions League football secured.';}
+  else if(f.pos===1){cls='champ';tag='Campeones de Liga';title='Champions';sub='Top of the table — you’ve won the league.';}
+  else if(f.pos<=4){cls='champ';tag=`Finished ${ordinal(f.pos)}`;title='Top Four';sub='European football secured.';}
   else if(f.pos<=10){tag=`Finished ${ordinal(f.pos)}`;title='Mid-table';sub='A solid, unspectacular campaign.';}
   else{tag=`Finished ${ordinal(f.pos)}`;title='Survival';sub='That all-time XI deserved better. Generate smarter.';}
   v.className='verdict '+cls;
@@ -258,14 +258,14 @@ function renderResults(matches,f){
   document.getElementById('resStats').innerHTML=`<div class="rstat"><b>${f.PTS}</b><small>Points</small></div><div class="rstat"><b>${ordinal(f.pos)}</b><small>Position</small></div><div class="rstat"><b>${f.GF}</b><small>Goals For</small></div><div class="rstat"><b>${f.GF-f.GA>=0?'+':''}${f.GF-f.GA}</b><small>Goal Diff</small></div>`;
 
   const RECPTS=100,RECWINS=32;let cmp;
-  if(f.W===38) cmp="You won all 38 — no side has ever done it in La Liga history. This is fiction made flesh.";
-  else if(f.L===0) cmp="An unbeaten 38-game season — no La Liga side has ever managed it; the closest ever lost just once.";
-  else if(f.W>RECWINS) cmp=`Your ${f.W} wins would beat the all-time La Liga record of ${RECWINS} (Madrid 2011-12, Barça 2012-13).`;
-  else if(f.W===RECWINS) cmp=`Your ${f.W} wins match the all-time La Liga record of ${RECWINS}.`;
+  if(f.W===38) cmp="You won all 38 — no side has ever done it in Spanish league history. This is fiction made flesh.";
+  else if(f.L===0) cmp="An unbeaten 38-game season — no Spanish league side has ever managed it; the closest ever lost just once.";
+  else if(f.W>RECWINS) cmp=`Your ${f.W} wins would beat the all-time Spanish league record of ${RECWINS} (Madrid 2011-12, Barça 2012-13).`;
+  else if(f.W===RECWINS) cmp=`Your ${f.W} wins match the all-time Spanish league record of ${RECWINS}.`;
   else if(f.PTS>=RECPTS) cmp=`Your ${f.PTS} points would equal or beat the league record of ${RECPTS}.`;
   else if(f.pos===1) cmp=`Champions — but the record is ${RECPTS} pts / ${RECWINS} wins, and no team has ever won all 38.`;
   else cmp=`For reference: the record is ${RECPTS} points and ${RECWINS} wins. No team has ever won all 38, and a fully unbeaten season has never happened.`;
-  document.getElementById('benchmark').innerHTML=`<b>Measured against 45 years of La Liga:</b> ${cmp}`;
+  document.getElementById('benchmark').innerHTML=`<b>Measured against 45 years of the Spanish league:</b> ${cmp}`;
 
   // player stats
   const stats=genPlayerStats(matches,f.GF);
@@ -283,7 +283,7 @@ function renderResults(matches,f){
   document.getElementById('matchLog').innerHTML=matches.map(m=>`<div class="mrow"><span class="ha">${m.home?'HOME':'AWAY'}</span><span class="opp">${m.opp}</span><span class="sc">${m.gf}–${m.ga}</span><span class="res ${m.res}">${m.res}</span></div>`).join('');
 
   const topScorer=[...stats].sort((a,b)=>b.goals-a.goals)[0];
-  lastResultSummary=`38–0 La Liga · my all-time XI finished ${ordinal(f.pos)} — ${f.W}W ${f.D}D ${f.L}L, ${f.PTS} pts. Top scorer ${topScorer.name} (${topScorer.goals}). ${f.W===38?'A PERFECT 38–0!':f.L===0?'Unbeaten Invincibles!':f.pos===1?'CHAMPIONS!':''}`.trim();
+  lastResultSummary=`38–0 España · my all-time XI finished ${ordinal(f.pos)} — ${f.W}W ${f.D}D ${f.L}L, ${f.PTS} pts. Top scorer ${topScorer.name} (${topScorer.goals}). ${f.W===38?'A PERFECT 38–0!':f.L===0?'Unbeaten Invincibles!':f.pos===1?'CHAMPIONS!':''}`.trim();
 }
-function shareRun(){const t=lastResultSummary||'38–0 La Liga';if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast('Result copied'),()=>showToast('Copy failed'));else showToast(t);}
+function shareRun(){const t=lastResultSummary||'38–0 España';if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast('Result copied'),()=>showToast('Copy failed'));else showToast(t);}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('on'),2200);}
