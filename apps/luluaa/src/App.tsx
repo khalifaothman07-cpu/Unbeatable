@@ -9,7 +9,11 @@ import { RESOURCE_LABEL, TERRAIN_LABEL, type Resource } from "./game/types";
 import {
   COST, LIMITS, canAfford, canPlaceBarasti, canPlaceRoute, canUpgradeQasr, handCount, seatPorts, tradeRate,
 } from "./game/rules";
-import { DHOW_LABEL, activeSeat, legalShamalTiles, playableSeat, publicScore, totalScore, useGame, visibleSeat } from "./state/store";
+import {
+  DHOW_LABEL, activeSeat, handHidden, legalShamalTiles, ownDevice, playableSeat,
+  publicScore, totalScore, useGame, visibleSeat,
+} from "./state/store";
+import { DhowBack, DhowIcon, ResIcon } from "./render/Icons";
 import { useBot } from "./state/useBot";
 import { useTheme } from "./state/useTheme";
 
@@ -18,8 +22,19 @@ const SHORT: Record<Resource, string> = {
   palmWood: "Wood", limestone: "Stone", dates: "Dates", fish: "Fish", pearls: "Pearls",
 };
 
-function costText(c: Partial<Record<Resource, number>>) {
-  return (Object.keys(c) as Resource[]).map((r) => `${c[r]} ${SHORT[r]}`).join(" + ");
+/** A price, drawn rather than spelled — the build buttons are the place a
+    player is deciding whether they can afford something, and matching icons
+    to the ones in their hand answers that faster than reading two words. */
+function Price({ of }: { of: Partial<Record<Resource, number>> }) {
+  return (
+    <i className="price">
+      {(Object.keys(of) as Resource[]).map((r) => (
+        <span key={r} className="price-part">
+          <ResIcon res={r} size={15} />{of[r]}
+        </span>
+      ))}
+    </i>
+  );
 }
 
 /* Players said they couldn't tell what the cards did. Saying so on the card
@@ -36,12 +51,15 @@ export function App() {
   const s = useGame();
   /* The seat whose TURN it is — used for prompts and the board. */
   const me = s.players[activeSeat(s)];
-  /* The seat whose CARDS this device is entitled to see. On a joined phone
-     that is always your own seat, never whoever happens to be playing:
-     showing the active seat's hand handed every player everyone else's
-     cards the moment the game went online. */
-  const mine = s.players[visibleSeat(s)];
+  /* The seat whose CARDS this device is entitled to see — or none. A device
+     may only ever show a hand it plays: on a joined phone that is your own
+     seat, on the host it is whichever local seat is up. When the turn belongs
+     to somebody else's phone there is no hand to show at all, and saying so
+     is the point. */
+  const shown = visibleSeat(s);
+  const mine = shown === null ? null : s.players[shown];
   const [muted, setMuted] = useState(fx.isMuted());
+  const [showLog, setShowLog] = useState(false);
   const { theme, cycle, ground } = useTheme();
 
   /* bot seats play themselves; the hook is a no-op when there are none */
@@ -122,9 +140,13 @@ export function App() {
 
   /* The privacy screen exists for one phone being passed around. On your own
      device the hand is yours, so there is nobody to hide it from. */
-  const ownDevice = s.mySeat !== null && s.mySeat >= 0;
-  const hideHand = !ownDevice && s.toggles.privacyScreen && !s.handRevealed
-    && s.phase !== "setup" && s.phase !== "over";
+  const own = ownDevice(s);
+  const hideHand = handHidden(s);
+  /* When this device plays exactly one seat — your own phone, or a host who
+     kept one chair and gave the rest away — the hand on screen is simply
+     yours. Calling it "Seat 3's hand" then is needlessly third-person about
+     the player's own cards. */
+  const soleSeat = s.seats.filter((_x, i) => playableSeat(s, i)).length === 1;
 
   /* Where the Shamal is, in words — it moves on a 7 and the board alone
      never made clear what that had cost anyone. */
@@ -132,7 +154,7 @@ export function App() {
   const shamalWhere = shamalTile
     ? `${TERRAIN_LABEL[shamalTile.terrain]}${shamalTile.token ? ` ${shamalTile.token}` : ""}`
     : "the sabkha";
-  const shamalHitsMe = (s.geo.tileVertices[s.shamalTile] ?? [])
+  const shamalHitsMe = mine !== null && (s.geo.tileVertices[s.shamalTile] ?? [])
     .some((v) => s.buildings[v]?.player === mine.id);
 
   const myPorts = seatPorts(s.current, s.buildings, s.geo);
@@ -193,13 +215,15 @@ export function App() {
         <>
           <div className="scoreboard">
             {s.players.map((p) => (
-              <div key={p.id} className={`seat ${p.id === activeSeat(s) ? "on" : ""} ${p.id === mine.id && ownDevice ? "you" : ""}`}>
+              <div key={p.id} className={`seat ${p.id === activeSeat(s) ? "on" : ""} ${p.id === s.mySeat ? "you" : ""}`}>
                 <span className="dot" style={{ background: p.colour }} />
                 <b>{p.name}</b>
                 {s.seats[p.id]?.type === "bot" && <span className="tag2">bot</span>}
-                {p.id === mine.id && ownDevice && <span className="tag2 remote">you</span>}
+                {p.id === s.mySeat && <span className="tag2 remote">you</span>}
                 <span className="pts">{publicScore(s, p.id)}<i>pts</i></span>
-                <span className="cards">{handCount(p.hand)} cards · {p.cards.length} dhow</span>
+                <span className="cards">
+                  {handCount(p.hand)} card{handCount(p.hand) === 1 ? "" : "s"} · {p.cards.length} dhow
+                </span>
               </div>
             ))}
           </div>
@@ -231,17 +255,28 @@ export function App() {
           {s.phase !== "setup" && (
             <div className="panel">
               <div className="panel-head">
-                <span>{ownDevice ? "Your hand" : `${mine.name}’s hand`}</span>
-                {hideHand && <button className="btn small" onClick={s.revealHand}>Tap to reveal</button>}
+                <span>{mine === null ? "Hands" : soleSeat ? "Your hand" : `${mine.name}’s hand`}</span>
+                {mine !== null && hideHand && <button className="btn small" onClick={s.revealHand}>Tap to reveal</button>}
               </div>
-              {hideHand ? (
+
+              {mine === null ? (
+                /* Nothing on this device is entitled to this hand. Saying
+                   whose it is and why it's closed beats an empty panel. */
+                <p className="muted">
+                  {s.seats[activeSeat(s)]?.type === "bot"
+                    ? `${me.name} is a bot — its cards stay face down.`
+                    : `${me.name} is playing on their own device. You only ever see your own cards.`}
+                </p>
+              ) : hideHand ? (
                 <p className="muted">Hidden — pass the device to {mine.name}.</p>
               ) : (
                 <>
                   <div className="hand">
                     {RESOURCES.map((r) => (
                       <span key={r} className={`res ${mine.hand[r] > 0 ? "has" : ""}`}>
-                        <i className={`sw sw-${r}`} />{SHORT[r]} <b>{mine.hand[r]}</b>
+                        <ResIcon res={r} size={22} />
+                        <span className="res-name">{SHORT[r]}</span>
+                        <b>{mine.hand[r]}</b>
                       </span>
                     ))}
                   </div>
@@ -257,13 +292,19 @@ export function App() {
                         const picks = c.kind === "bountifulTide" || c.kind === "souqCorner";
                         return (
                           <div key={c.uid} className={`dhow ${playable ? "ready" : ""}`}>
-                            <b>{DHOW_LABEL[c.kind]}</b>
-                            <span className="muted">{DHOW_HELP[c.kind]}</span>
+                            <DhowIcon kind={c.kind} size={30} />
+                            <span className="dhow-text">
+                              <b>{DHOW_LABEL[c.kind]}</b>
+                              <span className="muted">{DHOW_HELP[c.kind]}</span>
+                            </span>
                             {picks ? (
-                              <span className="row">
+                              <span className="row dhow-picks">
                                 {RESOURCES.map((r) => (
-                                  <button key={r} className="btn tiny" disabled={!playable} onClick={() => s.playDhow(c.uid, r)}>
-                                    {SHORT[r]}
+                                  <button
+                                    key={r} className="btn tiny" disabled={!playable}
+                                    title={SHORT[r]} onClick={() => s.playDhow(c.uid, r)}
+                                  >
+                                    <ResIcon res={r} size={16} />{SHORT[r]}
                                   </button>
                                 ))}
                               </span>
@@ -290,7 +331,7 @@ export function App() {
               <div className="row">
                 {RESOURCES.filter((r) => s.players[s.discardQueue[0]].hand[r] > 0).map((r) => (
                   <button key={r} className="btn small" onClick={() => s.discard(r)}>
-                    {SHORT[r]} ({s.players[s.discardQueue[0]].hand[r]})
+                    <ResIcon res={r} size={18} />{SHORT[r]} ({s.players[s.discardQueue[0]].hand[r]})
                   </button>
                 ))}
               </div>
@@ -332,28 +373,30 @@ export function App() {
                     disabled={!canAfford(me.hand, COST.route) || routeCount >= LIMITS.route}
                     onClick={() => s.setPending("route")}
                   >
-                    Trade route<i>{costText(COST.route)}</i>
+                    Trade route<Price of={COST.route} />
                   </button>
                   <button
                     className={`btn small ${s.pending === "barasti" ? "on" : ""}`}
                     disabled={!canAfford(me.hand, COST.barasti) || built("barasti") >= LIMITS.barasti}
                     onClick={() => s.setPending("barasti")}
                   >
-                    Barasti · 1pt<i>{costText(COST.barasti)}</i>
+                    Barasti · 1pt<Price of={COST.barasti} />
                   </button>
                   <button
                     className={`btn small ${s.pending === "qasr" ? "on" : ""}`}
                     disabled={!canAfford(me.hand, COST.qasr) || built("qasr") >= LIMITS.qasr}
                     onClick={() => s.setPending("qasr")}
                   >
-                    Qasr · 2pts<i>{costText(COST.qasr)}</i>
+                    Qasr · 2pts<Price of={COST.qasr} />
                   </button>
                   <button
                     className="btn small"
                     disabled={!canAfford(me.hand, COST.dhow) || !s.deck.length}
                     onClick={s.buyDhow}
                   >
-                    Dhow card<i>{costText(COST.dhow)} · {s.deck.length} left</i>
+                    <span className="btn-line"><DhowBack size={17} />Dhow card</span>
+                    <Price of={COST.dhow} />
+                    <i className="price">{s.deck.length} left</i>
                   </button>
                 </div>
                 {s.pending && (
@@ -366,9 +409,14 @@ export function App() {
               <div className="panel">
                 <div className="panel-head">
                   <span>Bank</span>
-                  <span className="dice">
+                  <span className="dice ports-held">
                     {myPorts.length
-                      ? myPorts.map((p) => (p.resource ? `2:1 ${SHORT[p.resource]}` : "3:1 any")).join(" · ")
+                      ? myPorts.map((p, i) => (
+                          <span key={i} className="port-chip">
+                            {p.resource ? <ResIcon res={p.resource} size={15} /> : null}
+                            {p.resource ? "2:1" : "3:1 any"}
+                          </span>
+                        ))
                       : "4:1 — build on a trade post for better"}
                   </span>
                 </div>
@@ -377,9 +425,11 @@ export function App() {
                     const rate = tradeRate(s.current, give, s.buildings, s.geo);
                     return (
                       <span key={give} className="trade">
-                        <b>{rate} {SHORT[give]} →</b>
+                        <b><ResIcon res={give} size={17} />{rate} {SHORT[give]} →</b>
                         {RESOURCES.filter((r) => r !== give).map((get) => (
-                          <button key={get} className="btn tiny" onClick={() => s.bankTrade(give, get)}>{SHORT[get]}</button>
+                          <button key={get} className="btn tiny" title={SHORT[get]} onClick={() => s.bankTrade(give, get)}>
+                            <ResIcon res={get} size={16} />{SHORT[get]}
+                          </button>
                         ))}
                       </span>
                     );
@@ -414,14 +464,23 @@ export function App() {
                   }</span>}
                 </span>
               </div>
-              {!ownDevice && <InviteCard url={joinUrl} code={s.roomCode} />}
+              {!own && <InviteCard url={joinUrl} code={s.roomCode} />}
             </div>
           )}
 
-          <div className="panel">
-            <div className="panel-head"><span>What just happened</span></div>
+          {/* Seven lines of history was seven lines nobody was reading —
+              the only one that matters is what happened since you last
+              looked. The rest is there for an argument about who took what,
+              and stays folded away until there is one. */}
+          <div className="panel panel--log">
+            <div className="panel-head">
+              <span>Last move</span>
+              <button className="btn tiny ghost" aria-expanded={showLog} onClick={() => setShowLog((v) => !v)}>
+                {showLog ? "Hide history" : "History"}
+              </button>
+            </div>
             <ul className="log">
-              {s.log.slice(0, 7).map((l, i) => <li key={i}>{l}</li>)}
+              {s.log.slice(0, showLog ? 14 : 1).map((l, i) => <li key={i}>{l}</li>)}
             </ul>
           </div>
 

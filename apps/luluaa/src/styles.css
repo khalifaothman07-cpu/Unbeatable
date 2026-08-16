@@ -598,3 +598,89 @@ select.input { max-width: 46vw; }
 
 /* the port badges shouldn't swallow taps meant for the board */
 .port { pointer-events: none; }
+
+/* ================= DRAWN GOODS AND CARDS =================
+   The hand used to be five coloured squares and playtesters couldn't tell
+   what any of them were. Everything below exists to give the icons room:
+   they are the label now, and a 10px swatch's worth of space isn't enough
+   for a thing to be recognisable. */
+
+.rico, .dico { flex: none; display: inline-block; vertical-align: middle; }
+
+/* any button carrying an icon has to lay out as a row, not a text run */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn.tiny { gap: 4px; }
+
+/* ---- the hand ----
+   Five across on every width. Letting it wrap put pearls alone on a second
+   row, which reads as an afterthought rather than as the fifth good — and
+   pearls are the one the whole game is named after. */
+.hand { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.res {
+  flex-direction: column; align-items: center; gap: 3px;
+  min-width: 0; padding: 9px 4px 8px;
+  font-size: .58rem; letter-spacing: .04em;
+}
+.res .res-name { color: var(--ink-soft); }
+.res b { font-size: 1.15rem; line-height: 1; }
+.res.has .res-name { color: var(--ink); }
+
+/* ---- dhow cards ----
+   A grid rather than a flex row: the two cards that ask you to pick a good
+   carry five buttons, and under flex those either squeezed the description
+   into a column two words wide or stacked themselves vertically. Named
+   areas mean the picks always get the full width on a phone and sit beside
+   the text once there's room for them. */
+.dhow {
+  display: grid; grid-template-columns: auto 1fr;
+  grid-template-areas: "icon text" "act act";
+  gap: 7px 11px; align-items: start; padding: 10px 11px;
+}
+.dhow .dico { grid-area: icon; margin-top: 1px; }
+.dhow-text { grid-area: text; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dhow-text b { white-space: normal; font-size: .86rem; }
+/* `flex: none` matters: the older rule gave this a 12ch basis, which was
+   harmless across a flex row and became 12ch of HEIGHT once the text became
+   a column — every card grew a hand's width of empty space under it. */
+.dhow .muted { flex: none; font-size: .74rem; line-height: 1.45; }
+.dhow > .btn, .dhow-picks { grid-area: act; }
+.dhow > .btn { justify-self: start; }
+@media (min-width: 560px) {
+  .dhow { grid-template-columns: auto 1fr auto; grid-template-areas: "icon text act"; align-items: center; }
+}
+
+/* ---- prices on the build buttons ---- */
+.price {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  font-style: normal; font-size: .68rem; letter-spacing: .04em; text-transform: none;
+}
+.price-part { display: inline-flex; align-items: center; gap: 3px; }
+.build-row .btn { align-items: flex-start; gap: 6px; }
+
+/* ---- bank ---- */
+.ports-held { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.port-chip { display: inline-flex; align-items: center; gap: 4px; }
+.trade b { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---- lobby ---- */
+/* five across, always — wrapping left pearls orphaned on its own row,
+   which read as "and one other thing" rather than as the fifth good */
+.goods-strip {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 14px 0 4px;
+}
+.good {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 4px;
+  min-width: 0; padding: 8px 4px;
+  border: 1px solid var(--line); background: var(--surface);
+  font-family: ui-monospace, monospace; font-size: .6rem;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+.steps--tight { margin-top: 14px; font-size: .9rem; }
+.steps--tight li { line-height: 1.5; }
+
+/* ---- the log, folded away ---- */
+.panel--log .log li + li { color: var(--ink-faint); }
+
+/* the build buttons stack label over price, so an icon inside the label
+   needs its own row or it lands above the words */
+.btn-line { display: inline-flex; align-items: center; gap: 6px; }

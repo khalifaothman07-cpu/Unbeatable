@@ -14,7 +14,8 @@
 
 import { useState } from "react";
 import type { Resource } from "../game/types";
-import { playableSeat, useGame } from "../state/store";
+import { handHidden, playableSeat, useGame } from "../state/store";
+import { ResIcon } from "./Icons";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -37,7 +38,7 @@ function Stepper({
 }: { res: Resource; value: number; max: number; onChange: (n: number) => void }) {
   return (
     <span className={`stepper ${value > 0 ? "on" : ""}`}>
-      <i className={`sw sw-${res}`} />
+      <ResIcon res={res} size={20} />
       <span className="stepper-label">{SHORT[res]}</span>
       <button
         className="step"
@@ -135,9 +136,15 @@ export function TradePanel() {
 
   /* ---------- composer, active seat only ---------- */
   if (!myTurn) return null;
-  /* the give side is capped by what's in hand, so showing it while the
-     privacy screen is up would print the hand for the whole room */
-  if (s.toggles.privacyScreen && !s.handRevealed) return null;
+  /* The give side is capped by what's in hand, so showing it while the
+     privacy screen is up would print the hand for the whole room.
+
+     It has to be the SAME test the hand panel uses. Asking only whether the
+     hand had been revealed meant a player on their own phone — who has no
+     privacy screen to lift, and so never taps "reveal" — could never open
+     the composer. From the table it looked like the host was the only person
+     allowed to trade. */
+  if (handHidden(s)) return null;
 
   const giveN = total(give);
   const wantN = total(want);
