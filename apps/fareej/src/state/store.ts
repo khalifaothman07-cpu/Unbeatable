@@ -31,8 +31,9 @@ import { SANDOOQ_CARDS, SHAMAL_CARDS, cardById } from "../game/cards";
 import { full, short, type Dinars } from "../game/money";
 import {
   TOWER, buildingCounts, buildingRefund, canBuild, canMortgage, canSellBuilding,
-  canUnmortgage, emptyEstate, holdings, isMortgaged, levelOf, liquidatableTotal,
-  mortgageValue, netWorth, ownerOf, rentFor, spaceAt, unmortgageCost, type Estate,
+  canTrade, canUnmortgage, emptyEstate, holdings, isMortgaged, levelOf, liquidatableTotal,
+  mortgageValue, netWorth, ownerOf, rentFor, spaceAt, unmortgageCost,
+  type Estate, type Trade,
 } from "../game/rules";
 import { isOwnable, type Card, type Deck } from "../game/types";
 
@@ -156,6 +157,9 @@ export interface GameState {
   offer: number | null;
   auction: Auction | null;
   debt: Debt | null;
+  /** one standing offer at a time — a table with four live offers on it is
+      a negotiation nobody can follow */
+  trade: Trade | null;
 
   seats: Seat[];
   roomCode: string | null;
@@ -180,6 +184,9 @@ export interface GameState {
   usePass: () => void;
   settleDebt: () => void;
   declareBankrupt: () => void;
+  proposeTrade: (t: Trade) => void;
+  acceptTrade: () => void;
+  declineTrade: () => void;
   endTurn: () => void;
 }
 
@@ -309,6 +316,7 @@ export const useGame = create<GameState>((set, get) => {
     offer: null,
     auction: null,
     debt: null,
+    trade: null,
     seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
     roomCode: null,
     mySeat: null,
@@ -334,6 +342,7 @@ export const useGame = create<GameState>((set, get) => {
         offer: null,
         auction: null,
         debt: null,
+        trade: null,
         seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
         roomCode: null,
         mySeat: null,
@@ -694,6 +703,57 @@ export const useGame = create<GameState>((set, get) => {
       finishOrContinue();
     },
 
+    /* --- TRADING ---------------------------------------------------------
+       Composed by one seat, accepted by another, and re-checked in between.
+       The offer is a description of a swap, never a promise that it is
+       still possible: a 7 between composing and accepting can empty the
+       wallet the offer was counting on. */
+    proposeTrade: (t) => {
+      const s = get();
+      if (s.phase !== "manage" && s.phase !== "debt") return;
+      const cash = (seat: number) => s.players[seat].cash;
+      const v = canTrade(s.estate, cash, t);
+      if (!v.ok) { set({ log: say(s.log, v.reason!) }); return; }
+      set({
+        trade: t,
+        log: say(s.log, `${s.players[t.from].name} offers ${s.players[t.to].name} a deal.`),
+      });
+    },
+
+    declineTrade: () => {
+      const s = get();
+      if (!s.trade) return;
+      set({ trade: null, log: say(s.log, `${s.players[s.trade.to].name} says no.`) });
+    },
+
+    acceptTrade: () => {
+      const s = get();
+      const t = s.trade;
+      if (!t) return;
+      /* the check that matters: everything is re-read now, not as it was
+         when the offer went up */
+      const cash = (seat: number) => s.players[seat].cash;
+      const v = canTrade(s.estate, cash, t);
+      if (!v.ok) {
+        set({ trade: null, log: say(s.log, `The deal lapsed — ${v.reason!.toLowerCase()}`) });
+        return;
+      }
+      const owner = { ...s.estate.owner };
+      for (const i of t.giveDeeds) owner[i] = t.to;
+      for (const i of t.wantDeeds) owner[i] = t.from;
+      const players = s.players.map((p) => {
+        if (p.id === t.from) return { ...p, cash: p.cash - t.giveCash + t.wantCash };
+        if (p.id === t.to) return { ...p, cash: p.cash + t.giveCash - t.wantCash };
+        return p;
+      });
+      set({
+        estate: { ...s.estate, owner },
+        players,
+        trade: null,
+        log: say(s.log, `${s.players[t.to].name} takes the deal.`),
+      });
+    },
+
     endTurn: () => {
       const s = get();
       if (s.phase !== "manage") return;
@@ -717,6 +777,8 @@ export const useGame = create<GameState>((set, get) => {
         dice: null,
         doubles: 0,
         rolled: false,
+        /* an offer does not outlive the turn it was made on */
+        trade: null,
         turnNo: s.turnNo + 1,
         log: say(s.log, `${s.players[next].name} to roll.`),
       });

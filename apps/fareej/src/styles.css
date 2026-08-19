@@ -502,3 +502,33 @@ body {
   .square { display: grid; }
   .strip { display: none; }
 }
+
+/* ================= TRADING ================= */
+.trade-who { margin-bottom: 10px; }
+.trade-who .dot { width: 9px; height: 9px; border: 1px solid rgba(0,0,0,.3); margin-right: 4px; }
+.trade-side { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+.trade-side:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.trade-side .panel-head { margin-bottom: 7px; }
+
+/* deeds are toggles rather than a list to drag — nothing to drop, nothing
+   to mis-drag, and it works identically with a thumb or a mouse */
+.deedpick { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px; }
+.chipdeed {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: inherit; font-size: .68rem;
+  border: 1px solid var(--line-2); border-radius: var(--r);
+  background: var(--surface); color: var(--ink-soft);
+  padding: 5px 8px; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: background .16s, border-color .16s, color .16s;
+}
+.chipdeed i { width: 9px; height: 12px; flex: none; border: 1px solid rgba(0,0,0,.3); }
+.chipdeed:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.chipdeed.on { border-color: var(--terracotta); background: var(--surface-3); color: var(--ink); font-weight: 600; }
+.chipdeed:disabled { opacity: .38; cursor: not-allowed; }
+
+.trade-cash { gap: 5px; }
+.trade-balance { margin: 10px 0; font-size: .82rem; }
+.trade-balance b { color: var(--accent-ink); }
+.trade-summary { display: grid; gap: 4px; margin-bottom: 11px; font-size: .86rem; line-height: 1.5; }
+.trade-summary b { color: var(--ink); }

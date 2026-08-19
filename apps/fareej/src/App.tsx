@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
 import { Deed } from "./render/Deed";
+import { TradePanel } from "./render/TradePanel";
 import { TokenIcon } from "./render/Tokens";
 import { GROUP_COLOUR, LADDER } from "./render/boardGeometry";
 import { BAIL, SALARY, STARTING_CASH } from "./game/board";
@@ -222,6 +223,8 @@ export function App() {
           </div>
         </div>
       )}
+
+      <TradePanel />
 
       {s.phase === "manage" && (
         <div className="panel panel--turn">

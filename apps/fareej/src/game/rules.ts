@@ -245,3 +245,86 @@ export function liquidatableTotal(e: Estate, cash: Dinars, seat: number): Dinars
 export function completeGroups(e: Estate, seat: number): ColourGroup[] {
   return COLOUR_GROUPS.filter((g) => ownsWholeGroup(e, seat, g));
 }
+
+/* -------------------------------------------------------------------------
+   TRADING
+   -------------------------------------------------------------------------
+   Deeds and cash, both directions, in one offer. The thing that makes this
+   hard is not the swap — it is that an offer is composed at one moment and
+   accepted at another, and in between a 7 can empty somebody's wallet or a
+   building can go up. So the offer is a DESCRIPTION, validated again at the
+   instant it is accepted, and never a promise.
+   ------------------------------------------------------------------------- */
+
+export interface Trade {
+  from: number;
+  to: number;
+  giveDeeds: number[];
+  giveCash: Dinars;
+  wantDeeds: number[];
+  wantCash: Dinars;
+}
+
+export const emptyTrade = (from: number, to: number): Trade => ({
+  from, to, giveDeeds: [], giveCash: 0, wantDeeds: [], wantCash: 0,
+});
+
+export const tradeIsEmpty = (t: Trade): boolean =>
+  t.giveDeeds.length === 0 && t.wantDeeds.length === 0 && t.giveCash === 0 && t.wantCash === 0;
+
+/** A deed can only change hands with nothing standing on its group. Selling
+    the buildings first is the rule, and it stops a group being handed over
+    mid-development where the even-build rule could never be satisfied. */
+export function canTradeDeed(e: Estate, index: number): Verdict {
+  const space = spaceAt(index);
+  if (!isOwnable(space)) return no("Not something you can own.");
+  if (space.kind === "property") {
+    const built = spacesInGroup(space.group!).some((s) => levelOf(e, s.index) > 0);
+    if (built) return no(`Sell the buildings on ${space.group} first.`);
+  }
+  return yes;
+}
+
+/** The whole offer, checked from scratch. Called when it is composed AND
+    again when it is accepted — the second call is the one that matters. */
+export function canTrade(
+  e: Estate,
+  cash: (seat: number) => Dinars,
+  t: Trade,
+): Verdict {
+  if (t.from === t.to) return no("Pick somebody else.");
+  if (tradeIsEmpty(t)) return no("There's nothing in the offer.");
+  if (t.giveCash < 0 || t.wantCash < 0) return no("Cash can't be negative.");
+
+  for (const i of t.giveDeeds) {
+    if (ownerOf(e, i) !== t.from) return no(`${spaceAt(i).name} isn't theirs to give.`);
+    const v = canTradeDeed(e, i);
+    if (!v.ok) return v;
+  }
+  for (const i of t.wantDeeds) {
+    if (ownerOf(e, i) !== t.to) return no(`${spaceAt(i).name} isn't theirs to give.`);
+    const v = canTradeDeed(e, i);
+    if (!v.ok) return v;
+  }
+  if (cash(t.from) < t.giveCash) return no("They haven't got that much cash.");
+  if (cash(t.to) < t.wantCash) return no("The other side hasn't got that much cash.");
+  return yes;
+}
+
+/** What the offer is worth to whoever is being asked, in plain dinars:
+    positive means they come out ahead on paper. Buildings are impossible
+    here — a group with anything built on it cannot be traded — so a deed is
+    worth its printed price, halved if it arrives mortgaged. */
+export function tradeBalance(e: Estate, t: Trade, forSeat: number): Dinars {
+  const value = (i: number) => {
+    const price = spaceAt(i).deed!.price;
+    return isMortgaged(e, i) ? Math.round(price / 2) : price;
+  };
+  const incoming = t.from === forSeat
+    ? t.wantDeeds.reduce((n, i) => n + value(i), 0) + t.wantCash
+    : t.giveDeeds.reduce((n, i) => n + value(i), 0) + t.giveCash;
+  const outgoing = t.from === forSeat
+    ? t.giveDeeds.reduce((n, i) => n + value(i), 0) + t.giveCash
+    : t.wantDeeds.reduce((n, i) => n + value(i), 0) + t.wantCash;
+  return incoming - outgoing;
+}
