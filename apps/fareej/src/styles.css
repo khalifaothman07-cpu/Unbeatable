@@ -532,3 +532,102 @@ body {
 .trade-balance b { color: var(--accent-ink); }
 .trade-summary { display: grid; gap: 4px; margin-bottom: 11px; font-size: .86rem; line-height: 1.5; }
 .trade-summary b { color: var(--ink); }
+
+/* ================= LOBBY AND TABLE CHROME ================= */
+/* Eyebrow on its own line above the name, controls beside it. As a wrapping
+   flex row the eyebrow and the wordmark shared a line and pushed the buttons
+   onto a third — three rows of chrome above a game that has not started. */
+.head {
+  display: grid; grid-template-columns: 1fr auto; align-items: end;
+  column-gap: 14px; margin-bottom: 6px;
+}
+.head .eyebrow { grid-column: 1 / -1; }
+.head .wordmark { grid-column: 1; margin-bottom: 0; }
+.head-controls { grid-column: 2; display: flex; gap: 7px; padding-bottom: 4px; }
+
+.fold { border: 1px solid var(--line); background: var(--surface); margin-bottom: 8px; }
+.fold-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: transparent; border: 0; cursor: pointer; text-align: left;
+  font-family: ui-monospace, monospace; font-size: .72rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink); padding: 13px 14px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.fold.on .fold-head { border-bottom: 1px solid var(--line); }
+.fold-mark { font-size: 1.1rem; color: var(--accent-ink); line-height: 1; }
+.fold-body { padding: 13px 14px 15px; font-size: .92rem; line-height: 1.6; }
+.fold-body .muted { margin-top: 9px; }
+.steps { margin: 0 0 0 1.1em; display: grid; gap: 7px; }
+.steps li { line-height: 1.55; }
+.steps--tight { font-size: .9rem; }
+
+/* seats stack rather than wrap: four controls on one line on a phone is
+   four things too small to hit */
+.seatlist { display: grid; gap: 6px; }
+.seatctl {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: .78rem; border: 1px solid var(--line); padding: 7px 9px; background: var(--surface);
+}
+.seatctl.mine { border-color: var(--terracotta); }
+.seatctl-acts { display: flex; gap: 5px; margin-left: auto; flex-wrap: wrap; }
+.tag2.bot { color: var(--accent-ink); border-color: var(--accent-ink); }
+.tag2.remote { color: var(--turquoise); border-color: var(--turquoise); }
+
+.code { font-family: ui-monospace, monospace; font-size: .68rem; letter-spacing: .18em; color: var(--accent-ink); }
+.link { display: inline-flex; align-items: center; gap: 5px; font-family: ui-monospace, monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.link-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); }
+.link--live .link-dot { background: var(--good); }
+.link--connecting .link-dot { background: var(--coral-tan); }
+.link--error .link-dot { background: var(--terracotta); }
+.invite-lead { margin: 12px 0 9px; }
+
+.input {
+  font-family: ui-monospace, monospace; font-size: .74rem; letter-spacing: .1em;
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink);
+  padding: 9px 11px; border-radius: var(--r);
+}
+.input::placeholder { color: var(--ink-faint); }
+
+/* ---- invite card, lifted with the component ---- */
+.invite { margin-top: 9px; }
+.invite .row { margin-bottom: 4px; }
+
+/* the raw link is the fallback, not the offer — it sits last and quiet, but
+   stays selectable for anyone who wants to paste it somewhere themselves */
+.invite-url {
+  display: block; width: 100%; margin-top: 8px;
+  font-family: ui-monospace, monospace; font-size: .62rem;
+  padding: 7px 9px; border: 1px solid var(--line);
+  background: var(--surface-2); color: var(--ink-soft);
+  overflow-x: auto; white-space: nowrap;
+  user-select: all; -webkit-user-select: all;
+}
+.invite-code {
+  margin-top: 10px; font-size: .84rem; color: var(--ink-soft);
+}
+.invite-code b {
+  font-family: ui-monospace, monospace; letter-spacing: .18em;
+  color: var(--accent-ink); font-size: 1rem;
+}
+
+/* An <a> styled as a button still has to sit on the same baseline as real
+   buttons, which anchors don't do on their own. */
+a.btn { display: inline-block; text-decoration: none; line-height: 1; }
+a.btn.small { padding: 9px 13px; }
+
+.qr-wrap {
+  margin-top: 12px; padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+}
+/* Physical size matters more than styling here: below roughly 150px a
+   phone camera starts failing to lock on across a table. */
+.qr {
+  width: min(220px, 62vw); height: auto; display: block;
+  border: 6px solid #fff;
+  box-shadow: 0 2px 10px rgba(var(--shadow-rgb), 0.16);
+}
+.qr-wrap .muted { text-align: center; font-size: .78rem; }
+
+select.input { max-width: 46vw; }

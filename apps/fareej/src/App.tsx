@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
 import { Deed } from "./render/Deed";
 import { TradePanel } from "./render/TradePanel";
+import { SeatBar } from "./render/SeatBar";
+import { InviteCard } from "./render/InviteCard";
+import * as fx from "./state/feedback";
+import { useTheme } from "./state/useTheme";
 import { TokenIcon } from "./render/Tokens";
 import { GROUP_COLOUR, LADDER } from "./render/boardGeometry";
 import { BAIL, SALARY, STARTING_CASH } from "./game/board";
@@ -12,7 +16,7 @@ import {
   TOWER, canBuild, canMortgage, canSellBuilding, canUnmortgage, completeGroups,
   holdings, isMortgaged, levelOf, liquidatableTotal, netWorth, spaceAt,
 } from "./game/rules";
-import { TOKEN_LABEL, activeSeat, playableSeat, solvent, useGame } from "./state/store";
+import { TOKEN_LABEL, activeSeat, playableSeat, useGame } from "./state/store";
 import { useBot } from "./state/useBot";
 
 export function App() {
@@ -21,13 +25,35 @@ export function App() {
   const [openDeed, setOpenDeed] = useState<number | null>(null);
   const [showLog, setShowLog] = useState(false);
 
+  const [muted, setMuted] = useState(fx.isMuted());
+  const { theme, cycle, ground } = useTheme();
+
   /* bot seats play themselves; the hook is a no-op when there are none */
   useBot();
+
+  /* One listener for every button on the page rather than a call at each
+     onClick: the response belongs to the act of pressing, not to any
+     particular action, and pointerdown fires before the state change so it
+     lands with the finger instead of after the re-render. Listening on the
+     document also covers buttons that appear later — the auction steps, the
+     trade chips — without each one having to remember to ask. */
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      const el = (e.target as HTMLElement | null)?.closest?.("button");
+      if (!el || (el as HTMLButtonElement).disabled) return;
+      fx.press(el as HTMLElement, e.clientX, e.clientY);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
 
   const myTurn = playableSeat(s, activeSeat(s));
   /* What the board should be looking at: the space under auction if there
      is one, otherwise the active seat's token. */
   const boardFocus = s.phase === "auction" ? s.auction!.index : me.at;
+  const joinUrl = typeof window !== "undefined" && s.roomCode
+    ? (() => { const u = new URL(window.location.href); u.searchParams.set("room", s.roomCode!); u.hash = ""; return u.toString(); })()
+    : "";
   const mine = useMemo(() => holdings(s.estate, s.current), [s.estate, s.current]);
 
   /* One line saying what the table is waiting for. Every phase answers it. */
@@ -57,6 +83,31 @@ export function App() {
       <header className="head">
         <p className="eyebrow">The Whole Street</p>
         <h1 className="wordmark">FAREEJ</h1>
+        <div className="head-controls">
+          <button
+            className="btn tiny ghost"
+            title={theme === "auto" ? `Following your device (${ground})` : `Always ${theme}`}
+            onClick={cycle}
+          >
+            {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+          </button>
+          <button
+            className="btn tiny ghost"
+            aria-pressed={!muted}
+            onClick={() => {
+              const m = !muted;
+              fx.setMuted(m);
+              setMuted(m);
+              /* Turning sound on answers a question the player can't otherwise
+                 ask: iOS routes web audio through the ringer, so "I hear
+                 nothing" might mean the switch on the side of the phone. A
+                 confirmation chirp makes the toggle its own test. */
+              if (!m) fx.gain();
+            }}
+          >
+            Sound {muted ? "off" : "on"}
+          </button>
+        </div>
       </header>
 
       <div className="scoreboard">
@@ -244,6 +295,27 @@ export function App() {
         </div>
       )}
 
+      {/* A running table shows only what it needs: who is connected and how
+          to get back in. Seat setup is finished business. */}
+      {s.roomCode && (
+        <div className="panel">
+          <div className="panel-head">
+            <span>Table</span>
+            <span className="row" style={{ gap: 8 }}>
+              <span className="code">room {s.roomCode}</span>
+              {s.syncing && (
+                <span className={`link link--${s.link}`}>
+                  <i className="link-dot" />
+                  {s.link === "live" ? "live" : s.link === "connecting" ? "connecting…"
+                    : s.link === "error" ? "connection lost" : "not connected"}
+                </span>
+              )}
+            </span>
+          </div>
+          {s.mySeat === -1 && <InviteCard url={joinUrl} code={s.roomCode} />}
+        </div>
+      )}
+
       <div className="panel panel--log">
         <div className="panel-head">
           <span>Last move</span>
@@ -302,25 +374,58 @@ function AuctionPanel() {
   );
 }
 
-/* -------------------------------------------------------------------------
-   A minimal lobby for now — the real one, with the invite card and the
-   short-mode explanations, lands with the online seats.
-   ------------------------------------------------------------------------- */
+/* =========================================================================
+   Lobby — the page before the game
+   -------------------------------------------------------------------------
+   Sitting down at a board game normally comes with somebody explaining it,
+   and a web page has to do that itself. LU'LU'A's playtest settled how much:
+   not much. Four lines that are always visible, and everything else folded
+   shut. Five open sections of prose is a rulebook, and nobody reads a
+   rulebook to start a game on a phone.
+
+   The seat controls live here and nowhere else. Once the game begins they
+   are gone for good, so a stray tap two hours in can't reset the table.
+   ========================================================================= */
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className={`fold ${show ? "on" : ""}`}>
+      <button className="fold-head" aria-expanded={show} onClick={() => setShow((v) => !v)}>
+        <span>{title}</span>
+        <span className="fold-mark">{show ? "\u2212" : "+"}</span>
+      </button>
+      {show && <div className="fold-body">{children}</div>}
+    </div>
+  );
+}
+
 function Lobby() {
   const s = useGame();
+  const { theme, cycle, ground } = useTheme();
+  const joined = s.mySeat !== null && s.mySeat >= 0;
 
   return (
     <div className="shell">
-      <a className="kaz6-home" href="../../index.html">← KAZ6</a>
+      <a className="kaz6-home" href="../../index.html">&larr; KAZ6</a>
       <header className="head">
         <p className="eyebrow">The Whole Street</p>
         <h1 className="wordmark">FAREEJ</h1>
+        <div className="head-controls">
+          <button
+            className="btn tiny ghost"
+            title={theme === "auto" ? `Following your device (${ground})` : `Always ${theme}`}
+            onClick={cycle}
+          >
+            {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+          </button>
+        </div>
       </header>
 
       <div className="panel panel--lead">
         <p className="lede">
-          Buy the island one landmark at a time. Charge rent, build villas, put up towers,
-          and take everybody else&rsquo;s money until there is nobody left.
+          Buy the island one landmark at a time, charge rent on it, and build until
+          nobody else can afford to land there. <b>Last one still solvent wins.</b>
         </p>
         <div className="ladder">
           {LADDER.map((gr) => (
@@ -331,62 +436,93 @@ function Lobby() {
           ))}
         </div>
         <p className="muted">
-          Everyone starts with {full(STARTING_CASH)} and collects {full(SALARY)} each time they
-          pass Bab Al Bahrain.
+          Eight groups, cheapest to dearest, and the order is a journey: four thousand years
+          of Dilmun, then the pearling houses of Muharraq, the forts, the souqs, and out to
+          the towers you can see from the Causeway. Everyone starts with {full(STARTING_CASH)}{" "}
+          and collects {full(SALARY)} each time they pass Bab Al Bahrain.
         </p>
       </div>
 
-      <div className="panel">
-        <div className="panel-head"><span>Seats</span></div>
-        <div className="row">
-          {s.seats.map((seat, i) => (
-            <span key={i} className="seatctl">
-              <TokenIcon token={s.players[i].token} fill={s.players[i].colour} size={20} />
-              <b>{TOKEN_LABEL[s.players[i].token]}</b>
-              <span className={`tag2 ${seat.type}`}>{seat.type === "bot" ? "bot" : "this device"}</span>
-              <button
-                className="btn tiny ghost"
-                onClick={() => s.setSeatType(i, seat.type === "bot" ? "local" : "bot")}
-              >
-                {seat.type === "bot" ? "Take over" : "Add bot"}
-              </button>
-            </span>
-          ))}
-        </div>
-      </div>
+      <Section title="How a turn works">
+        <ol className="steps steps--tight">
+          <li><b>Roll.</b> Land on something unowned and you can buy it — or send it to
+            auction, where everyone bids and you can still win it cheaper.</li>
+          <li><b>Pay up.</b> Land on somebody else&rsquo;s and you owe them rent. Hold a whole
+            group and the rent on it doubles before you have built anything at all.</li>
+          <li><b>Build, trade, end the turn.</b> Four villas on a plot, then a tower. You can
+            only build on a group you hold outright, and only evenly across it.</li>
+        </ol>
+        <p className="muted">
+          Roll doubles and you go again — three in a row and you are pulled over at the
+          border. Owe more than you hold and you must sell buildings or mortgage deeds to
+          cover it; if you cannot, you are out and everything you own goes to whoever you
+          owed.
+        </p>
+      </Section>
+
+      <Section title="Playing with people who aren&rsquo;t here">
+        <p className="muted">
+          <b>This device is the table.</b> Open a seat below, send the link, and whoever
+          opens it picks that seat. Keep this page open — the host&rsquo;s browser is what
+          holds the game, so closing it closes the table. Any seat nobody takes can be a
+          <b> bot</b>, so you never need a full four.
+        </p>
+      </Section>
+
+      <SeatBar />
 
       <div className="panel">
-        <div className="panel-head"><span>Length</span></div>
+        <div className="panel-head"><span>How long</span></div>
         <label className="opt">
           <input
-            type="checkbox"
-            checked={s.toggles.openingDeal}
+            type="checkbox" checked={s.toggles.openingDeal}
             onChange={(e) => s.setToggles({ openingDeal: e.target.checked })}
           />
           <span>
             <b>Opening deal</b>
-            <span className="muted">Two landmarks to every seat before the first roll, so the slow opening lap disappears.</span>
+            <span className="muted">
+              Two landmarks dealt to every seat before the first roll, so the slow opening
+              lap where nothing happens disappears.
+            </span>
           </span>
         </label>
         <label className="opt">
           <input
-            type="checkbox"
-            checked={s.toggles.lapLimit > 0}
+            type="checkbox" checked={s.toggles.lapLimit > 0}
             onChange={(e) => s.setToggles({ lapLimit: e.target.checked ? 8 : 0 })}
           />
           <span>
             <b>Stop after eight laps</b>
-            <span className="muted">Richest wins when everyone has been round eight times. Without it, play runs until one seat is left.</span>
+            <span className="muted">
+              Richest wins once everybody has been round eight times. Without it the game
+              runs until one seat is left, which is the real ending and the longer one.
+            </span>
           </span>
         </label>
       </div>
 
-      <div className="panel panel--start">
-        <button className="btn" onClick={s.startGame}>Start the game</button>
-        <span className="muted">
-          {solvent(s).length} seats, all on this device unless you sit a bot down.
-        </span>
-      </div>
+      {joined ? (
+        <div className="panel">
+          <p className="muted">
+            You&rsquo;re in as {TOKEN_LABEL[s.players[s.mySeat!].token]}. The game begins when
+            the host starts it — the board will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="panel panel--start">
+          <button className="btn" onClick={s.startGame}>Start the game</button>
+          <span className="muted">
+            {s.seats.filter((x) => x.type === "bot").length > 0
+              ? "Bots will play their own seats."
+              : "Everyone plays from this device unless you open a seat online."}
+          </span>
+        </div>
+      )}
+
+      <p className="seed">
+        Independently made and not affiliated with any board game publisher. The landmarks
+        are real places, used affectionately.
+      </p>
     </div>
   );
 }
