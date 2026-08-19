@@ -12,7 +12,7 @@
    ========================================================================= */
 
 import { useEffect, useRef } from "react";
-import { applyBotAction, useGame } from "./store";
+import { applyBotAction, drivesSeat, useGame } from "./store";
 import { decide, pendingSeat } from "../game/bot";
 
 /** Long enough to read, short enough not to feel like waiting. */
@@ -38,6 +38,10 @@ export function useBot() {
       const seat = pendingSeat(s);
       if (seat === null) return;
       if (s.seats[seat]?.type !== "bot") return;
+      /* Only ONE device may drive any seat, bots included. The host runs
+         them; a phone that joined runs its own seat and nothing else. Two
+         drivers means two publishers and a lost move. */
+      if (!drivesSeat(s, seat)) return;
       if (spent.current++ > BUDGET) {
         console.warn("[bot] budget spent — stopping so the table doesn't spin");
         return;

@@ -24,6 +24,10 @@
 
 import { create } from "zustand";
 import {
+  claimSeat, createRoom, fetchRoom, makeRoomCode, pollRoom, pushSnapshot,
+  remoteConfigured, subscribeRoom, type Claims, type LinkStatus, type Room, type Snapshot,
+} from "./sync";
+import {
   BAIL, BANK_TOWERS, BANK_VILLAS, BOARD, CAUSEWAY_INDEX, LAP, SALARY, STARTING_CASH,
   VILLAS_PER_TOWER, spacesInGroup,
 } from "../game/board";
@@ -167,7 +171,16 @@ export interface GameState {
 
   seats: Seat[];
   roomCode: string | null;
+  /** which seat THIS device controls; null = host holding all local seats */
   mySeat: number | null;
+  syncing: boolean;
+  /** live state of the realtime channel, for the "connected" light */
+  link: LinkState;
+  /** server revision this device has seen; writes below it are rejected */
+  rev: number;
+  /** which seats are taken. Server-owned — never part of a published snapshot. */
+  claims: Claims;
+  lastPushedAt: string | null;
 
   newGame: (toggles?: Toggles) => void;
   startGame: () => void;
@@ -192,7 +205,19 @@ export interface GameState {
   acceptTrade: () => void;
   declineTrade: () => void;
   endTurn: () => void;
+
+  openSeat: (seat: number) => Promise<void>;
+  closeSeat: (seat: number) => void;
+  joinRoom: (code: string, seat: number) => Promise<boolean>;
+  startSync: () => void;
+  stopSync: () => void;
+  snapshot: () => Snapshot;
+  applySnapshot: (snap: Snapshot) => void;
+  acceptRoom: (room: Room) => void;
+  publish: () => void;
 }
+
+export type LinkState = "offline" | "connecting" | "live" | "error";
 
 const say = (log: string[], msg: string) => [msg, ...log].slice(0, 60);
 
@@ -229,7 +254,31 @@ export function playableSeat(s: Pick<GameState, "roomCode" | "mySeat" | "seats">
   return drivesSeat(s, seat) && s.seats[seat]?.type !== "bot";
 }
 
-export const useGame = create<GameState>((set, get) => {
+export const useGame = create<GameState>((rawSet, get) => {
+  /* -----------------------------------------------------------------------
+     ONE CHOKE POINT FOR PUBLISHING
+     Sprinkling publish() through twenty actions guarantees somebody forgets
+     one and a seat silently desyncs. Instead every set() that touches TABLE
+     state publishes, and the keys that describe only THIS DEVICE are listed
+     out so writing them never does.
+     ----------------------------------------------------------------------- */
+  const LOCAL_ONLY = new Set([
+    "syncing", "mySeat", "lastPushedAt", "roomCode", "link", "rev", "claims",
+  ]);
+  /* Guard against the echo loop: applying a received snapshot also calls
+     set(), which would publish it straight back out, and two clients would
+     ping-pong forever. Nothing publishes while we are applying. */
+  let applying = false;
+  const set: typeof rawSet = ((partial: object, replace?: boolean) => {
+    (rawSet as (p: object, r?: boolean) => void)(partial, replace);
+    if (applying) return;
+    const keys = Object.keys(partial ?? {});
+    if (keys.length && !keys.every((k) => LOCAL_ONLY.has(k))) {
+      const st = get();
+      if (st.roomCode && st.syncing) st.publish();
+    }
+  }) as typeof rawSet;
+
   /* ---- helpers that read and write through set/get ---- */
 
   /** Move cash. Negative `amount` takes it. Never lets a balance go under
@@ -325,8 +374,16 @@ export const useGame = create<GameState>((set, get) => {
     seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
     roomCode: null,
     mySeat: null,
+    syncing: false,
+    link: "offline" as LinkState,
+    rev: 0,
+    claims: {} as Claims,
+    lastPushedAt: null,
 
     newGame: (toggles) => {
+      /* leave the old table first, or its snapshots keep arriving and stamp
+         the abandoned game back over the fresh board */
+      get().stopSync();
       const seed = freshSeed();
       set({
         seed,
@@ -352,6 +409,11 @@ export const useGame = create<GameState>((set, get) => {
         seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
         roomCode: null,
         mySeat: null,
+        syncing: false,
+        link: "offline",
+        rev: 0,
+        claims: {},
+        lastPushedAt: null,
       });
     },
 
@@ -763,6 +825,154 @@ export const useGame = create<GameState>((set, get) => {
         players,
         trade: null,
         log: say(s.log, `${s.players[t.to].name} takes the deal.`),
+      });
+    },
+
+    /* --- TABLE / SEATS ---------------------------------------------------
+       Flipping the first seat to remote is what creates the row; until then
+       the game is purely local and never touches the network. */
+    openSeat: async (seatId: number) => {
+      const s = get();
+      if (s.started) return;
+      if (!remoteConfigured) {
+        set({ log: say(s.log, "Online seats aren't configured on this build.") });
+        return;
+      }
+      const code = s.roomCode ?? makeRoomCode();
+      const seats = s.seats.map((x, i) => (i === seatId ? { ...x, type: "remote" as SeatType, code } : x));
+      const first = !s.roomCode;
+      set({ seats, roomCode: code, syncing: true, link: "connecting", mySeat: s.mySeat ?? -1 });
+
+      /* Don't announce a room code until the row actually exists. Showing
+         one optimistically means handing friends a link to a table that was
+         never created, and nobody can tell why it doesn't work. */
+      const wrote = first
+        ? await createRoom(code, get().snapshot())
+        : (await pushSnapshot(code, get().snapshot(), s.rev + 1)) === "ok";
+
+      if (!wrote) {
+        set({
+          seats: s.seats, roomCode: s.roomCode, syncing: s.syncing, link: "error", mySeat: s.mySeat,
+          log: say(s.log, "Couldn't reach the table server — the seat is still local."),
+        });
+        return;
+      }
+      if (first) set({ rev: 1 });
+      set({ log: say(get().log, `Seat ${seatId + 1} opened online — room code ${code}.`) });
+      get().startSync();
+    },
+
+    closeSeat: (seatId: number) => {
+      const s = get();
+      if (s.started) return;
+      set({
+        seats: s.seats.map((x, i) => (i === seatId ? { ...x, type: "local" as SeatType } : x)),
+        log: say(s.log, `Seat ${seatId + 1} is local again.`),
+      });
+    },
+
+    joinRoom: async (code: string, seatId: number) => {
+      if (!remoteConfigured) return false;
+      const room = code.toUpperCase();
+      const got = await fetchRoom(room);
+      if (!got) return false;
+      get().applySnapshot(got.snapshot);
+      set({ rev: got.rev, claims: got.claims });
+
+      /* Only a seat the host actually opened can be joined. Taking one that
+         is still local would leave two devices driving it, each silently
+         overwriting the other's moves. */
+      if (get().seats[seatId]?.type !== "remote") {
+        set({ log: say(get().log, `Seat ${seatId + 1} isn't open online.`) });
+        return false;
+      }
+
+      /* Claim through the database, not through a snapshot push: a joining
+         device is by definition not the one whose turn it is, so anything it
+         wrote to the game state would be a stale overwrite. The RPC is
+         atomic and refuses a seat that is already taken. */
+      const claims = await claimSeat(room, seatId);
+      if (!claims) {
+        set({ log: say(get().log, `Seat ${seatId + 1} was already taken.`) });
+        return false;
+      }
+      set({ roomCode: room, mySeat: seatId, syncing: true, claims });
+      get().startSync();
+      return true;
+    },
+
+    startSync: () => {
+      const s = get();
+      if (!s.roomCode) return;
+      const self = get() as unknown as { _unsub?: () => void };
+      /* re-subscribing to a different room must drop the old channel, or the
+         device keeps receiving snapshots from a table it has left */
+      self._unsub?.();
+      const take = (room: Room) => get().acceptRoom(room);
+      const unsubLive = subscribeRoom(s.roomCode, take, (st: LinkStatus) =>
+        set({ link: st === "live" ? "live" : st === "connecting" ? "connecting" : "error" }));
+      const unsubPoll = pollRoom(s.roomCode, take);
+      self._unsub = () => { unsubLive(); unsubPoll(); };
+    },
+
+    stopSync: () => {
+      const self = get() as unknown as { _unsub?: () => void };
+      self._unsub?.();
+      self._unsub = undefined;
+      set({ syncing: false, link: "offline" });
+    },
+
+    /** The serialisable slice. The board is fixed, so nothing is derived and
+        everything that matters travels. */
+    snapshot: (): Snapshot => {
+      const s = get();
+      return {
+        v: 1,
+        updatedAt: new Date().toISOString(),
+        state: {
+          players: s.players, estate: s.estate, current: s.current, phase: s.phase,
+          dice: s.dice, doubles: s.doubles, rolled: s.rolled, turnNo: s.turnNo,
+          log: s.log, winner: s.winner, toggles: s.toggles, started: s.started,
+          decks: s.decks, drawn: s.drawn, offer: s.offer, auction: s.auction,
+          debt: s.debt, trade: s.trade, offersMade: s.offersMade, seats: s.seats,
+        },
+      };
+    },
+
+    applySnapshot: (snap: Snapshot) => {
+      applying = true;
+      try {
+        set({ ...(snap.state as object), lastPushedAt: snap.updatedAt });
+      } finally {
+        applying = false;
+      }
+    },
+
+    /** Adopt a room read. Older or equal revisions are our own echo, or a
+        device that has fallen behind — either way, not news. */
+    acceptRoom: (room: Room) => {
+      const s = get();
+      /* claims are server-owned and monotonic, so they are worth taking even
+         when the snapshot alongside them is one we already have */
+      if (room.claims) set({ claims: room.claims });
+      if (room.rev <= s.rev) return;
+      s.applySnapshot(room.snapshot);
+      set({ rev: room.rev });
+    },
+
+    publish: () => {
+      const s = get();
+      if (!s.roomCode || !s.syncing) return;
+      const code = s.roomCode;
+      const next = s.rev + 1;
+      const snap = s.snapshot();
+      set({ lastPushedAt: snap.updatedAt, rev: next });
+      void pushSnapshot(code, snap, next).then((res) => {
+        /* Someone else advanced the table first. Our snapshot described a
+           board that no longer exists, so take theirs rather than retry ours
+           — retrying is exactly the overwrite this guard exists to stop. */
+        if (res !== "stale") return;
+        void fetchRoom(code).then((room) => { if (room) get().acceptRoom(room); });
       });
     },
 
