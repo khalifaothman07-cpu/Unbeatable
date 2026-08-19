@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
 import { Dice } from "./render/Dice";
+import { BoardOverlay, MiniBoard } from "./render/FullBoard";
 import { Deed } from "./render/Deed";
 import { TradePanel } from "./render/TradePanel";
 import { SeatBar } from "./render/SeatBar";
@@ -24,6 +25,7 @@ export function App() {
   const s = useGame();
   const me = s.players[s.current];
   const [openDeed, setOpenDeed] = useState<number | null>(null);
+  const [fullBoard, setFullBoard] = useState(false);
   const [showLog, setShowLog] = useState(false);
 
   const [muted, setMuted] = useState(fx.isMuted());
@@ -151,9 +153,27 @@ export function App() {
               width-watching hook would remount the board on every resize and
               lose the strip's scroll position. Both read the same geometry. */}
           <BoardSquare estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
-          <BoardStrip estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+          <div className="strip-wrap">
+            <BoardStrip estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+            {/* The strip shows four spaces. This is how you see the other
+                thirty-six — and everyone standing on them. */}
+            <MiniBoard
+              estate={s.estate} players={s.players} focus={boardFocus}
+              onOpen={() => setFullBoard(true)}
+            />
+          </div>
         </div>
       </div>
+
+      {fullBoard && (
+        <BoardOverlay
+          estate={s.estate}
+          players={s.players}
+          focus={boardFocus}
+          onPick={(i) => { setFullBoard(false); setOpenDeed(i); }}
+          onClose={() => setFullBoard(false)}
+        />
+      )}
 
       {openDeed !== null && (
         <Deed index={openDeed} estate={s.estate} players={s.players} onClose={() => setOpenDeed(null)} />

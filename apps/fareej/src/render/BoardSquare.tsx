@@ -27,12 +27,15 @@ import { TokenIcon } from "./Tokens";
 import { Buildings } from "./Buildings";
 
 export function BoardSquare({
-  estate, players, focus, onPick,
+  estate, players, focus, onPick, tokenSize = 17,
 }: {
   estate: Estate;
   players: Player[];
   focus: number;
   onPick: (index: number) => void;
+  /** the overlay draws the same board much smaller, where a 17px token in a
+      34px cell is the difference between seeing positions and not */
+  tokenSize?: number;
 }) {
   return (
     <div className="square" role="group" aria-label="The board">
@@ -79,7 +82,7 @@ export function BoardSquare({
                 </span>
               )}
               <span className="sq-tokens">
-                {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={17} />)}
+                {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={tokenSize} />)}
               </span>
             </span>
           </button>
