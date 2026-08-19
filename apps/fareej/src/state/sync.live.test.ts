@@ -16,6 +16,13 @@
 
    Skips itself when the backend is unreachable, so `npm test` on a plane
    still goes green.
+
+   TIMING. This suite is the only one here that waits on a network, and it
+   runs alongside eight other files competing for the same machine. It
+   passed on its own and failed twice in a full run, which is a tight window
+   rather than a broken seam — so the waits below are generous on purpose.
+   If you tighten them to make the suite feel quicker you will get a test
+   that fails for reasons that have nothing to do with the code.
    ========================================================================= */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -56,8 +63,10 @@ async function newClient() {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Poll a condition rather than sleeping a fixed time — latency varies. */
-async function until(cond: () => boolean, ms = 15000, step = 250) {
+/** Poll a condition rather than sleeping a fixed time — latency varies.
+    The fallback poll inside the app runs every 4s, so any window has to be
+    a comfortable multiple of that even when realtime is not delivering. */
+async function until(cond: () => boolean, ms = 30000, step = 250) {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
     if (cond()) return true;
@@ -111,7 +120,7 @@ describe("two devices on one table", () => {
 
     host.useGame.getState().stopSync();
     guest.useGame.getState().stopSync();
-  }, 60000);
+  }, 90000);
 
   it("carries a whole turn across, deeds and cash included", async () => {
     if (!reachable) return;
@@ -140,7 +149,7 @@ describe("two devices on one table", () => {
 
     host.useGame.getState().stopSync();
     guest.useGame.getState().stopSync();
-  }, 60000);
+  }, 90000);
 
   it("refuses a seat two devices both reach for", async () => {
     if (!reachable) return;
@@ -161,7 +170,7 @@ describe("two devices on one table", () => {
     host.useGame.getState().stopSync();
     first.useGame.getState().stopSync();
     second.useGame.getState().stopSync();
-  }, 40000);
+  }, 60000);
 
   it("refuses a seat the host never opened", async () => {
     if (!reachable) return;
@@ -180,5 +189,5 @@ describe("two devices on one table", () => {
 
     host.useGame.getState().stopSync();
     guest.useGame.getState().stopSync();
-  }, 40000);
+  }, 60000);
 });
