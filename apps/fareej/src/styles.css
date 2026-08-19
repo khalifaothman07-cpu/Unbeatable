@@ -1,0 +1,430 @@
+/* =========================================================================
+   styles.css — FAREEJ shell.
+   -------------------------------------------------------------------------
+   The token system, the button physics and the light/dark grounds are
+   LIFTED FROM apps/luluaa/src/styles.css and deliberately kept identical.
+   Two games on one site that disagree about what a border weight means look
+   like two sites. If you change a token here, change it there.
+   ========================================================================= */
+/* -------------------------------------------------------------------------
+   TWO GROUNDS, ONE BOARD
+   -------------------------------------------------------------------------
+   Dark mode inverts the ROOM, not the board. A physical board doesn't turn
+   into a negative of itself at night — the table it sits on goes dark and
+   the wood catches less light. So the page, panels and type flip, the board
+   art keeps its own palette, and dark mode just takes the glare off it.
+
+   Everything is expressed as tiers rather than one-off alphas: three border
+   weights, three surface levels. That is also why the interface reads as
+   more organised than it did — the same line means the same thing twice.
+   ------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  /* fixed brand notes — the same in both grounds */
+  --terracotta: #b4623f;      /* fills, borders, marks — the brand note */
+  --accent-fill: #9e5231;     /* the same red, dark enough to label at AA */
+  --accent-ink: #8d4326;      /* red as TEXT on the ground */
+  --turquoise: #1c7d84;
+  --coral-tan: #cbaa82;
+  --pearl: #f4f1ea;
+  --night: #1c1712;
+  --r: 4px;
+
+  /* --- light ground (the default) --- */
+  --sand: #e8d9c0;
+  --sand-deep: #d9c4a3;
+  --ink: #2a211a;
+  --ink-soft: rgba(42, 33, 26, 0.72);
+  --ink-faint: rgba(42, 33, 26, 0.68);
+
+  --line:   rgba(42, 33, 26, 0.18);
+  --line-2: rgba(42, 33, 26, 0.28);
+  --line-3: rgba(42, 33, 26, 0.42);
+
+  --surface:   rgba(255, 255, 255, 0.44);
+  --surface-2: rgba(255, 255, 255, 0.64);
+  --surface-3: rgba(255, 255, 255, 0.84);
+
+  --shadow-rgb: 28, 23, 18;
+  --weave-1: rgba(180, 98, 63, 0.05);
+  --weave-2: rgba(28, 125, 132, 0.04);
+
+  --ripple-1: rgba(255, 255, 255, 0.5);
+  --ripple-2: rgba(255, 255, 255, 0.16);
+  --good: #2f7d4a;
+  --board-filter: none;
+}
+
+/* Dark is applied two ways so both the system setting and an explicit
+   choice land on the same tokens: the media query is guarded so a reader
+   who has picked Light is never overridden by their OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sand: #17120e;
+    --sand-deep: #221a14;
+    --ink: #efe6d8;
+    --ink-soft: rgba(239, 230, 216, 0.7);
+    --ink-faint: rgba(239, 230, 216, 0.6);
+
+    --line:   rgba(239, 230, 216, 0.16);
+    --line-2: rgba(239, 230, 216, 0.28);
+    --line-3: rgba(239, 230, 216, 0.44);
+
+    --surface:   rgba(255, 255, 255, 0.045);
+    --surface-2: rgba(255, 255, 255, 0.085);
+    --surface-3: rgba(255, 255, 255, 0.14);
+
+    --shadow-rgb: 0, 0, 0;
+    --weave-1: rgba(180, 98, 63, 0.07);
+    --weave-2: rgba(28, 125, 132, 0.06);
+
+    --ripple-1: rgba(255, 255, 255, 0.42);
+    --ripple-2: rgba(255, 255, 255, 0.12);
+    /* the board is the only lit thing on a dark page, so take the edge off
+       rather than let it glare in a dark room */
+    --good: #6ec98d;
+    /* on a dark ground red has to go UP to stay legible, not down */
+    --accent-fill: #a85736;
+    --accent-ink: #cc8560;
+    --board-filter: brightness(0.9) saturate(0.94);
+  }
+}
+
+:root[data-theme="dark"] {
+  --sand: #17120e;
+  --sand-deep: #221a14;
+  --ink: #efe6d8;
+  --ink-soft: rgba(239, 230, 216, 0.7);
+  --ink-faint: rgba(239, 230, 216, 0.6);
+
+  --line:   rgba(239, 230, 216, 0.16);
+  --line-2: rgba(239, 230, 216, 0.28);
+  --line-3: rgba(239, 230, 216, 0.44);
+
+  --surface:   rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.085);
+  --surface-3: rgba(255, 255, 255, 0.14);
+
+  --shadow-rgb: 0, 0, 0;
+  --weave-1: rgba(180, 98, 63, 0.07);
+  --weave-2: rgba(28, 125, 132, 0.06);
+
+  --ripple-1: rgba(255, 255, 255, 0.42);
+  --ripple-2: rgba(255, 255, 255, 0.12);
+  --good: #6ec98d;
+  --accent-fill: #a85736;
+  --accent-ink: #cc8560;
+  --board-filter: brightness(0.9) saturate(0.94);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--sand) !important;
+  color: var(--ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* sadu-weave geometry as a faint ground texture, not a loud border */
+  background-image:
+    repeating-linear-gradient(45deg, var(--weave-1) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(-45deg, var(--weave-2) 0 6px, transparent 6px 12px);
+}
+
+.shell {
+  max-width: 1000px;
+  margin-inline: auto;
+  padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 36px) 64px;
+}
+
+.kaz6-home {
+  display: inline-block;
+  margin-bottom: 24px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.kaz6-home:hover { color: var(--ink); }
+
+.eyebrow {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.wordmark {
+  font-size: clamp(2.8rem, 10vw, 5rem);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+  margin: 8px 0 14px;
+  color: var(--ink);
+}
+/* LU'LU'A ends its wordmark with a pearl. FAREEJ does not borrow it — a
+   shared signature makes two games look like one game with two skins. The
+   name carries itself. */
+
+.tagline { max-width: 56ch; color: var(--ink-soft); line-height: 1.6; }
+
+.controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  margin: 28px 0 20px;
+}
+
+/* PRESS PHYSICS
+   A button should feel like it takes the weight of a finger and gives it
+   back. Three things do that: a raised resting state, a real travel on
+   :active, and a snap back that is faster than the push down (0.16s out,
+   0.04s in) — the asymmetry is what reads as springy rather than laggy.
+   touch-action/tap-highlight kill the 300ms delay and the grey iOS flash,
+   which otherwise arrive between the press and the response and make the
+   whole thing feel dead. */
+.btn {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--pearl); background: var(--accent-fill);
+  border: 0; border-radius: var(--r); padding: 12px 22px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 0 rgba(var(--shadow-rgb), 0.34), 0 3px 7px rgba(var(--shadow-rgb), 0.16);
+  transition: background 0.2s, transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.16s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.btn:hover { filter: brightness(1.08); }
+
+/* The pressed state is driven from JS (.pressing) as well as :active. A tap
+   can release inside a single frame, and :active alone would come and go
+   without ever being painted — the button would look inert no matter how
+   carefully it was styled. .pressing is held for ~130ms so every press is
+   actually seen. On an iPhone, where vibrate doesn't exist and the ringer
+   switch can mute the audio, this is the only feedback left, so it is sized
+   to be felt rather than merely noticed: 3px of travel, the shadow fully
+   collapsing, and a squeeze across the width. */
+.btn:active:not(:disabled),
+.btn.pressing:not(:disabled) {
+  transform: translateY(3px) scaleX(0.985);
+  box-shadow: 0 0 0 rgba(var(--shadow-rgb), 0.34), 0 1px 2px rgba(var(--shadow-rgb), 0.22);
+  filter: brightness(0.93);
+  transition-duration: 0.03s;
+}
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Ink spreading from where the finger actually landed. Short and opaque
+   enough to survive a glance, gone before it can feel decorative. */
+.btn, .step { overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--ripple-1) 0%, var(--ripple-2) 45%, transparent 70%);
+  transform: scale(0.25);
+  opacity: 0.9;
+  animation: ripple 0.42s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+}
+@keyframes ripple {
+  to { transform: scale(1); opacity: 0; }
+}
+/* on the dark tiny/step buttons the light ripple would vanish */
+.btn.tiny .ripple, .step .ripple {
+  background: radial-gradient(circle, var(--ripple-1) 0%, var(--ripple-2) 50%, transparent 72%);
+}
+.btn.ghost .ripple {
+  background: radial-gradient(circle, rgba(180,98,63,0.34) 0%, rgba(180,98,63,0.1) 50%, transparent 72%);
+}
+
+.seg { display: flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.segBtn {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  background: transparent; color: var(--ink-soft);
+  border: 0; padding: 11px 16px; cursor: pointer; transition: background 0.2s, color 0.2s;
+}
+.segBtn.on { background: var(--ink); color: var(--sand); }
+
+/* ================= FAREEJ ================= */
+
+.head { margin-bottom: 6px; }
+
+/* ---- the scoreboard ---- */
+.scoreboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 8px; margin: 18px 0 12px; }
+.seat {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 9px 11px; font-size: .82rem;
+}
+.seat.on { border-color: var(--ink); background: var(--surface-3); box-shadow: inset 3px 0 0 var(--terracotta); }
+.seat.out { opacity: .45; }
+.seat-who { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.seat-who .muted { font-family: ui-monospace, monospace; font-size: .66rem; }
+.seat-worth {
+  margin-left: auto; display: inline-flex; align-items: baseline; gap: 3px;
+  font-family: ui-monospace, monospace; font-weight: 700; font-size: .92rem;
+}
+.seat-worth i { font-style: normal; font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+/* one square per group held outright — the thing a player is actually racing for */
+.seat-groups { display: inline-flex; gap: 3px; flex-basis: 100%; }
+.seat-groups i { width: 15px; height: 6px; border: 1px solid var(--line-2); }
+
+.banner {
+  font-family: ui-monospace, monospace; font-size: .8rem; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink);
+  border-left: 3px solid var(--terracotta); padding: 10px 12px;
+  background: var(--surface); margin-bottom: 12px;
+}
+.banner.mine { border-left-color: var(--turquoise); background: var(--surface-2); font-weight: 600; }
+
+/* ---- the strip: the lap, unrolled ----
+   A square board is 35px a space on a phone. The strip trades the iconic
+   silhouette for a space wide enough to carry its own name. */
+.strip {
+  display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain;
+  padding: 4px 2px 14px; margin-bottom: 14px;
+  scrollbar-width: thin;
+}
+.cellbtn {
+  flex: 0 0 auto; width: 92px; min-height: 104px;
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  border: 1px solid var(--line-2); border-radius: var(--r);
+  background: var(--surface); color: var(--ink);
+  padding: 0 0 6px; cursor: pointer; text-align: left;
+  font: inherit; overflow: hidden;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: border-color .16s, background .16s, transform .16s;
+}
+.cellbtn:hover { background: var(--surface-2); }
+.cellbtn.on { border-color: var(--ink); background: var(--surface-3); transform: translateY(-3px); }
+.cellbtn.corner { background: var(--surface-2); }
+.cellbtn.corner .cell-name { text-transform: uppercase; letter-spacing: .1em; font-size: .58rem; }
+.cellbtn.mortgaged { opacity: .6; }
+/* an owned space is bordered in its owner's colour — set inline from the seat */
+.cellbtn[style*="border-color"] { border-width: 2px; }
+
+.cell-band { display: block; height: 14px; border-bottom: 1px solid var(--line); }
+/* corners, decks and taxes have no group — a hatch keeps the band meaning
+   "this is the top of a space" rather than looking like a rendering gap */
+.cell-band.none {
+  background: repeating-linear-gradient(
+    45deg, var(--line-2) 0 3px, transparent 3px 7px);
+}
+.cell-name {
+  padding: 0 7px; font-size: .68rem; line-height: 1.25; font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.cell-price {
+  padding: 0 7px; font-family: ui-monospace, monospace; font-size: .6rem;
+  color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cell-built { display: flex; gap: 2px; padding: 0 7px; margin-top: auto; }
+.cell-built .villa { width: 7px; height: 7px; background: var(--good); border: 1px solid rgba(0,0,0,.35); }
+.cell-built .tower { width: 10px; height: 13px; background: var(--terracotta); border: 1px solid rgba(0,0,0,.4); }
+.cell-tokens { display: flex; flex-wrap: wrap; gap: 1px; padding: 0 5px; min-height: 20px; margin-top: auto; }
+.tok { flex: none; display: inline-block; vertical-align: middle; }
+
+/* ---- the deed sheet ---- */
+.deed { padding: 0 0 14px; overflow: hidden; }
+.deed-head { padding: 11px 14px; display: flex; flex-direction: column; gap: 2px; }
+.deed-head b { font-size: 1.05rem; line-height: 1.2; }
+.deed-group { font-family: ui-monospace, monospace; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase; opacity: .85; }
+.deed-note { padding: 11px 14px 0; font-size: .9rem; line-height: 1.55; }
+.deed-group-note { padding: 4px 14px 0; font-size: .82rem; }
+.deed-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 8px 14px; border-top: 1px solid var(--line);
+  font-size: .82rem;
+}
+.deed-row span { color: var(--ink-soft); }
+.deed-row b { font-family: ui-monospace, monospace; text-align: right; }
+.deed-owner b { display: inline-flex; align-items: center; gap: 6px; }
+.deed .dot { width: 10px; height: 10px; border: 1px solid var(--line-2); }
+.deed .btn { margin: 12px 14px 0; }
+.rents { width: calc(100% - 28px); margin: 8px 14px 0; border-collapse: collapse; font-size: .8rem; }
+.rents th { text-align: left; font-weight: 400; color: var(--ink-soft); padding: 4px 0; }
+.rents td { text-align: right; font-family: ui-monospace, monospace; padding: 4px 0; }
+.rents tr + tr th, .rents tr + tr td { border-top: 1px solid var(--line); }
+.rents tr.on th, .rents tr.on td { color: var(--accent-ink); font-weight: 700; }
+
+/* ---- panels ---- */
+.panel { border: 1px solid var(--line); background: var(--surface); padding: 12px 14px; margin-bottom: 10px; }
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: ui-monospace, monospace; font-size: .68rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 9px;
+}
+.panel--turn { border-color: var(--terracotta); background: var(--surface-2); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.panel--turn .panel-head { flex-basis: 100%; margin-bottom: 0; }
+.panel--urgent { border-color: var(--terracotta); background: var(--surface-3); box-shadow: inset 3px 0 0 var(--terracotta); }
+.panel--lead { background: var(--surface-2); border-color: var(--line-2); }
+.panel--start { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.muted { color: var(--ink-soft); font-size: .85rem; line-height: 1.55; }
+.hint { margin-top: 9px; font-size: .8rem; }
+.dice { font-family: ui-monospace, monospace; font-size: .76rem; color: var(--ink-soft); }
+.lede { font-size: 1.02rem; line-height: 1.62; max-width: 62ch; }
+.card-text { font-size: 1rem; line-height: 1.6; margin-bottom: 12px; max-width: 52ch; }
+
+.btn.small { font-size: .7rem; padding: 9px 13px; letter-spacing: .06em; }
+.btn.tiny { font-size: .62rem; padding: 6px 9px; letter-spacing: .05em; background: var(--ink); color: var(--sand); }
+.btn.on { background: var(--ink); color: var(--sand); }
+.btn:disabled { opacity: .34; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn:disabled:hover { filter: none; }
+.btn.ghost {
+  background: transparent; color: var(--ink-soft);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 1px 0 rgba(var(--shadow-rgb), 0.18);
+}
+.btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
+.btn.ghost:active:not(:disabled) { box-shadow: none; }
+.btn.ghost:disabled:hover { background: transparent; }
+
+/* ---- your street ---- */
+.holdings { display: grid; gap: 6px; }
+.hold {
+  display: grid; grid-template-columns: 5px 1fr auto; align-items: center; gap: 10px;
+  border: 1px solid var(--line); background: var(--surface); padding: 7px 9px 7px 0;
+}
+.hold.mortgaged { opacity: .6; }
+.hold-band { align-self: stretch; min-height: 30px; }
+.hold-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hold-name b { font-size: .82rem; }
+.hold-name .muted { font-family: ui-monospace, monospace; font-size: .62rem; }
+.hold-acts { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ---- lobby ---- */
+.ladder { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 14px 0 12px; }
+@media (min-width: 640px) { .ladder { grid-template-columns: repeat(4, 1fr); } }
+.rung {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: ui-monospace, monospace; font-size: .62rem;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft);
+}
+.rung i { width: 16px; height: 16px; border: 1px solid var(--line-2); flex: none; }
+.seatctl {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .76rem; border: 1px solid var(--line); padding: 6px 9px; background: var(--surface);
+}
+.tag2 {
+  font-family: ui-monospace, monospace; font-size: .56rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-soft);
+  border: 1px solid var(--line-2); padding: 2px 5px;
+}
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--line); }
+.opt:first-of-type { border-top: 0; }
+.opt input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--accent-fill); flex: none; }
+.opt span { display: flex; flex-direction: column; gap: 2px; }
+.opt b { font-size: .88rem; }
+.opt .muted { font-size: .8rem; }
+
+/* ---- the log ---- */
+.log { list-style: none; font-family: ui-monospace, monospace; font-size: .68rem; line-height: 1.75; color: var(--ink-soft); }
+.log li:first-child { color: var(--ink); }
+.panel--log .log li + li { color: var(--ink-faint); }
+
+.seed { margin-top: 10px; font-family: ui-monospace, monospace; font-size: .66rem; letter-spacing: .1em; color: var(--ink-faint); }

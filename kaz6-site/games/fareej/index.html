@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FAREEJ — The Whole Street</title>
+  <meta name="description" content="FAREEJ — a Bahrain-themed property-trading board game. Buy the island one landmark at a time, from the Dilmun burial mounds to Bahrain Financial Harbour." />
+  <link rel="icon" href="/games/fareej/favicon.svg" />
+  <meta name="theme-color" content="#e8d9c0" />
+  <!-- Runs before the first paint, so a saved Dark choice on a light-
+       preference phone never flashes cream for a frame. The "auto" case
+       needs no script: the CSS media query already covers it. -->
+  <script>
+    try {
+      var t = localStorage.getItem("fareej.theme");
+      if (t === "dark" || t === "light") {
+        document.documentElement.setAttribute("data-theme", t);
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute("content", t === "dark" ? "#17120e" : "#e8d9c0");
+      } else if (matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#17120e");
+      }
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
+  <script type="module" crossorigin src="/games/fareej/assets/index-DsXZOF7c.js"></script>
+  <link rel="stylesheet" crossorigin href="/games/fareej/assets/index-Bp7CRVCf.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
