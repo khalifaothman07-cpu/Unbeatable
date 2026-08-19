@@ -13,12 +13,16 @@ import {
   holdings, isMortgaged, levelOf, liquidatableTotal, netWorth, spaceAt,
 } from "./game/rules";
 import { TOKEN_LABEL, activeSeat, playableSeat, solvent, useGame } from "./state/store";
+import { useBot } from "./state/useBot";
 
 export function App() {
   const s = useGame();
   const me = s.players[s.current];
   const [openDeed, setOpenDeed] = useState<number | null>(null);
   const [showLog, setShowLog] = useState(false);
+
+  /* bot seats play themselves; the hook is a no-op when there are none */
+  useBot();
 
   const myTurn = playableSeat(s, activeSeat(s));
   /* What the board should be looking at: the space under auction if there

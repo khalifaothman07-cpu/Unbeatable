@@ -160,6 +160,10 @@ export interface GameState {
   /** one standing offer at a time — a table with four live offers on it is
       a negotiation nobody can follow */
   trade: Trade | null;
+  /** offers posted by the seat whose turn it is, reset each turn. A bot
+      reads this so it tries a deal once rather than re-proposing the same
+      swap forever after it is declined. */
+  offersMade: number;
 
   seats: Seat[];
   roomCode: string | null;
@@ -317,6 +321,7 @@ export const useGame = create<GameState>((set, get) => {
     auction: null,
     debt: null,
     trade: null,
+    offersMade: 0,
     seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
     roomCode: null,
     mySeat: null,
@@ -343,6 +348,7 @@ export const useGame = create<GameState>((set, get) => {
         auction: null,
         debt: null,
         trade: null,
+        offersMade: 0,
         seats: [0, 1, 2, 3].map(() => ({ type: "local" as SeatType, code: null })),
         roomCode: null,
         mySeat: null,
@@ -701,6 +707,11 @@ export const useGame = create<GameState>((set, get) => {
         log: say(s.log, `${p.name} is out${d.to !== null ? `, and everything goes to ${s.players[d.to].name}` : ""}.`),
       });
       finishOrContinue();
+      /* The seat that just folded was the one whose turn it was, and nothing
+         has moved the turn on. Leaving it here parks the table in the debt
+         phase with no debt in it and nobody able to act — which is exactly
+         the shape of failure four bots playing each other are here to find. */
+      if (get().phase !== "over") passTurn();
     },
 
     /* --- TRADING ---------------------------------------------------------
@@ -716,6 +727,7 @@ export const useGame = create<GameState>((set, get) => {
       if (!v.ok) { set({ log: say(s.log, v.reason!) }); return; }
       set({
         trade: t,
+        offersMade: s.offersMade + 1,
         log: say(s.log, `${s.players[t.from].name} offers ${s.players[t.to].name} a deal.`),
       });
     },
@@ -765,23 +777,7 @@ export const useGame = create<GameState>((set, get) => {
         return;
       }
 
-      const order = s.players.map((p) => p.id);
-      let next = s.current;
-      for (let i = 1; i <= order.length; i++) {
-        const cand = (s.current + i) % order.length;
-        if (!s.players[cand].bankrupt) { next = cand; break; }
-      }
-      set({
-        current: next,
-        phase: "roll",
-        dice: null,
-        doubles: 0,
-        rolled: false,
-        /* an offer does not outlive the turn it was made on */
-        trade: null,
-        turnNo: s.turnNo + 1,
-        log: say(s.log, `${s.players[next].name} to roll.`),
-      });
+      passTurn();
       finishOrContinue();
     },
   };
@@ -858,6 +854,29 @@ export const useGame = create<GameState>((set, get) => {
     }
   }
 
+  /** Hand the turn to the next seat still standing. */
+  function passTurn() {
+    const s = get();
+    const n = s.players.length;
+    let next = s.current;
+    for (let i = 1; i <= n; i++) {
+      const cand = (s.current + i) % n;
+      if (!s.players[cand].bankrupt) { next = cand; break; }
+    }
+    set({
+      current: next,
+      phase: "roll",
+      dice: null,
+      doubles: 0,
+      rolled: false,
+      /* an offer does not outlive the turn it was made on */
+      trade: null,
+      offersMade: 0,
+      turnNo: s.turnNo + 1,
+      log: say(s.log, `${s.players[next].name} to roll.`),
+    });
+  }
+
   /** Called after anything that could end the game. */
   function finishOrContinue() {
     const s = get();
@@ -882,6 +901,37 @@ export const useGame = create<GameState>((set, get) => {
     }
   }
 });
+
+/* -------------------------------------------------------------------------
+   APPLYING A BOT'S DECISION
+   -------------------------------------------------------------------------
+   Lives here rather than in bot.ts so that bot.ts can stay pure — it decides
+   what to do, this turns that into a call. The self-play test drives the
+   game through this exact function, so the bots in a test are running the
+   same code path as the bots on the page.
+   ------------------------------------------------------------------------- */
+export function applyBotAction(s: GameState, action: import("../game/bot").BotAction): void {
+  switch (action.kind) {
+    case "roll": return s.roll();
+    case "acknowledge": return s.acknowledge();
+    case "buy": return s.buy();
+    case "declineBuy": return s.declineBuy();
+    case "bid": return s.bid(action.amount);
+    case "foldBid": return s.foldBid();
+    case "build": return s.build(action.index);
+    case "sellBuilding": return s.sellBuilding(action.index);
+    case "mortgage": return s.mortgage(action.index);
+    case "unmortgage": return s.unmortgage(action.index);
+    case "payBail": return s.payBail();
+    case "usePass": return s.usePass();
+    case "settleDebt": return s.settleDebt();
+    case "declareBankrupt": return s.declareBankrupt();
+    case "propose": return s.proposeTrade(action.trade);
+    case "acceptTrade": return s.acceptTrade();
+    case "declineTrade": return s.declineTrade();
+    case "endTurn": return s.endTurn();
+  }
+}
 
 /* Re-exported so the UI never has to import from two places. */
 export {
