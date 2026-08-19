@@ -20,9 +20,10 @@ import { short } from "../game/money";
 import { isOwnable } from "../game/types";
 import type { Estate } from "../game/rules";
 import { isMortgaged, levelOf, ownerOf } from "../game/rules";
-import type { Player } from "../state/store";
+import { TOKEN_LABEL, type Player } from "../state/store";
 import { GROUP_COLOUR, SPACES, TOWER_LEVEL, isCornerSpace, label } from "./boardGeometry";
 import { TokenIcon } from "./Tokens";
+import { Buildings } from "./Buildings";
 
 export function BoardStrip({
   estate, players, focus, onPick,
@@ -61,8 +62,16 @@ export function BoardStrip({
           <button
             key={space.index}
             ref={focused ? here : undefined}
-            className={`cellbtn ${focused ? "on" : ""} ${isCornerSpace(space) ? "corner" : ""} ${mortgaged ? "mortgaged" : ""}`}
-            style={owner !== null ? { borderColor: players[owner].colour } : undefined}
+            className={[
+              "cellbtn",
+              focused ? "on" : "",
+              isCornerSpace(space) ? "corner" : "",
+              mortgaged ? "mortgaged" : "",
+              owner !== null ? "owned" : "",
+            ].filter(Boolean).join(" ")}
+            /* the owner's colour rides as a custom property so the ring, the
+               name and anything else added later all read from one source */
+            style={owner !== null ? ({ "--own": players[owner].colour } as React.CSSProperties) : undefined}
             onClick={() => onPick(space.index)}
           >
             {/* The band is the fastest read on the strip, so it always says
@@ -77,24 +86,22 @@ export function BoardStrip({
             <span className="cell-name">{label(space, "tight")}</span>
 
             {isOwnable(space) && (
-              <span className="cell-price">
-                {owner === null ? short(space.deed!.price) : mortgaged ? "mortgaged" : players[owner].name}
-              </span>
+              owner === null
+                ? <span className="cell-price">{short(space.deed!.price)}</span>
+                : <span className="cell-owner">{mortgaged ? "mortgaged" : TOKEN_LABEL[players[owner].token]}</span>
             )}
             {space.kind === "tax" && <span className="cell-price">{short(space.amount!)}</span>}
 
             {/* what is built here — four villas, or the tower that replaces them */}
             {level > 0 && (
               <span className="cell-built">
-                {level === TOWER_LEVEL
-                  ? <i className="tower" title="Tower" />
-                  : Array.from({ length: level }, (_x, i) => <i key={i} className="villa" title="Villa" />)}
+                <Buildings level={level} tower={level === TOWER_LEVEL} />
               </span>
             )}
 
             {/* who is standing on it */}
             <span className="cell-tokens">
-              {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={18} />)}
+              {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={22} />)}
             </span>
           </button>
         );

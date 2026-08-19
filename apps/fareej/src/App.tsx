@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
+import { Dice } from "./render/Dice";
 import { Deed } from "./render/Deed";
 import { TradePanel } from "./render/TradePanel";
 import { SeatBar } from "./render/SeatBar";
@@ -14,7 +15,7 @@ import { full, short } from "./game/money";
 import { GROUP_LABEL } from "./game/types";
 import {
   TOWER, canBuild, canMortgage, canSellBuilding, canUnmortgage, completeGroups,
-  holdings, isMortgaged, levelOf, liquidatableTotal, netWorth, spaceAt,
+  holdings, isMortgaged, levelOf, liquidatableTotal, spaceAt,
 } from "./game/rules";
 import { TOKEN_LABEL, activeSeat, playableSeat, useGame } from "./state/store";
 import { useBot } from "./state/useBot";
@@ -76,20 +77,23 @@ export function App() {
 
   if (!s.started) return <Lobby />;
 
+  const dice = s.dice;
+  /* The tumble is keyed on something that changes every action, so a
+     repeated 4+4 still animates. Keyed on the value alone, the dice sit
+     perfectly still on doubles — which is exactly when a player is watching. */
+  const rollNonce = s.log.length;
+
   return (
     <div className="shell">
-      <a className="kaz6-home" href="../../index.html">← KAZ6</a>
-
-      <header className="head">
-        <p className="eyebrow">The Whole Street</p>
-        <h1 className="wordmark">FAREEJ</h1>
+      <div className="topbar">
+        <a className="kaz6-home" href="../../index.html">&larr; KAZ6</a>
         <div className="head-controls">
           <button
             className="btn tiny ghost"
             title={theme === "auto" ? `Following your device (${ground})` : `Always ${theme}`}
             onClick={cycle}
           >
-            {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+            {theme === "auto" ? "Auto" : theme === "dark" ? "Night" : "Day"}
           </button>
           <button
             className="btn tiny ghost"
@@ -105,131 +109,57 @@ export function App() {
               if (!m) fx.gain();
             }}
           >
-            Sound {muted ? "off" : "on"}
+            {muted ? "Sound off" : "Sound on"}
           </button>
         </div>
-      </header>
+      </div>
 
-      <div className="scoreboard">
+      {/* Four seats across the top like a scoreboard. Cash is the biggest
+          thing in each, because cash is what everyone is actually watching. */}
+      <div className="players">
         {s.players.map((p) => {
-          const worth = netWorth(s.estate, p.cash, p.id);
           const groups = completeGroups(s.estate, p.id);
           return (
-            <div key={p.id} className={`seat ${p.id === s.current ? "on" : ""} ${p.bankrupt ? "out" : ""}`}>
-              <TokenIcon token={p.token} fill={p.colour} size={26} />
-              <span className="seat-who">
-                <b>{p.name}</b>
-                <span className="muted">{p.bankrupt ? "out" : full(p.cash)}</span>
+            <div
+              key={p.id}
+              className={`pbanner ${p.id === s.current ? "on" : ""} ${p.bankrupt ? "out" : ""}`}
+              style={{ "--seat-colour": p.colour } as React.CSSProperties}
+            >
+              <span className="pbanner-top">
+                <TokenIcon token={p.token} fill={p.colour} size={20} />
+                <span className="pbanner-name">{TOKEN_LABEL[p.token]}</span>
               </span>
-              <span className="seat-worth">
-                {short(worth)}<i>worth</i>
+              <span className="pbanner-cash">{p.bankrupt ? "out" : short(p.cash)}</span>
+              <span className="pbanner-groups">
+                {groups.map((gr) => (
+                  <i key={gr} title={GROUP_LABEL[gr]} style={{ background: GROUP_COLOUR[gr] }} />
+                ))}
               </span>
-              {groups.length > 0 && (
-                <span className="seat-groups">
-                  {groups.map((gr) => (
-                    <i key={gr} title={GROUP_LABEL[gr]} style={{ background: GROUP_COLOUR[gr] }} />
-                  ))}
-                </span>
-              )}
-              {p.stuck > 0 && <span className="tag2">queue {p.stuck}</span>}
+              {p.stuck > 0 && <span className="pbanner-jail">queue {p.stuck}</span>}
             </div>
           );
         })}
       </div>
 
-      <p className={`banner ${myTurn ? "mine" : ""}`}>{banner}</p>
+      <p className={`call ${myTurn ? "mine" : ""}`}>{banner}</p>
 
-      {/* Two renderers, one at a time, chosen in CSS rather than in JS: a
-          width-watching hook would remount the board on every resize and
-          lose the strip's scroll position. Both read the same geometry. */}
-      <BoardSquare estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
-      <BoardStrip estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+      {/* Teak rail, teal felt, board on top. Three nested materials is what
+          makes it read as an object on a surface rather than a div. */}
+      <div className="table">
+        <div className="felt">
+          {/* Two renderers, one at a time, chosen in CSS rather than in JS: a
+              width-watching hook would remount the board on every resize and
+              lose the strip's scroll position. Both read the same geometry. */}
+          <BoardSquare estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+          <BoardStrip estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+        </div>
+      </div>
 
       {openDeed !== null && (
         <Deed index={openDeed} estate={s.estate} players={s.players} onClose={() => setOpenDeed(null)} />
       )}
 
-      {/* ---- a card is face up ---- */}
-      {s.drawn && (
-        <div className="panel panel--urgent card-drawn">
-          <div className="panel-head"><span>{s.drawn.deck === "shamal" ? "Shamal" : "Sandooq"}</span></div>
-          <p className="card-text">{s.drawn.text}</p>
-          <button className="btn" onClick={s.acknowledge}>Take it</button>
-        </div>
-      )}
-
-      {/* ---- roll ---- */}
-      {s.phase === "roll" && !s.drawn && (
-        <div className="panel panel--turn">
-          <button className="btn" disabled={!myTurn} onClick={s.roll}>
-            {me.stuck > 0 ? "Roll for doubles" : "Roll"}
-          </button>
-          {s.dice && <span className="dice">{s.dice[0]} + {s.dice[1]} = {s.dice[0] + s.dice[1]}</span>}
-          {me.stuck > 0 && myTurn && (
-            <>
-              <button className="btn small ghost" disabled={me.cash < BAIL} onClick={s.payBail}>
-                Pay {short(BAIL)}
-              </button>
-              {me.passes.length > 0 && (
-                <button className="btn small ghost" onClick={s.usePass}>Use a pass</button>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ---- buy or auction it ---- */}
-      {s.phase === "buy" && s.offer !== null && (
-        <div className="panel panel--turn">
-          <div className="panel-head"><span>{spaceAt(s.offer).name}</span></div>
-          <div className="row">
-            <button
-              className="btn"
-              disabled={!myTurn || me.cash < spaceAt(s.offer).deed!.price}
-              onClick={s.buy}
-            >
-              Buy · {short(spaceAt(s.offer).deed!.price)}
-            </button>
-            <button className="btn small ghost" disabled={!myTurn} onClick={s.declineBuy}>
-              Send to auction
-            </button>
-          </div>
-          <p className="muted hint">
-            Passing doesn&rsquo;t skip it — everyone gets to bid, including you.
-          </p>
-        </div>
-      )}
-
-      {/* ---- auction ---- */}
-      {s.phase === "auction" && s.auction && (
-        <AuctionPanel />
-      )}
-
-      {/* ---- debt ---- */}
-      {s.phase === "debt" && s.debt && (
-        <div className="panel panel--urgent">
-          <div className="panel-head">
-            <span>{s.players[s.debt.seat].name} owes {full(s.debt.amount)}</span>
-            <span className="dice">{s.debt.reason}</span>
-          </div>
-          <p className="muted">
-            Holding {full(s.players[s.debt.seat].cash)}. Selling and mortgaging everything raises{" "}
-            {full(liquidatableTotal(s.estate, s.players[s.debt.seat].cash, s.debt.seat))}.
-          </p>
-          <div className="row">
-            <button
-              className="btn"
-              disabled={s.players[s.debt.seat].cash < s.debt.amount}
-              onClick={s.settleDebt}
-            >
-              Pay {short(s.debt.amount)}
-            </button>
-            <button className="btn small ghost" onClick={s.declareBankrupt}>Fold</button>
-          </div>
-        </div>
-      )}
-
-      {/* ---- manage ---- */}
+      {/* ---- your street ---- */}
       {(s.phase === "manage" || s.phase === "debt") && mine.length > 0 && (
         <div className="panel">
           <div className="panel-head">
@@ -281,20 +211,6 @@ export function App() {
 
       <TradePanel />
 
-      {s.phase === "manage" && (
-        <div className="panel panel--turn">
-          <button className="btn" disabled={!myTurn} onClick={s.endTurn}>
-            {s.doubles > 0 && me.stuck === 0 ? "Roll again" : "End turn"}
-          </button>
-        </div>
-      )}
-
-      {s.phase === "over" && (
-        <div className="panel panel--turn">
-          <button className="btn" onClick={() => s.newGame()}>New table</button>
-        </div>
-      )}
-
       {/* A running table shows only what it needs: who is connected and how
           to get back in. Seat setup is finished business. */}
       {s.roomCode && (
@@ -302,11 +218,11 @@ export function App() {
           <div className="panel-head">
             <span>Table</span>
             <span className="row" style={{ gap: 8 }}>
-              <span className="code">room {s.roomCode}</span>
+              <span className="code">{s.roomCode}</span>
               {s.syncing && (
                 <span className={`link link--${s.link}`}>
                   <i className="link-dot" />
-                  {s.link === "live" ? "live" : s.link === "connecting" ? "connecting…"
+                  {s.link === "live" ? "live" : s.link === "connecting" ? "connecting\u2026"
                     : s.link === "error" ? "connection lost" : "not connected"}
                 </span>
               )}
@@ -320,12 +236,102 @@ export function App() {
         <div className="panel-head">
           <span>Last move</span>
           <button className="btn tiny ghost" aria-expanded={showLog} onClick={() => setShowLog((v) => !v)}>
-            {showLog ? "Hide history" : "History"}
+            {showLog ? "Hide" : "History"}
           </button>
         </div>
         <ul className="log">
           {s.log.slice(0, showLog ? 14 : 1).map((l, i) => <li key={i}>{l}</li>)}
         </ul>
+      </div>
+
+      {/* =====================================================================
+          THE DOCK — where the turn actually happens.
+          Sticky to the bottom of the viewport, so the thing you press is
+          never the thing that scrolled off the screen.
+          ===================================================================== */}
+      <div className="dock">
+        {s.drawn ? (
+          <>
+            <div className="panel-head"><span>{s.drawn.deck === "shamal" ? "Shamal" : "Sandooq"}</span></div>
+            <p className="card-text">{s.drawn.text}</p>
+            <div className="dock-row">
+              <button className="btn" onClick={s.acknowledge}>Take it</button>
+            </div>
+          </>
+        ) : s.phase === "roll" ? (
+          <div className="dock-row">
+            <Dice roll={dice} nonce={rollNonce} />
+            <button className="btn" disabled={!myTurn} onClick={s.roll}>
+              {me.stuck > 0 ? "Roll for doubles" : "Roll"}
+            </button>
+            {me.stuck > 0 && myTurn && (
+              <>
+                <button className="btn small ghost" disabled={me.cash < BAIL} onClick={s.payBail}>
+                  Pay {short(BAIL)}
+                </button>
+                {me.passes.length > 0 && (
+                  <button className="btn small ghost" onClick={s.usePass}>Use a pass</button>
+                )}
+              </>
+            )}
+          </div>
+        ) : s.phase === "buy" && s.offer !== null ? (
+          <>
+            <div className="panel-head">
+              <span>{spaceAt(s.offer).name}</span>
+              <span className="dice">unowned</span>
+            </div>
+            <div className="dock-row">
+              <button
+                className="btn"
+                disabled={!myTurn || me.cash < spaceAt(s.offer).deed!.price}
+                onClick={s.buy}
+              >
+                Buy &middot; {short(spaceAt(s.offer).deed!.price)}
+              </button>
+              <button className="btn small ghost" disabled={!myTurn} onClick={s.declineBuy}>
+                Auction it
+              </button>
+            </div>
+            <p className="muted hint">
+              Passing doesn&rsquo;t skip it &mdash; everyone gets to bid, including you.
+            </p>
+          </>
+        ) : s.phase === "auction" && s.auction ? (
+          <AuctionPanel />
+        ) : s.phase === "debt" && s.debt ? (
+          <>
+            <div className="panel-head">
+              <span>{s.players[s.debt.seat].name} owes {full(s.debt.amount)}</span>
+              <span className="dice">{s.debt.reason}</span>
+            </div>
+            <p className="muted">
+              Holding {full(s.players[s.debt.seat].cash)}. Selling and mortgaging everything raises{" "}
+              {full(liquidatableTotal(s.estate, s.players[s.debt.seat].cash, s.debt.seat))}.
+            </p>
+            <div className="dock-row">
+              <button
+                className="btn"
+                disabled={s.players[s.debt.seat].cash < s.debt.amount}
+                onClick={s.settleDebt}
+              >
+                Pay {short(s.debt.amount)}
+              </button>
+              <button className="btn small ghost" onClick={s.declareBankrupt}>Fold</button>
+            </div>
+          </>
+        ) : s.phase === "manage" ? (
+          <div className="dock-row">
+            <Dice roll={dice} nonce={rollNonce} />
+            <button className="btn" disabled={!myTurn} onClick={s.endTurn}>
+              {s.doubles > 0 && me.stuck === 0 ? "Roll again" : "End turn"}
+            </button>
+          </div>
+        ) : s.phase === "over" ? (
+          <div className="dock-row">
+            <button className="btn" onClick={() => s.newGame()}>New table</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

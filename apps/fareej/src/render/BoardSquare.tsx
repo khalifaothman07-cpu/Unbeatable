@@ -24,6 +24,7 @@ import {
   GROUP_COLOUR, RING, SPACES, TOWER_LEVEL, bandSide, cellFor, isCornerSpace, label,
 } from "./boardGeometry";
 import { TokenIcon } from "./Tokens";
+import { Buildings } from "./Buildings";
 
 export function BoardSquare({
   estate, players, focus, onPick,
@@ -53,11 +54,12 @@ export function BoardSquare({
               corner ? "sq--corner" : "",
               space.index === focus ? "on" : "",
               mortgaged ? "mortgaged" : "",
+              owner !== null ? "owned" : "",
             ].filter(Boolean).join(" ")}
             style={{
               gridColumn: col + 1,
               gridRow: row + 1,
-              ...(owner !== null ? { boxShadow: `inset 0 0 0 2px ${players[owner].colour}` } : null),
+              ...(owner !== null ? ({ "--own": players[owner].colour } as React.CSSProperties) : null),
             }}
             onClick={() => onPick(space.index)}
             title={space.name}
@@ -73,13 +75,11 @@ export function BoardSquare({
               )}
               {level > 0 && (
                 <span className="sq-built">
-                  {level === TOWER_LEVEL
-                    ? <i className="tower" />
-                    : Array.from({ length: level }, (_x, i) => <i key={i} className="villa" />)}
+                  <Buildings level={level} tower={level === TOWER_LEVEL} size={11} />
                 </span>
               )}
               <span className="sq-tokens">
-                {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={15} />)}
+                {standing.map((p) => <TokenIcon key={p.id} token={p.token} fill={p.colour} size={17} />)}
               </span>
             </span>
           </button>

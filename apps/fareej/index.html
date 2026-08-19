@@ -6,7 +6,13 @@
   <title>FAREEJ — The Whole Street</title>
   <meta name="description" content="FAREEJ — a Bahrain-themed property-trading board game. Buy the island one landmark at a time, from the Dilmun burial mounds to Bahrain Financial Harbour." />
   <link rel="icon" href="/games/fareej/favicon.svg" />
-  <meta name="theme-color" content="#e8d9c0" />
+  <!-- Outfit, the game's face. Loaded as a link rather than a CSS @import so
+       it isn't render-blocking, and with a real fallback stack because a
+       blocked or slow font must not leave the game unreadable. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#100d0b" />
   <!-- Runs before the first paint, so a saved Dark choice on a light-
        preference phone never flashes cream for a frame. The "auto" case
        needs no script: the CSS media query already covers it. -->
@@ -16,9 +22,9 @@
       if (t === "dark" || t === "light") {
         document.documentElement.setAttribute("data-theme", t);
         document.querySelector('meta[name="theme-color"]')
-          .setAttribute("content", t === "dark" ? "#17120e" : "#e8d9c0");
+          .setAttribute("content", t === "dark" ? "#100d0b" : "#2b241d");
       } else if (matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#17120e");
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#100d0b");
       }
     } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
   </script>
