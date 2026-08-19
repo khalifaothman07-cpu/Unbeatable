@@ -223,7 +223,7 @@ export const BOARD: Space[] = [
     note: "Twin sails with three wind turbines slung between them.",
   },
   {
-    index: 38, kind: "tax", name: "Municipality Fee", shortName: "Municipality",
+    index: 38, kind: "tax", name: "Municipality Fee", shortName: "Muni Fee",
     amount: k(100),
     note: "Ten per cent of the rent, collected whether you like it or not.",
   },

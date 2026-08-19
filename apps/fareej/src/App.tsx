@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
 import { Deed } from "./render/Deed";
 import { TokenIcon } from "./render/Tokens";
@@ -19,6 +20,9 @@ export function App() {
   const [showLog, setShowLog] = useState(false);
 
   const myTurn = playableSeat(s, activeSeat(s));
+  /* What the board should be looking at: the space under auction if there
+     is one, otherwise the active seat's token. */
+  const boardFocus = s.phase === "auction" ? s.auction!.index : me.at;
   const mine = useMemo(() => holdings(s.estate, s.current), [s.estate, s.current]);
 
   /* One line saying what the table is waiting for. Every phase answers it. */
@@ -79,12 +83,11 @@ export function App() {
 
       <p className={`banner ${myTurn ? "mine" : ""}`}>{banner}</p>
 
-      <BoardStrip
-        estate={s.estate}
-        players={s.players}
-        focus={s.phase === "auction" ? s.auction!.index : me.at}
-        onPick={setOpenDeed}
-      />
+      {/* Two renderers, one at a time, chosen in CSS rather than in JS: a
+          width-watching hook would remount the board on every resize and
+          lose the strip's scroll position. Both read the same geometry. */}
+      <BoardSquare estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
+      <BoardStrip estate={s.estate} players={s.players} focus={boardFocus} onPick={setOpenDeed} />
 
       {openDeed !== null && (
         <Deed index={openDeed} estate={s.estate} players={s.players} onClose={() => setOpenDeed(null)} />

@@ -428,3 +428,77 @@ body {
 .panel--log .log li + li { color: var(--ink-faint); }
 
 .seed { margin-top: 10px; font-family: ui-monospace, monospace; font-size: .66rem; letter-spacing: .1em; color: var(--ink-faint); }
+
+/* ================= THE SQUARE (desktop) =================
+   Eleven by eleven, spaces on the ring only. The whole thing is sized off
+   one custom property so the board scales as a unit rather than each cell
+   guessing its own size. */
+.square {
+  display: none; /* the strip is the phone board; see the breakpoint below */
+  --sq: 74px;
+  grid-template-columns: var(--sq) repeat(9, 1fr) var(--sq);
+  grid-template-rows: var(--sq) repeat(9, 1fr) var(--sq);
+  gap: 2px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  margin-bottom: 16px;
+}
+
+.sq {
+  position: relative; display: flex; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 2px;
+  background: var(--surface-2); color: var(--ink);
+  padding: 0; font: inherit; text-align: left; cursor: pointer;
+  transition: background .16s, border-color .16s;
+}
+.sq:hover { background: var(--surface-3); }
+.sq.on { border-color: var(--ink); background: var(--surface-3); }
+.sq.mortgaged { opacity: .55; }
+.sq--corner { background: var(--surface); }
+
+/* The band faces the middle of the board, the way a printed one does — so
+   the four sides each stack their band differently. The class names the
+   EDGE OF THE CELL the band sits on, and since the band is the first child,
+   "at the start" is `column`/`row` and "at the end" is the reverse. Getting
+   this backwards points every band outward, which reads as a board printed
+   inside out. */
+.sq--top    { flex-direction: column; }
+.sq--bottom { flex-direction: column-reverse; }
+.sq--left   { flex-direction: row; }
+.sq--right  { flex-direction: row-reverse; }
+
+.sq-band { flex: none; }
+.sq--top .sq-band, .sq--bottom .sq-band { height: 13px; width: 100%; }
+.sq--left .sq-band, .sq--right .sq-band { width: 13px; height: 100%; }
+.sq-band.none { background: repeating-linear-gradient(45deg, var(--line-2) 0 3px, transparent 3px 7px); }
+
+.sq-body {
+  flex: 1 1 auto; min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 4px 5px;
+}
+.sq-name { font-size: .56rem; line-height: 1.2; font-weight: 600; overflow-wrap: break-word; hyphens: none; }
+.sq--corner .sq-name { text-transform: uppercase; letter-spacing: .06em; font-size: .5rem; }
+.sq-price { font-family: ui-monospace, monospace; font-size: .5rem; color: var(--ink-soft); }
+.sq-built { display: flex; flex-wrap: wrap; gap: 1px; }
+.sq-built .villa { width: 5px; height: 5px; background: var(--good); border: 1px solid rgba(0,0,0,.35); }
+.sq-built .tower { width: 8px; height: 10px; background: var(--terracotta); border: 1px solid rgba(0,0,0,.4); }
+.sq-tokens { display: flex; flex-wrap: wrap; gap: 1px; margin-top: auto; }
+
+.square-middle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; padding: 20px;
+}
+.square-middle h2 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: .9; letter-spacing: .02em; }
+.square-middle .muted { max-width: 28ch; }
+
+/* ---- the swap ----
+   One board at a time. Building both and showing both would double the
+   tokens on screen and halve the space each gets. */
+@media (min-width: 900px) {
+  .square { display: grid; }
+  .strip { display: none; }
+}
