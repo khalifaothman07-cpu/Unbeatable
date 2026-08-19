@@ -30,9 +30,14 @@ export function Deed({
 
   return (
     <div className="panel deed">
+      {/* A real deed leads with what it IS, then what it is called, then the
+          group it belongs to. The coloured band across the top is the whole
+          reason a property board reads at arm's length, so it gets the full
+          width rather than a stripe down the side. */}
       <div className="deed-head" style={{ background: colour, color: ink }}>
-        <span className="deed-group">{space.group ? GROUP_LABEL[space.group] : " "}</span>
+        <span className="deed-kind">Title deed</span>
         <b>{space.name}</b>
+        <span className="deed-group">{space.group ? GROUP_LABEL[space.group] : " "}</span>
       </div>
 
       {space.note && <p className="deed-note">{space.note}</p>}

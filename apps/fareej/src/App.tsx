@@ -3,6 +3,7 @@ import { BoardSquare } from "./render/BoardSquare";
 import { BoardStrip } from "./render/BoardStrip";
 import { Dice } from "./render/Dice";
 import { BoardOverlay, MiniBoard } from "./render/FullBoard";
+import { Cash } from "./render/Cash";
 import { Deed } from "./render/Deed";
 import { TradePanel } from "./render/TradePanel";
 import { SeatBar } from "./render/SeatBar";
@@ -131,7 +132,9 @@ export function App() {
                 <TokenIcon token={p.token} fill={p.colour} size={20} />
                 <span className="pbanner-name">{TOKEN_LABEL[p.token]}</span>
               </span>
-              <span className="pbanner-cash">{p.bankrupt ? "out" : short(p.cash)}</span>
+              <span className="pbanner-cash">
+                {p.bankrupt ? "out" : <Cash amount={p.cash} />}
+              </span>
               <span className="pbanner-groups">
                 {groups.map((gr) => (
                   <i key={gr} title={GROUP_LABEL[gr]} style={{ background: GROUP_COLOUR[gr] }} />
