@@ -63,3 +63,65 @@
 }
 .nav-theme:hover { color: var(--band-fg); border-color: var(--band-fg); }
 .nav-theme:active { transform: translateY(1px); }
+
+/* ============================================================
+   THE ACCOUNT CHIP
+   Signing in is optional on this site, so the control must not
+   look like a demand. It borrows .nav-theme's register exactly
+   — mono, tracked, hairline box — which puts it in the class of
+   "small settings that live in the bar" rather than making it a
+   second CTA arguing with Contact for the same attention.
+   ============================================================ */
+.nav-acct { display: inline-flex; }
+.acct { display: inline-flex; align-items: center; gap: var(--s1); }
+
+.acct-btn {
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--band-fg-2);
+  background: none;
+  border: 1px solid var(--band-line);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color var(--dur-1), border-color var(--dur-1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.acct-btn:hover { color: var(--band-fg); border-color: var(--band-fg); }
+.acct-btn:active { transform: translateY(1px); }
+
+/* Once you are signed in, your own name is the thing worth reading and
+   Sign out is the afterthought — so the name loses the box and the button
+   loses its border. */
+.acct-who {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--f-mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--band-fg);
+  max-width: 14ch;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.acct-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  object-fit: cover; flex: none;
+  filter: var(--img-filter);
+}
+.acct-btn--quiet { border-color: transparent; padding-inline: 4px; }
+.acct-btn--quiet:hover { border-color: transparent; color: var(--band-fg); text-decoration: underline; text-underline-offset: 4px; }
+
+/* On a phone the nav already drops its links to keep the bar to one line,
+   so the chip has to earn its width. The NAME is what gives: an avatar
+   already says who you are, and the first draft of this hid Sign out
+   instead — which reads as tidier right up until somebody signs in on
+   their phone and finds no way back out. A control you cannot reach is
+   worse than one that is cramped. */
+@media (max-width: 680px) {
+  .acct-who { max-width: 7ch; gap: 5px; letter-spacing: 0.04em; }
+  .acct-who:has(.acct-avatar) { max-width: none; font-size: 0; gap: 0; }
+  .acct-btn { padding: 5px 8px; }
+  .acct-btn--quiet { padding-inline: 2px; }
+}

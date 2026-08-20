@@ -14,7 +14,8 @@
 
 import { useState } from "react";
 import type { Resource } from "../game/types";
-import { playableSeat, useGame } from "../state/store";
+import { handHidden, playableSeat, useGame } from "../state/store";
+import { ResIcon } from "./Icons";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 const SHORT: Record<Resource, string> = {
@@ -37,7 +38,7 @@ function Stepper({
 }: { res: Resource; value: number; max: number; onChange: (n: number) => void }) {
   return (
     <span className={`stepper ${value > 0 ? "on" : ""}`}>
-      <i className={`sw sw-${res}`} />
+      <ResIcon res={res} size={20} />
       <span className="stepper-label">{SHORT[res]}</span>
       <button
         className="step"
@@ -64,6 +65,10 @@ export function TradePanel() {
   const s = useGame();
   const [give, setGive] = useState<Basket>(empty);
   const [want, setWant] = useState<Basket>(empty);
+  /* Ten steppers open by default made the composer the tallest thing on the
+     page, sitting above the two panels — build and bank — that a player
+     actually touches every turn. It is one button until somebody wants it. */
+  const [open, setOpen] = useState(false);
 
   if (s.phase !== "main") return null;
 
@@ -135,9 +140,15 @@ export function TradePanel() {
 
   /* ---------- composer, active seat only ---------- */
   if (!myTurn) return null;
-  /* the give side is capped by what's in hand, so showing it while the
-     privacy screen is up would print the hand for the whole room */
-  if (s.toggles.privacyScreen && !s.handRevealed) return null;
+  /* The give side is capped by what's in hand, so showing it while the
+     privacy screen is up would print the hand for the whole room.
+
+     It has to be the SAME test the hand panel uses. Asking only whether the
+     hand had been revealed meant a player on their own phone — who has no
+     privacy screen to lift, and so never taps "reveal" — could never open
+     the composer. From the table it looked like the host was the only person
+     allowed to trade. */
+  if (handHidden(s)) return null;
 
   const giveN = total(give);
   const wantN = total(want);
@@ -146,11 +157,23 @@ export function TradePanel() {
   const overlap = RESOURCES.filter((r) => (give[r] ?? 0) > 0 && (want[r] ?? 0) > 0);
   const ready = giveN > 0 && wantN > 0 && !overlap.length;
 
+  if (!open) {
+    return (
+      <div className="panel panel--start">
+        <button className="btn small ghost" onClick={() => setOpen(true)}>Offer the table a deal</button>
+        <span className="muted">Swap goods with another seat — they have to agree.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="panel">
       <div className="panel-head">
         <span>Trade with the table</span>
-        {(giveN > 0 || wantN > 0) && <button className="btn tiny ghost" onClick={clear}>Clear</button>}
+        <span className="row" style={{ gap: 6 }}>
+          {(giveN > 0 || wantN > 0) && <button className="btn tiny ghost" onClick={clear}>Clear</button>}
+          <button className="btn tiny ghost" onClick={() => { clear(); setOpen(false); }}>Close</button>
+        </span>
       </div>
 
       <p className="trade-leg">You give</p>
@@ -183,7 +206,7 @@ export function TradePanel() {
         <button
           className="btn small"
           disabled={!ready}
-          onClick={() => { s.proposeTrade(give, want); clear(); }}
+          onClick={() => { s.proposeTrade(give, want); clear(); setOpen(false); }}
         >
           Post offer
         </button>

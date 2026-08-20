@@ -101,7 +101,7 @@
 
    CONTENT TRUTHS (verified — never inflate):
    18 WSC debate medals · 5 MUN Best Council · 300K+ @k.a.z6 ·
-   4 games SHIPPED (LU'LU'A became playable and was counted in). Othello: Shakespeare, the NARRATOR (not the
+   5 games SHIPPED (LU'LU'A, then FAREEJ, both counted in). Othello: Shakespeare, the NARRATOR (not the
    lead) — wrote his own speech, memorized it in two weeks,
    designed his own costume. IAM GOLF price line: "roughly half
    of retail" (never "exactly 50%"). Games: España 38·0 / Europa
@@ -166,10 +166,50 @@
    points, so every occupied tile is sheltered and the 7 can never
    resolve. legalShamalTiles() + settleShamal() handle it by sending
    the Shamal back to the sabkha with no steal. Don't remove that.
-   39 tests cover generation, rules, the distance rule, QR encoding, bot
-   self-play (four bots to a winner, which is what catches deadlocks) and
-   a LIVE two-device sync suite that talks to the real Supabase and skips
-   itself when unreachable. Run `npm test` there before touching either.
+   47 tests cover generation, rules, the distance rule, QR encoding, bot
+   self-play (four bots to a winner, which is what catches deadlocks), a
+   LIVE two-device sync suite that talks to the real Supabase and skips
+   itself when unreachable, and privacy.test.ts — visibleSeat/handHidden,
+   both of which failed SILENTLY in playtest (a host was offered "tap to
+   reveal" on a remote player's hand, and nobody but the host could open
+   the trade composer). Run `npm test` there before touching either.
+
+   FAREEJ — the FIFTH game. Source: /apps/fareej, same stack and same
+   deal as LU'LU'A: React+TS+Vite, built output COMMITTED to
+   kaz6-site/games/fareej/, Netlify never builds it. Rebuild with
+   `cd apps/fareej && npm run build`, then COMMIT the output.
+   NEVER CALL IT MONOPOLY. It is a property-trading board game. Hasbro
+   owns that name, and the precedent is already set here — La Liga and
+   the Champions League came out of the football two for the same reason.
+   Board: 40 spaces, 22 landmarks in 8 groups running Dilmun → Pearling
+   Path → Forts → Souqs → Culture → Sport → Malls → Skyline, so where you
+   are on the lap is where you are in the island's history. Corners are
+   Bab Al Bahrain, Stuck on the Causeway, Gahwa and Border Check; decks
+   are SHAMAL and SANDOOQ; you build villas then a tower. Prices are
+   realistic Bahraini scale, BD 60,000–400,000, and money.ts is the ONLY
+   place that formats a figure — short() for the board, full() for deeds.
+   TWO THINGS STAY OFF THAT BOARD and there is a test that fails if they
+   turn up: the Pearl/Lulu Roundabout, and any security, government or
+   military facility.
+   Full rules — auctions on a declined purchase, mortgages at 10%,
+   even-build, free player trading — plus two independent lobby toggles
+   for length (opening deal, eight-lap limit).
+   GOTCHA worth keeping, and it is the whole reason the bots trade: with
+   nobody PROPOSING deals, groups never complete, nothing is ever built,
+   rents stay below the salary and NO GAME CAN END. Eleven of twenty
+   seeds ran past 60,000 moves with every seat rich and not one villa
+   down. Bots now propose a mutual group-completing swap, or buy the last
+   deed they need at triple. Don't take that out.
+   Backend: public.fareej_games, same shape as luluaa_games, same policy
+   set, purge at 03:23 UTC. Grants are ENUMERATED rather than left at the
+   schema default — which is how it came up that anon still held TRUNCATE
+   on luluaa_games (revoking DELETE alone leaves it). TRUNCATE ignores
+   RLS. Not reachable through PostgREST, so latent rather than live, but
+   revoked on both tables now. 187 tests.
+   VERIFICATION GAP, same as LU'LU'A: two-device sync is proven in Node
+   against the real backend, never from a browser — this sandbox blocks
+   outbound HTTPS from the browser. Test it on two real phones.
+
    Education: on-site copy uses law-as-ambition framing. KO's
    profile states law student (foundation yr, ASU, partial
    scholarship) — confirm with KO before adding any enrollment
@@ -182,6 +222,68 @@
    `email` field or a mailto: link anywhere — an address that drops
    mail is worse than no address. IAM GOLF already follows the same
    rule ("only the real channel — no invented email/phone").
+
+   ACCOUNTS + THE VISIT LOG (new — full detail in kaz6-site/ACCOUNTS.md).
+   Every page and every game records a view into public.visits. The site
+   is NOT walled: signing in is optional and only adds a NAME to numbers
+   that are collected either way. Two identities — visitor_id (a uuid in
+   localStorage, minted on first arrival, anonymous) and user_id (null
+   until a Google sign-in). visitor_id survives the sign-in and is
+   stamped onto the profile, which is what lets a sign-in name the
+   visits that came BEFORE it. Dashboard at /admin.html, deliberately
+   not in the nav.
+   THE RULE THAT INVERTS HERE: luluaa_games/fareej_games must let anon
+   SELECT (Realtime cannot work otherwise) — hence "don't put anything
+   in a snapshot you wouldn't hand a stranger". public.visits is the
+   opposite and must stay that way: anon has INSERT and nothing else,
+   there is no UPDATE or DELETE policy at all, and SELECT requires a row
+   in public.admins. Verified over REST, not assumed: anon insert 201,
+   select 401, forge/patch/delete/purge-rpc all 401.
+   ONE COPY OF THE CLIENT: kaz6-site/js/account.js. The site imports it;
+   the games pull it in at RUNTIME via a dynamic import of the string
+   "/js/account.js" (each app's src/state/account.ts). Do NOT turn it into
+   a static import or an index.html script tag — Vite rewrites absolute
+   paths through `base` and would resolve it to /games/<game>/js/... In
+   `npm run dev` there is no site, the import 404s, and the game runs
+   exactly as before. That degradation is deliberate; keep it.
+   MANUAL STEP STILL OWED: Google OAuth is not configured yet, so nobody
+   can sign in — tracking works, names do not. ACCOUNTS.md has the exact
+   Google Cloud + Supabase steps. KO becomes admin automatically on his
+   first sign-in, via app_settings.owner_email.
+   THE GOOGLE REDIRECT URI IS NOT YOUR SITE. It is
+   https://ngtpeamcaxdtghimdspz.supabase.co/auth/v1/callback — Google hands
+   the user to Supabase, which then returns them to the site. The site's own
+   origins go in Supabase → Authentication → URL Configuration, NOT in the
+   Google console. KO's first attempt had "HTTPS://Kaz6.com" in that box,
+   which cannot work. Advice found online about Google One Tap (client id in
+   the page, implicit flow, your own backend verifying JWTs) describes a
+   DIFFERENT integration and none of it applies here.
+
+   CONSENT — the bar is not decoration; it gates behaviour.
+   This site sets NO cookies; it uses localStorage. That is not a loophole:
+   the EU rule covers storing anything on a device, so what matters is what
+   each key is FOR. theme (a chosen preference), session (the login they
+   asked for) and the consent flag itself are exempt. kaz6.visitor, the
+   tracking id, is not — and it is the only reason the bar exists.
+   Three states: unanswered stores NOTHING and logs the view with a NULL
+   visitor_id; allowed mints the id; declined logs nothing at all and
+   DELETES any id already held. Reversible both ways from /privacy.html.
+   Two things that were the other way first and should stay as they are:
+   saying yes does NOT re-send the view already on screen (it wrote two rows
+   for one page load and inflated Views — the id applies from the next
+   navigation), and the id is minted AT the moment of agreement rather than
+   lazily on first use.
+   public.visits.visitor_id is therefore NULLABLE. The dashboard counts
+   distinct non-null ids as visitors and reports the nulls separately —
+   never add them together, they are views we cannot attribute.
+   DATA LIVES IN TOKYO (ap-northeast-1), and privacy.html says so. An early
+   draft claimed the EU; a false data-location claim in a privacy notice is
+   exactly the sort of error worth catching. Move that line if the project
+   ever moves region.
+   Privacy + Terms live in SITE.legal, rendered on the FOOTER BASE LINE, and
+   deliberately NOT in SITE.pages — a portfolio's nav should not spend one of
+   its six slots on a privacy notice. There is no accept-to-continue gate:
+   the fan-game disclaimers are restated verbatim on terms.html.
 
    OPEN (KO's calls):
    • football games are now generically named (per KO): "La Liga" and
@@ -245,9 +347,17 @@ const SITE = {
     { file: "index.html",     label: "Home",     n: "00", home: true, desc: "" },
     { file: "about.html",     label: "About",    n: "01", desc: "The person behind the record, and the thread through all of it." },
     { file: "record.html",    label: "Record",   n: "02", desc: "Debate, Model UN, and an audience — the verifiable numbers." },
-    { file: "games.html",     label: "Games",    n: "03", desc: "Four strategy games, three of them live. Draft, manage, and chase a perfect run." },
+    { file: "games.html",     label: "Games",    n: "03", desc: "Five strategy games, all of them live. Draft, manage, and chase a perfect run." },
     { file: "ventures.html",  label: "Ventures", n: "04", desc: "IAM GOLF — premium pre-owned clubs, delivered across the Gulf." },
     { file: "contact.html",   label: "Contact",  n: "05", desc: "Socials and a direct line." },
+  ],
+
+  /* Kept out of SITE.pages on purpose. These belong in the footer, where
+     people look for them, and nowhere near the nav — a portfolio's top bar
+     should not spend one of its six slots on a privacy notice. */
+  legal: [
+    { file: "privacy.html", label: "Privacy" },
+    { file: "terms.html",   label: "Terms" },
   ],
 
   heroMedia:  { type: "image", src: "assets/media/hero.jpg", alt: "Khalifa Othman" },
@@ -261,7 +371,7 @@ const SITE = {
     { value: "300K+", label: "Followers · @k.a.z6" },
     { value: "18",    label: "Debate medals · World Scholars Cup" },
     { value: "5",     label: "MUN Best Council Awards" },
-    { value: "4",     label: "Strategy games shipped" },
+    { value: "5",     label: "Strategy games shipped" },
   ],
 
   about: [
@@ -316,15 +426,25 @@ const SITE = {
       media: { type: "video", src: "assets/media/decisions-loop.mp4", poster: "assets/media/decisions-poster.jpg", alt: "On the range" },
     },
     {
-      /* Now genuinely playable end-to-end (local pass-and-play, 4 seats):
-         setup draft, dice + production, building, bank trade, dhow cards,
-         the Shamal, and the win at 10. Online seats are still to come, so
-         the tag says "local play". */
+      /* Playable end-to-end, and ONLINE SEATS HAVE SHIPPED — the old note
+         here said they were still to come and the copy said "pass-and-play
+         on one device", which stopped being true. Each seat is
+         independently local, a bot, or somebody else's phone. */
       id: "luluaa", title: "LU'LU'A", score: "10", scoreLabel: "Points to win",
-      desc: "Isle of Pearls — a Bahrain-themed trading and settlement game for four. Dive the pearl banks, run dhow routes, and build from barasti to qasr while the Shamal blows across the board. Pass-and-play on one device.",
+      desc: "Isle of Pearls — a Bahrain-themed trading and settlement game for four. Dive the pearl banks, run dhow routes, and build from barasti to qasr while the Shamal blows across the board. Play round one device, or send a link and take a seat from anywhere.",
       tags: ["Strategy", "Board game", "4 player"], live: true,
       url: "games/luluaa/index.html",
       media: { type: "image", src: "assets/media/luluaa-cover.jpg", alt: "A dealt LU'LU'A board" },
+    },
+    {
+      /* The fifth game. A property-trading board game — never called by the
+         brand name of the one everybody is thinking of, same rule that took
+         La Liga and the Champions League out of the football two. */
+      id: "fareej", title: "FAREEJ", score: "40", scoreLabel: "Spaces to a lap",
+      desc: "The Whole Street — buy Bahrain one landmark at a time, from the Dilmun burial mounds to Bahrain Financial Harbour. Full rules: auctions, mortgages, villas and towers, and free trading across the table. Play round one device, or send a link.",
+      tags: ["Strategy", "Board game", "4 player"], live: true,
+      url: "games/fareej/index.html",
+      media: { type: "image", src: "assets/media/fareej-cover.jpg", alt: "A FAREEJ board mid-game" },
     },
   ],
 

@@ -122,14 +122,49 @@ export function playableSeat(
   return drivesSeat(s, seat) && s.seats[seat]?.type !== "bot";
 }
 
-/** Whose CARDS this device may show.
-    On a joined phone that is always your own seat — never whoever happens to
-    be playing. Reading the active seat here is what handed every player
-    everyone else's hand the moment a game went online. */
+/** True when this device is one person's phone rather than the shared table. */
+export function ownDevice(s: Pick<GameState, "mySeat">): boolean {
+  return s.mySeat !== null && s.mySeat >= 0;
+}
+
+/** Whose CARDS this device may show, or `null` for nobody's.
+    -------------------------------------------------------------------------
+    Three cases, and the third is the one that leaked:
+      your own phone ... always your seat, never whoever happens to be playing
+      the table ....... the active seat, because the phone is being passed
+      the table, when the active seat is played from SOMEWHERE ELSE ... none
+
+    The old version fell through to the active seat in every case, so a host
+    watching a remote player's turn was offered a "tap to reveal" for a hand
+    that isn't theirs to see. A bot's hand is hidden for the same reason:
+    this device drives it, but nobody at this device is playing it. */
 export function visibleSeat(
-  s: Pick<GameState, "mySeat" | "phase" | "setupOrder" | "setupIndex" | "current">,
-): number {
-  return s.mySeat !== null && s.mySeat >= 0 ? s.mySeat : activeSeat(s);
+  s: Pick<GameState, "roomCode" | "mySeat" | "seats" | "phase" | "setupOrder" | "setupIndex" | "current">,
+): number | null {
+  if (ownDevice(s)) return s.mySeat;
+  const seat = activeSeat(s);
+  if (playableSeat(s, seat)) return seat;
+  /* The active seat is being played somewhere else (or by a bot). If this
+     device plays exactly one seat, that hand is both the only one it may
+     show and the one its owner wants to look at while they wait. */
+  const own = s.seats.map((_x, i) => i).filter((i) => playableSeat(s, i));
+  return own.length === 1 ? own[0] : null;
+}
+
+/** Whether the privacy screen is currently covering the hand.
+    Shared by the hand panel and the trade composer so they can never
+    disagree — they did, and the disagreement is why a player on their own
+    phone could see their cards but not offer them to anyone. */
+export function handHidden(
+  s: Pick<GameState, "roomCode" | "mySeat" | "seats" | "toggles" | "handRevealed" | "phase">,
+): boolean {
+  if (!s.toggles.privacyScreen || s.handRevealed) return false;
+  if (s.phase === "setup" || s.phase === "over") return false;
+  if (ownDevice(s)) return false;
+  /* There is nobody to hide from when this device only ever shows one
+     person's cards — a host who kept a single seat and opened the rest was
+     being made to tap "reveal" every turn to look at their own hand. */
+  return s.seats.filter((_x, i) => playableSeat(s, i)).length > 1;
 }
 
 /** The seat this device should be watching — for banners and prompts. */
@@ -195,6 +230,8 @@ export interface GameState {
   stealFrom: (playerId: number) => void;
   endTurn: () => void;
   revealHand: () => void;
+  /** Put a real name on a seat. Lobby only — see the implementation. */
+  renameSeat: (seatId: number, name: string) => void;
   startGame: () => void;
   setSeatType: (seatId: number, type: SeatType) => void;
   openSeat: (seatId: number) => Promise<void>;
@@ -386,6 +423,19 @@ export const useGame = create<GameState>((rawSet, get) => {
   },
 
   revealHand: () => set({ handRevealed: true }),
+
+  /* Names ride in the snapshot, so a rename reaches the other phones at the
+     table for free. It is restricted to the LOBBY on purpose: renaming is
+     cosmetic, but a write that lands mid-turn still bumps the revision and
+     would make a harmless label change race a real move. Before the game
+     starts there is no move to race. */
+  renameSeat: (seatId, name) => {
+    const s = get();
+    if (s.started) return;
+    const clean = name.trim().slice(0, 14);
+    if (!clean || !s.players[seatId] || s.players[seatId].name === clean) return;
+    set({ players: s.players.map((p, i) => (i === seatId ? { ...p, name: clean } : p)) });
+  },
 
   /* Leaving the lobby is a one-way door on purpose. Seat setup and "new
      game" stay out of reach for the rest of the table's life, so a stray

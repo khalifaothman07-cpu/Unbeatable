@@ -1,0 +1,98 @@
+/* ============================================================
+   legal.css  ·  PRIVACY AND TERMS
+   ------------------------------------------------------------
+   A legal page is the one page on a site that is actually read
+   in long lines rather than scanned, so it gets a real measure
+   and real paragraph spacing instead of the editorial grid the
+   rest of the site uses. Everything else — type, colour, rules
+   — is the site's own, because a privacy page in a different
+   voice reads as boilerplate somebody pasted in.
+   ============================================================ */
+
+.legal { max-width: 68ch; }
+
+.legal h2 {
+  font-family: var(--f-display);
+  font-size: var(--t-h3);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: var(--s7) 0 var(--s3);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
+.legal h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.legal p { font-size: var(--t-body); line-height: 1.7; margin-bottom: var(--s3); color: var(--fg-2); }
+.legal p b, .legal li b { color: var(--fg); font-weight: 600; }
+.legal a { color: var(--red-ink); text-decoration: underline; text-underline-offset: 3px; }
+.legal a:hover { text-decoration-thickness: 2px; }
+
+.legal-lede { font-size: var(--t-lead); line-height: 1.6; color: var(--fg); }
+
+.legal-list { margin: 0 0 var(--s3) 1.15em; display: grid; gap: var(--s2); }
+.legal-list li { font-size: var(--t-body); line-height: 1.65; color: var(--fg-2); }
+
+/* The note voice: quieter, for the caveats that would break the flow of a
+   paragraph but must not be dropped. */
+.legal-note {
+  font-size: 0.9375rem; line-height: 1.65; color: var(--fg-3);
+  border-left: 2px solid var(--line); padding-left: var(--s3);
+  margin-bottom: var(--s3);
+}
+
+.legal-table { width: 100%; border-collapse: collapse; margin: 0 0 var(--s4); font-size: 0.9375rem; }
+.legal-table th {
+  text-align: left; font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+  color: var(--fg-3); padding: 0 var(--s3) var(--s2) 0;
+  border-bottom: 1px solid var(--fg);
+}
+.legal-table td { padding: var(--s3) var(--s3) var(--s3) 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--fg-2); line-height: 1.6; }
+.legal-table code {
+  font-family: var(--f-mono); font-size: 0.8125rem;
+  color: var(--fg); white-space: nowrap;
+}
+@media (max-width: 640px) {
+  /* Three columns at 360px would give each about eleven characters. The
+     header becomes a label on each cell instead. */
+  .legal-table thead { display: none; }
+  .legal-table tr { display: block; padding: var(--s3) 0; border-bottom: 1px solid var(--line); }
+  .legal-table td { display: block; padding: 0 0 var(--s2); border: 0; }
+  .legal-table td::before {
+    content: attr(data-k); display: block;
+    font-family: var(--f-mono); font-size: var(--t-micro);
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3);
+    margin-bottom: 4px;
+  }
+}
+
+/* The live consent control. This is the page's one interactive thing, and
+   it has to state the CURRENT answer before offering to change it — a
+   control that only offers "turn off" tells you nothing about whether it is
+   currently on. */
+.legal-consent {
+  border: 1px solid var(--line); border-left: 3px solid var(--red);
+  padding: var(--s4); margin-bottom: var(--s3);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3);
+}
+.legal-consent-state { margin: 0 !important; flex: 1 1 20rem; font-size: 0.9375rem !important; }
+.legal-consent-state b { color: var(--fg); }
+.legal-consent-acts { display: flex; gap: var(--s2); flex-wrap: wrap; }
+.legal-btn {
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 10px 16px; cursor: pointer;
+  color: var(--fg); background: transparent;
+  border: 1px solid var(--fg); border-radius: 0;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.legal-btn:hover { background: var(--fg); color: var(--bg); }
+.legal-btn:active { transform: translateY(1px); }
+
+.legal-sig {
+  margin-top: var(--s7); padding-top: var(--s4);
+  border-top: 2px solid var(--ink);
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3) !important;
+}

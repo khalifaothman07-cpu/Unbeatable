@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Dashboard — KAZ6</title>
+  <!-- Not linked from the nav and not for indexing. The real protection is
+       the RLS policy on public.visits, which refuses the read for anyone who
+       is not in public.admins — this tag only keeps the page out of search
+       results, it is not what keeps the data private. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <meta name="theme-color" content="#e2ddcc" />
+  <script>
+    try {
+      var t = localStorage.getItem("kaz6.theme");
+      var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#181815" : "#e2ddcc");
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status">Private</span>
+        <span class="phero-loc">Owner only · not in the nav</span>
+      </div>
+      <h1 class="phero-title">Dashboard</h1>
+      <p class="phero-lead">Who opened the site and the games, when, and where they came from.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <!-- Everything below is drawn by admin.js. Empty on purpose: there is
+           no placeholder state worth flashing before we know whether the
+           person looking is allowed to see anything at all. -->
+      <div id="admBody"></div>
+    </div>
+  </section>
+
+  <footer class="foot" id="foot"></footer>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

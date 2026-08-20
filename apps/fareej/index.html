@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FAREEJ — The Whole Street</title>
+  <meta name="description" content="FAREEJ — a Bahrain-themed property-trading board game. Buy the island one landmark at a time, from the Dilmun burial mounds to Bahrain Financial Harbour." />
+  <link rel="icon" href="/games/fareej/favicon.svg" />
+  <!-- Outfit, the game's face. Loaded as a link rather than a CSS @import so
+       it isn't render-blocking, and with a real fallback stack because a
+       blocked or slow font must not leave the game unreadable. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#100d0b" />
+  <!-- Runs before the first paint, so a saved Dark choice on a light-
+       preference phone never flashes cream for a frame. The "auto" case
+       needs no script: the CSS media query already covers it. -->
+  <script>
+    try {
+      var t = localStorage.getItem("fareej.theme");
+      if (t === "dark" || t === "light") {
+        document.documentElement.setAttribute("data-theme", t);
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute("content", t === "dark" ? "#100d0b" : "#2b241d");
+      } else if (matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#100d0b");
+      }
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

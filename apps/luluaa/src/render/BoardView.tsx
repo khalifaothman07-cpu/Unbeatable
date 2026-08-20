@@ -14,6 +14,7 @@ import { memo } from "react";
 import { axialToPixel, hexCorners } from "../game/hex";
 import { TERRAIN_LABEL, type Board, type Tile } from "../game/types";
 import type { Port } from "../game/geometry";
+import { RES_FILL, ResGlyph } from "./Icons";
 
 const HEX_SIZE = 52;
 const GAP = 0.955;
@@ -444,38 +445,50 @@ const CompassRose = memo(function CompassRose({ x, y }: { x: number; y: number }
 });
 
 /* ---------- TRADE POSTS ---------------------------------------------------
-   A moored dhow rather than a disc. The ship is the thing a Catan board
-   uses to say "you can trade here", and it does the job better than a badge
-   because it reads at a glance even when the board is 350px wide on a
-   phone: hull, lateen sail, a line back to the shore it serves.
+   Playtesters said the ports were the one thing on the board they could not
+   read. The old version asked a lot of a 10px pennant: the colour told you
+   which good the post dealt in, and only if you already knew the code.
 
-   The rate goes ON the sail — the one surface big enough to hold two
-   characters at this scale — and the resource it deals in is carried by the
-   hull pennant, colour-matched to the swatches in your hand. */
+   So the information moved off the ship and onto a plate beside it. The
+   dhow still says "trade here" at a glance, but the RATE and the GOOD are
+   now a hoisted board carrying the same drawn icon you hold in your hand —
+   nothing to decode, and legible at the size a phone actually renders.
+
+   The plate is drawn upright regardless of which way the hull is turned,
+   because a rotated label is unreadable on the bottom half of the board. */
 function TradePost({ port }: { port: Port }) {
-  const RES_FILL: Record<string, string> = {
-    palmWood: "#6f8f4a", limestone: "#c3ac8a", dates: "#a8763c",
-    fish: "#1c7d84", pearls: "#8fc9c6",
-  };
-  const out = 30;
+  /* The ship moors close in and the plate rides outside it. Both distances
+     are load-bearing: the plate is drawn upright while the hull is rotated
+     to the shore's normal, so anywhere they overlap the plate wins and the
+     sail simply disappears behind it. 20 and 48 keep them clear. */
+  const out = 20;
   const cx = port.x + port.nx * out;
   const cy = port.y + port.ny * out;
+  const px = port.x + port.nx * 48;
+  const py = port.y + port.ny * 48;
   /* face the ship along the shore's normal, so it always sits bow-out to
      open water instead of sailing into the island */
   const angle = (Math.atan2(port.ny, port.nx) * 180) / Math.PI + 90;
   const flag = port.resource ? RES_FILL[port.resource] : "#efe7d6";
+  const rate = port.resource ? "2:1" : "3:1";
+  /* the general post has no icon, so its plate needs less room */
+  const plateW = port.resource ? 50 : 34;
 
   return (
     <g className="port">
-      {/* mooring line back to the shore it serves */}
+      {/* mooring line back to the two corners it serves — thicker and
+          brighter than before, because "which shore is this post for?" was
+          the other half of what players couldn't tell */}
       <line
         x1={port.x} y1={port.y} x2={cx} y2={cy}
-        stroke="#f0e3c6" strokeWidth={1.6} strokeLinecap="round"
-        strokeDasharray="3 3" opacity={0.5}
+        stroke="#f7ead0" strokeWidth={2.4} strokeLinecap="round"
+        strokeDasharray="4 3" opacity={0.75}
       />
+      <circle cx={port.x} cy={port.y} r={3} fill="#f7ead0" opacity={0.85} stroke="#8a6a3c" strokeWidth={0.8} />
+
       <g transform={`translate(${cx} ${cy}) rotate(${angle})`}>
         {/* wake */}
-        <ellipse cy={9} rx={20} ry={5} fill="#eaf7f4" opacity={0.16} />
+        <ellipse cy={9} rx={20} ry={5} fill="#eaf7f4" opacity={0.18} />
 
         {/* hull — the raised stern of a Gulf dhow, not a rowing boat */}
         <path
@@ -486,27 +499,49 @@ function TradePost({ port }: { port: Port }) {
         {/* gunwale highlight */}
         <path d="M -17 0.5 q 17 4 34 0" fill="none" stroke="#c99a63" strokeWidth={1.1} opacity={0.7} />
 
-        {/* mast + lateen sail, raked forward the way a settee rig sits */}
-        <line x1={-2} y1={0} x2={-2} y2={-27} stroke="#3f2712" strokeWidth={1.6} strokeLinecap="round" />
+        {/* mast + lateen sail, raked forward the way a settee rig sits.
+            Shorter than a real rig would be, to stay clear of the plate. */}
+        <line x1={-2} y1={0} x2={-2} y2={-22} stroke="#3f2712" strokeWidth={1.6} strokeLinecap="round" />
         <path
-          d="M -2 -26 L 15 -3 L -2 -1 Z"
+          d="M -2 -21 L 12 -4 L -2 -2 Z"
           fill="url(#sailCloth)" stroke="#8a6a3c" strokeWidth={0.9} strokeLinejoin="round"
         />
-        <path d="M -2 -26 L 15 -3" fill="none" stroke="#8a6a3c" strokeWidth={1.1} opacity={0.8} />
+        {/* pennant, colour-matched to the good — now decoration rather than
+            the only clue */}
+        <path d="M -2 -22 L 8 -19 L -2 -16 Z" fill={flag} stroke="#31200f" strokeWidth={0.7} />
+      </g>
 
-        {/* the rate, upright regardless of how the hull is turned */}
-        <g transform={`rotate(${-angle}) translate(0 -1)`}>
+      {/* ---- the plate: rate + which good, always upright ----
+             Pushed further out along the same normal as the ship rather
+             than straight up: a plate that always floated "up" landed on
+             top of the island for every post along the southern shore. */}
+      <line x1={cx} y1={cy} x2={px} y2={py} stroke="#5c4326" strokeWidth={1.4} opacity={0.9} />
+      <g transform={`translate(${px} ${py})`}>
+        <rect
+          x={-plateW / 2} y={-13} width={plateW} height={25} rx={5}
+          fill="#fdf6e6" stroke="#5c4326" strokeWidth={1.8}
+        />
+        <rect x={-plateW / 2 + 2} y={-11} width={plateW - 4} height={8} rx={3} fill="#ffffff" opacity={0.55} />
+        {port.resource ? (
+          <>
+            <g transform="translate(-23 -10.6) scale(0.88)">
+              <ResGlyph res={port.resource} />
+            </g>
+            <text
+              x={10} y={4} textAnchor="middle"
+              fontSize={13} fontWeight={800} fontFamily="ui-monospace, monospace" fill="#3b2c1e"
+            >
+              {rate}
+            </text>
+          </>
+        ) : (
           <text
-            textAnchor="middle" y={3.2}
-            fontSize={9.5} fontWeight={700} fontFamily="ui-monospace, monospace"
-            fill="#2a211a" stroke="#fdf8ec" strokeWidth={2.6} paintOrder="stroke"
+            y={4} textAnchor="middle"
+            fontSize={13} fontWeight={800} fontFamily="ui-monospace, monospace" fill="#3b2c1e"
           >
-            {port.resource ? "2:1" : "3:1"}
+            {rate}
           </text>
-        </g>
-
-        {/* pennant — which good this post deals in */}
-        <path d="M -2 -27 L 10 -23 L -2 -19 Z" fill={flag} stroke="#31200f" strokeWidth={0.7} />
+        )}
       </g>
     </g>
   );
@@ -527,12 +562,14 @@ export function BoardView({
 
   const xs = placed.map((p) => p.x);
   const ys = placed.map((p) => p.y);
-  /* The moored dhows hang off the coastline — hull, mast and pennant reach
-     roughly a hex and a half beyond the last tile — so the frame has to
-     leave room or the ships get sliced in half by the viewBox. The wider
-     margin also gives the island open water to sit in, which is most of
-     why it reads as a place rather than a grid. */
-  const pad = HEX_SIZE * 2.42;
+  /* The moored dhows hang off the coastline — hull, mast and now the rate
+     plate reach a little over two hexes beyond the last tile centre — so the
+     frame has to leave room or the ships get sliced in half by the sea clip.
+     Worst case is a plate on a corner vertex: 45px out to the vertex, 48 to
+     the plate, 25 for half its width, against a clip inset of 26. The wider
+     margin also gives the island open water to sit in, which is most of why
+     it reads as a place rather than a grid. */
+  const pad = HEX_SIZE * 2.82;
   const minX = Math.min(...xs) - pad;
   const minY = Math.min(...ys) - pad;
   const width = Math.max(...xs) - Math.min(...xs) + pad * 2;

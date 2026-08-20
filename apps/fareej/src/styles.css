@@ -1,0 +1,774 @@
+/* =========================================================================
+   styles.css — FAREEJ. A lit table in a dark room.
+   -------------------------------------------------------------------------
+   WHAT THIS REPLACES, AND WHY. The first version of this file was lifted
+   from the KAZ6 parent site's v12 MASTHEAD system: monospace labels in
+   tracked caps, hard edges, muted paper, everything in an identically
+   weighted bordered box. That language is right for an editorial portfolio
+   and wrong for a game — it made a board game read as a form. España and
+   Europa feel like games precisely because they were never built from it.
+
+   So the games get their own language, and this is it:
+
+     THE ROOM IS DARK.       A game is a lit object in a dim room, not a
+                             document on paper. Everything is staged.
+     THE BOARD IS THE HERO.  It is cream, it is lit, and it is the biggest
+                             thing on screen. Chrome gets out of its way.
+     THINGS ARE THINGS.      Dice have pips. Money is a note. Buildings are
+                             objects with a side and a top. Nothing that can
+                             be an object is left as a line of text.
+     CONTROLS ARE PHYSICAL.  Big, saturated, rounded, and they travel when
+                             pressed. Nothing important is a 12px label.
+
+   Type is Outfit throughout — geometric, modern, and readable at the sizes
+   a game actually uses. Monospace survives in exactly one place: money, and
+   only for the tabular alignment.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   TOKENS
+   Two rooms, one table. "Dark" is night, "light" is the same table under
+   daylight — NOT the site's paper ground. A game does not have a document
+   mode.
+   ------------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  /* --- the table itself, identical in both rooms --- */
+  --board:       #f4ecd8;   /* the cream board face */
+  --board-2:     #e9dfc4;   /* its shaded edge */
+  --board-ink:   #2b2118;   /* type printed on the board */
+  --board-ink-2: #6d6152;
+  --felt:        #10403c;   /* the teal inlay the board sits on */
+  --felt-2:      #0a2f2c;
+  --wood:        #4a3220;   /* the table's teak rail */
+  --wood-2:      #2a1b10;
+
+  /* --- brass: money, calls to action, anything worth wanting --- */
+  --gold:      #ffc94a;
+  --gold-2:    #d99a1e;
+  --gold-ink:  #2a1c06;
+
+  /* --- the four seats. Saturated enough to read on cream AND on felt --- */
+  --p1: #d6403f;
+  --p2: #3183d4;
+  --p3: #3ea564;
+  --p4: #8c5ad0;
+
+  /* --- the room --- */
+  --room:      #100d0b;
+  --room-2:    #17130f;
+  --panel:     #1e1a16;
+  --panel-2:   #272119;
+  --edge:      rgba(255, 244, 220, 0.10);
+  --edge-2:    rgba(255, 244, 220, 0.18);
+  --ink:       #f6efe2;
+  --ink-soft:  rgba(246, 239, 226, 0.72);
+  --ink-faint: rgba(246, 239, 226, 0.46);
+
+  --good: #4fbe7a;
+  --bad:  #e0574f;
+
+  /* --- shape and depth. The old system's 2-4px radii were the single
+         biggest reason it read as a spreadsheet. --- */
+  --r-sm: 8px;
+  --r:    14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  --lift-1: 0 1px 2px rgba(0,0,0,.4);
+  --lift-2: 0 4px 10px -2px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.4);
+  --lift-3: 0 14px 30px -8px rgba(0,0,0,.7), 0 3px 8px rgba(0,0,0,.45);
+  --glow-gold: 0 10px 30px -8px rgba(232,179,60,.5);
+}
+
+/* Daylight. Same table, brighter room — never the site's paper. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --room:     #2b241d;
+    --room-2:   #3a3128;
+    --panel:    #43392e;
+    --panel-2:  #4f4437;
+    --edge:     rgba(255, 246, 226, 0.14);
+    --edge-2:   rgba(255, 246, 226, 0.24);
+  }
+}
+:root[data-theme="light"] {
+  --room:    #2b241d;
+  --room-2:  #3a3128;
+  --panel:   #43392e;
+  --panel-2: #4f4437;
+  --edge:    rgba(255, 246, 226, 0.14);
+  --edge-2:  rgba(255, 246, 226, 0.24);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* The room: a warm pool of light with the table under it, falling off to
+   near-black at the corners. This one gradient does most of the work of
+   making the thing feel staged rather than laid out. */
+body {
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--room-2) 0%, var(--room) 62%, #070605 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: "Outfit", system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.shell {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ================= TOP BAR ================= */
+.topbar { display: flex; align-items: center; gap: 10px; }
+.kaz6-home {
+  font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+  color: var(--ink-faint); text-decoration: none;
+  padding: 7px 12px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,.05); border: 1px solid var(--edge);
+  transition: color .18s, background .18s;
+}
+.kaz6-home:hover { color: var(--ink); background: rgba(255,255,255,.09); }
+.head-controls { display: flex; gap: 7px; margin-left: auto; }
+
+.wordmark {
+  font-size: clamp(1.9rem, 7vw, 3.2rem);
+  font-weight: 900; letter-spacing: -.02em; line-height: .9;
+  background: linear-gradient(180deg, #fff8e8 0%, var(--gold) 62%, var(--gold-2) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 44px rgba(232,179,60,.22);
+}
+.eyebrow {
+  font-size: .64rem; font-weight: 800; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--gold);
+}
+/* Eyebrow over the name, controls beside it. As a plain column the controls
+   fell to a line of their own under the wordmark. */
+.head {
+  display: grid; grid-template-columns: 1fr auto; align-items: end;
+  column-gap: 14px;
+}
+.head .eyebrow { grid-column: 1 / -1; }
+.head .wordmark { grid-column: 1; }
+.head .head-controls { grid-column: 2; padding-bottom: 6px; }
+
+/* ================= PLAYER BANNERS =================
+   Four seats across the top like a scoreboard, not four cards in a form.
+   The seat's colour is a solid bar down the side, and cash is the biggest
+   thing in the banner, because cash is what you are actually watching. */
+.players { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pbanner {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 8px 8px 12px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge);
+  box-shadow: var(--lift-1);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.pbanner::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 5px;
+  background: var(--seat-colour, var(--gold));
+}
+.pbanner.on {
+  border-color: var(--seat-colour, var(--gold));
+  box-shadow: var(--lift-2), 0 0 0 1px var(--seat-colour, var(--gold)) inset;
+  transform: translateY(-2px);
+}
+.pbanner.out { opacity: .38; }
+.pbanner-top { display: flex; align-items: center; gap: 6px; }
+.pbanner-name {
+  font-size: .64rem; font-weight: 700; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pbanner-cash {
+  font-size: .96rem; font-weight: 800; letter-spacing: -.01em;
+  color: var(--ink); line-height: 1.1;
+}
+.pbanner.on .pbanner-cash { color: var(--gold); }
+.pbanner-groups { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 2px; min-height: 5px; }
+.pbanner-groups i { width: 11px; height: 5px; border-radius: 1px; }
+.pbanner-jail {
+  position: absolute; top: 5px; right: 5px;
+  font-size: .52rem; font-weight: 800; letter-spacing: .08em;
+  color: var(--bad); text-transform: uppercase;
+}
+
+/* ================= THE CALL =================
+   One line saying what the table is waiting for. It is a spotlight, not a
+   label: big, centred, and the only thing at that weight. */
+.call {
+  text-align: center; padding: 10px 14px;
+  font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em;
+  color: var(--ink);
+  border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+  border: 1px solid var(--edge);
+}
+.call.mine {
+  color: var(--gold);
+  border-color: rgba(232,179,60,.4);
+  box-shadow: 0 0 34px -10px rgba(232,179,60,.5);
+}
+
+/* ================= THE TABLE =================
+   Teak rail, teal felt, board on top. The nesting is the point — three
+   materials, each smaller than the last, is what reads as an object sitting
+   on a surface rather than a div. */
+.table {
+  border-radius: var(--r-lg);
+  padding: 10px;
+  background: linear-gradient(160deg, var(--wood) 0%, var(--wood-2) 70%);
+  box-shadow: var(--lift-3), inset 0 1px 0 rgba(255,255,255,.09);
+}
+.felt {
+  border-radius: var(--r);
+  padding: 10px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.07), transparent 60%),
+    linear-gradient(180deg, var(--felt), var(--felt-2));
+  box-shadow: inset 0 2px 14px rgba(0,0,0,.55);
+}
+
+/* ---- the strip: the lap unrolled, for phones ----
+   Cards with real thickness, sitting on the felt. The active space lifts
+   toward the player. */
+.strip {
+  display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain;
+  padding: 12px 4px 16px;
+  scrollbar-width: none;
+}
+.strip::-webkit-scrollbar { display: none; }
+
+.cellbtn {
+  flex: 0 0 auto; width: 90px; min-height: 126px;
+  display: flex; flex-direction: column; align-items: stretch;
+  border: 0; border-radius: 10px;
+  background: linear-gradient(180deg, var(--board) 0%, var(--board-2) 100%);
+  color: var(--board-ink);
+  padding: 0 0 7px; cursor: pointer; text-align: left;
+  font: inherit; overflow: hidden;
+  box-shadow: var(--lift-2), inset 0 1px 0 rgba(255,255,255,.6);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .22s cubic-bezier(.2,.9,.3,1.3), box-shadow .22s;
+}
+.cellbtn:hover { transform: translateY(-3px); }
+.cellbtn.on {
+  transform: translateY(-9px) scale(1.03);
+  box-shadow: var(--lift-3), 0 0 0 3px var(--gold), inset 0 1px 0 rgba(255,255,255,.7);
+}
+.cellbtn.corner { background: linear-gradient(180deg, #efe4c8, #ded1ae); }
+.cellbtn.corner .cell-name { font-size: .64rem; letter-spacing: .06em; text-transform: uppercase; }
+.cellbtn.mortgaged { filter: grayscale(.6) brightness(.82); }
+/* an owned space wears its owner's colour as a ring */
+.cellbtn.owned { box-shadow: var(--lift-2), 0 0 0 3px var(--own); }
+.cellbtn.owned.on { box-shadow: var(--lift-3), 0 0 0 3px var(--own), 0 0 0 6px rgba(232,179,60,.6); }
+
+.cell-band { display: block; height: 18px; border-bottom: 1px solid rgba(0,0,0,.22); }
+.cell-band.none {
+  background: repeating-linear-gradient(45deg,
+    rgba(43,33,24,.16) 0 5px, rgba(43,33,24,.05) 5px 10px);
+}
+.cell-name {
+  padding: 5px 7px 0; font-size: .7rem; line-height: 1.14; font-weight: 700;
+  overflow-wrap: break-word;
+}
+.cell-price {
+  padding: 1px 7px 0; font-size: .64rem; font-weight: 700;
+  color: var(--board-ink-2);
+}
+.cell-owner {
+  padding: 1px 7px 0; font-size: .6rem; font-weight: 700;
+  color: var(--own, var(--board-ink-2));
+}
+.cell-built { display: flex; gap: 3px; padding: 4px 7px 0; margin-top: auto; }
+.cell-tokens {
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 5px 0; min-height: 24px;
+  margin-top: auto;
+}
+.tok { flex: none; display: inline-block; vertical-align: middle; filter: drop-shadow(0 2px 2px rgba(0,0,0,.45)); }
+
+/* ---- the square, for desktop ---- */
+.square {
+  display: none;
+  --sq: 88px;
+  grid-template-columns: var(--sq) repeat(9, 1fr) var(--sq);
+  grid-template-rows: var(--sq) repeat(9, 1fr) var(--sq);
+  gap: 3px; width: 100%; aspect-ratio: 1;
+}
+.sq {
+  position: relative; display: flex; overflow: hidden;
+  border: 0; border-radius: 5px;
+  background: linear-gradient(180deg, var(--board), var(--board-2));
+  color: var(--board-ink);
+  padding: 0; font: inherit; text-align: left; cursor: pointer;
+  box-shadow: var(--lift-1), inset 0 1px 0 rgba(255,255,255,.55);
+  transition: transform .18s, box-shadow .18s;
+}
+.sq:hover { transform: translateY(-2px); box-shadow: var(--lift-2); }
+.sq.on { box-shadow: var(--lift-2), 0 0 0 3px var(--gold); z-index: 2; }
+.sq.owned { box-shadow: var(--lift-1), 0 0 0 3px var(--own); }
+.sq.mortgaged { filter: grayscale(.6) brightness(.85); }
+.sq--corner { background: linear-gradient(180deg, #efe4c8, #ded1ae); }
+.sq--top    { flex-direction: column; }
+.sq--bottom { flex-direction: column-reverse; }
+.sq--left   { flex-direction: row; }
+.sq--right  { flex-direction: row-reverse; }
+.sq-band { flex: none; }
+.sq--top .sq-band, .sq--bottom .sq-band { height: 17px; width: 100%; }
+.sq--left .sq-band, .sq--right .sq-band { width: 17px; height: 100%; }
+.sq-band.none { background: repeating-linear-gradient(45deg, rgba(43,33,24,.16) 0 4px, rgba(43,33,24,.05) 4px 8px); }
+.sq-body { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 2px; padding: 5px 6px; }
+.sq-name { font-size: .6rem; line-height: 1.15; font-weight: 700; overflow-wrap: break-word; }
+.sq--corner .sq-name { text-transform: uppercase; letter-spacing: .05em; font-size: .52rem; }
+.sq-price { font-size: .55rem; font-weight: 700; color: var(--board-ink-2); }
+.sq-built { display: flex; flex-wrap: wrap; gap: 2px; }
+.sq-tokens { display: flex; flex-wrap: wrap; gap: 1px; margin-top: auto; }
+.square-middle {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; padding: 20px;
+}
+.square-middle h2 {
+  font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 900; line-height: .9; letter-spacing: -.02em;
+  background: linear-gradient(180deg, #fff8e8, var(--gold) 60%, var(--gold-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.square-middle .muted { max-width: 30ch; }
+
+@media (min-width: 940px) {
+  .square { display: grid; }
+  .strip { display: none; }
+  .players { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ================= BUILDINGS =================
+   A villa has a roof and a wall; a tower has floors. Both are objects with
+   a lit face and a shaded one, because a flat square reads as a checkbox. */
+.villa, .tower { flex: none; display: block; }
+
+/* ================= CONTROLS =================
+   Big, rounded, saturated, and they travel. The press physics were already
+   here — they just had nothing worth pressing. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit; font-size: 1rem; font-weight: 800; letter-spacing: -.01em;
+  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  border: 0; border-radius: var(--r); padding: 15px 26px;
+  cursor: pointer; position: relative; overflow: hidden;
+  box-shadow: 0 5px 0 rgba(0,0,0,.32), var(--glow-gold);
+  transition: transform .16s cubic-bezier(.2,.9,.3,1.4), box-shadow .16s, filter .18s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.btn:hover { filter: brightness(1.07); }
+.btn:active:not(:disabled), .btn.pressing:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 rgba(0,0,0,.32), 0 2px 8px -4px rgba(232,179,60,.5);
+  transition-duration: .04s;
+}
+.btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.btn:disabled { opacity: .34; cursor: not-allowed; box-shadow: none; transform: none; filter: none; }
+
+.btn.small { font-size: .84rem; padding: 11px 17px; border-radius: var(--r-sm); box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.btn.small:active:not(:disabled), .btn.small.pressing:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.btn.tiny { font-size: .74rem; padding: 8px 12px; border-radius: var(--r-sm); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.btn.tiny:active:not(:disabled), .btn.tiny.pressing:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+
+/* the quiet one: same physics, no colour claim */
+.btn.ghost {
+  background: rgba(255,255,255,.07); color: var(--ink);
+  border: 1px solid var(--edge-2);
+  box-shadow: 0 3px 0 rgba(0,0,0,.28);
+}
+.btn.ghost:hover { background: rgba(255,255,255,.13); }
+.btn.ghost:active:not(:disabled), .btn.ghost.pressing:not(:disabled) { box-shadow: none; }
+.btn.on { background: linear-gradient(180deg, #fff3d6, var(--gold)); }
+
+.ripple {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,.75) 0%, rgba(255,255,255,.25) 45%, transparent 70%);
+  transform: scale(.25); opacity: .9;
+  animation: ripple .45s cubic-bezier(.22,.9,.3,1) forwards;
+}
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+.btn.ghost .ripple { background: radial-gradient(circle, rgba(232,179,60,.5) 0%, rgba(232,179,60,.15) 50%, transparent 72%); }
+
+/* ================= THE DOCK =================
+   Where the turn actually happens. Sticks to the bottom of the viewport so
+   the thing you press is never scrolled off. */
+/* The shell leaves room so the last panel is never parked under the dock. */
+.shell { scroll-padding-bottom: 160px; }
+.dock {
+  position: sticky; bottom: 0; z-index: 20;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px; margin: 0 -2px;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: linear-gradient(180deg, rgba(30,26,22,.9), rgba(16,13,11,.98));
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--edge); border-bottom: 0;
+  box-shadow: 0 -14px 34px -12px rgba(0,0,0,.8);
+}
+.dock-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.dock-row .btn { flex: 1 1 auto; }
+.dock-row .btn.ghost { flex: 0 1 auto; }
+
+/* ================= PANELS ================= */
+.panel {
+  border-radius: var(--r);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge);
+  box-shadow: var(--lift-1);
+  padding: 13px 14px;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: .62rem; font-weight: 800; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px;
+}
+.panel--urgent {
+  border-color: rgba(232,179,60,.42);
+  box-shadow: var(--lift-2), 0 0 34px -14px rgba(232,179,60,.55);
+}
+.panel--lead { background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
+.panel--start { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.muted { color: var(--ink-soft); font-size: .9rem; line-height: 1.55; }
+.hint { margin-top: 9px; font-size: .84rem; }
+.dice { font-size: .82rem; font-weight: 700; color: var(--ink-soft); }
+.lede { font-size: 1.08rem; line-height: 1.55; max-width: 62ch; font-weight: 500; }
+.lede b { color: var(--gold); font-weight: 800; }
+.card-text { font-size: 1.06rem; line-height: 1.5; margin-bottom: 14px; max-width: 52ch; font-weight: 600; }
+
+/* ================= DEED CARD =================
+   A real title deed: coloured header, rents in a ledger, and it sits on the
+   felt like a card rather than sitting in the page like a section. */
+.deed {
+  padding: 0 0 16px; overflow: hidden;
+  background: linear-gradient(180deg, var(--board), var(--board-2));
+  color: var(--board-ink);
+  border: 0; box-shadow: var(--lift-3);
+}
+.deed-head {
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 3px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.deed-head b { font-size: 1.18rem; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+.deed-group { font-size: .6rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; opacity: .9; }
+.deed-note { padding: 13px 16px 0; font-size: .94rem; line-height: 1.5; }
+.deed-group-note { padding: 5px 16px 0; font-size: .84rem; color: var(--board-ink-2); }
+.deed-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 9px 16px; border-top: 1px solid rgba(43,33,24,.14); font-size: .88rem;
+}
+.deed-row span { color: var(--board-ink-2); font-weight: 600; }
+.deed-row b { text-align: right; font-weight: 800; }
+.deed-owner b { display: inline-flex; align-items: center; gap: 7px; }
+.deed .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.deed .btn { margin: 14px 16px 0; }
+.rents { width: calc(100% - 32px); margin: 10px 16px 0; border-collapse: collapse; font-size: .86rem; }
+.rents th { text-align: left; font-weight: 600; color: var(--board-ink-2); padding: 5px 0; }
+.rents td { text-align: right; font-weight: 800; padding: 5px 0; }
+.rents tr + tr th, .rents tr + tr td { border-top: 1px solid rgba(43,33,24,.12); }
+.rents tr.on th, .rents tr.on td { color: #9a3f1e; }
+
+/* ================= HOLDINGS ================= */
+.holdings { display: grid; gap: 7px; }
+.hold {
+  display: grid; grid-template-columns: 6px 1fr auto; align-items: center; gap: 11px;
+  border-radius: var(--r-sm); overflow: hidden;
+  background: rgba(255,255,255,.045); border: 1px solid var(--edge);
+  padding: 8px 10px 8px 0;
+}
+.hold.mortgaged { opacity: .55; }
+.hold-band { align-self: stretch; min-height: 34px; }
+.hold-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.hold-name b { font-size: .88rem; font-weight: 700; }
+.hold-name .muted { font-size: .68rem; }
+.hold-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ================= TRADING ================= */
+.trade-who { margin-bottom: 11px; }
+.trade-who .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+.trade-side { border-top: 1px solid var(--edge); padding-top: 11px; margin-top: 11px; }
+.trade-side:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.deedpick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chipdeed {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: .78rem; font-weight: 700;
+  border: 1px solid var(--edge-2); border-radius: var(--r-pill);
+  background: rgba(255,255,255,.05); color: var(--ink-soft);
+  padding: 7px 12px 7px 8px; cursor: pointer;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: background .16s, border-color .16s, color .16s, transform .16s;
+}
+.chipdeed i { width: 10px; height: 14px; flex: none; border-radius: 2px; }
+.chipdeed:hover:not(:disabled) { background: rgba(255,255,255,.1); color: var(--ink); }
+.chipdeed.on { border-color: var(--gold); background: rgba(232,179,60,.18); color: var(--ink); transform: translateY(-1px); }
+.chipdeed:disabled { opacity: .35; cursor: not-allowed; }
+.trade-cash { gap: 6px; }
+.trade-balance { margin: 12px 0; font-size: .88rem; }
+.trade-balance b { color: var(--gold); font-weight: 800; }
+.trade-summary { display: grid; gap: 5px; margin-bottom: 13px; font-size: .92rem; line-height: 1.5; }
+.trade-summary b { color: var(--ink); font-weight: 800; }
+
+/* ================= LOBBY ================= */
+.fold {
+  border-radius: var(--r); overflow: hidden;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--edge);
+}
+.fold-head {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: transparent; border: 0; cursor: pointer; text-align: left;
+  font-family: inherit; font-size: .84rem; font-weight: 700; letter-spacing: .01em;
+  color: var(--ink); padding: 15px 16px;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.fold.on .fold-head { border-bottom: 1px solid var(--edge); }
+.fold-mark { font-size: 1.3rem; color: var(--gold); line-height: 1; font-weight: 700; }
+.fold-body { padding: 14px 16px 17px; font-size: .94rem; line-height: 1.6; }
+.fold-body .muted { margin-top: 10px; }
+.steps { margin: 0 0 0 1.15em; display: grid; gap: 9px; }
+.steps li { line-height: 1.5; }
+.steps b { color: var(--gold); font-weight: 800; }
+
+.ladder { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin: 16px 0 13px; }
+@media (min-width: 640px) { .ladder { grid-template-columns: repeat(4, 1fr); } }
+.rung {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .72rem; font-weight: 700; color: var(--ink-soft);
+}
+.rung i { width: 18px; height: 18px; border-radius: 5px; flex: none; box-shadow: var(--lift-1); }
+
+.seatlist { display: grid; gap: 7px; }
+.seatctl {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  font-size: .86rem; font-weight: 600;
+  border-radius: var(--r-sm); padding: 9px 11px;
+  background: rgba(255,255,255,.045); border: 1px solid var(--edge);
+}
+.seatctl.mine { border-color: var(--gold); background: rgba(232,179,60,.1); }
+.seatctl-acts { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.tag2 {
+  font-size: .6rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-faint); border: 1px solid var(--edge-2); border-radius: var(--r-pill);
+  padding: 3px 8px;
+}
+.tag2.bot { color: var(--gold); border-color: rgba(232,179,60,.5); }
+.tag2.remote { color: #63c6d8; border-color: rgba(99,198,216,.5); }
+
+.code { font-weight: 800; letter-spacing: .2em; color: var(--gold); font-size: .8rem; }
+.link { display: inline-flex; align-items: center; gap: 6px; font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+.link-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); }
+.link--live .link-dot { background: var(--good); box-shadow: 0 0 10px var(--good); }
+.link--connecting .link-dot { background: var(--gold); }
+.link--error .link-dot { background: var(--bad); }
+.invite-lead { margin: 13px 0 10px; }
+
+.input {
+  font-family: inherit; font-size: .88rem; font-weight: 700; letter-spacing: .06em;
+  border: 1px solid var(--edge-2); background: rgba(0,0,0,.28); color: var(--ink);
+  padding: 12px 14px; border-radius: var(--r-sm);
+}
+.input::placeholder { color: var(--ink-faint); font-weight: 500; }
+select.input { max-width: 48vw; }
+
+.opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--edge); cursor: pointer; }
+.opt:first-of-type { border-top: 0; padding-top: 0; }
+.opt input { margin-top: 3px; width: 22px; height: 22px; accent-color: var(--gold); flex: none; }
+.opt span { display: flex; flex-direction: column; gap: 3px; }
+.opt b { font-size: .95rem; font-weight: 800; }
+.opt .muted { font-size: .85rem; }
+
+/* ================= LOG ================= */
+.panel--log { background: rgba(255,255,255,.03); }
+.log { list-style: none; font-size: .8rem; line-height: 1.7; color: var(--ink-soft); }
+.log li:first-child { color: var(--ink); font-weight: 600; }
+.panel--log .log li + li { color: var(--ink-faint); }
+.seed { font-size: .72rem; color: var(--ink-faint); line-height: 1.5; }
+
+/* ================= INVITE ================= */
+.invite { margin-top: 10px; }
+.invite .row { margin-bottom: 6px; }
+.invite-url {
+  width: 100%; font-family: ui-monospace, monospace; font-size: .68rem;
+  color: var(--ink-faint); background: rgba(0,0,0,.3);
+  border: 1px solid var(--edge); border-radius: var(--r-sm); padding: 9px 11px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.invite-code { margin-top: 9px; font-size: .9rem; color: var(--ink-soft); }
+.invite-code b { font-size: 1.5rem; font-weight: 900; letter-spacing: .22em; color: var(--gold); }
+.qr-wrap {
+  margin-top: 14px; padding: 14px; border-radius: var(--r);
+  background: rgba(255,255,255,.05); border: 1px solid var(--edge);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+/* Physical size matters more than styling: below roughly 150px a phone
+   camera starts failing to lock on across a table. */
+.qr { width: min(230px, 64vw); height: auto; display: block; border: 8px solid #fff; border-radius: 6px; box-shadow: var(--lift-2); }
+.qr-wrap .muted { text-align: center; font-size: .82rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ================= THE DICE TRAY =================
+   The dice tumble on arrival. The animation is short and lands with a
+   settle, because a long roll is charming exactly once and then it is a
+   thing standing between the player and their turn. */
+.dice-tray { display: inline-flex; align-items: center; gap: 7px; }
+.die-wrap { display: inline-flex; animation: tumble .5s cubic-bezier(.2,.8,.3,1.2); }
+.die-wrap--b { animation-delay: .06s; animation-duration: .56s; }
+@keyframes tumble {
+  0%   { transform: translateY(-16px) rotate(-140deg) scale(.7); opacity: 0; }
+  55%  { transform: translateY(3px) rotate(12deg) scale(1.06); opacity: 1; }
+  75%  { transform: translateY(0) rotate(-4deg) scale(.99); }
+  100% { transform: none; }
+}
+.dice-total {
+  font-size: 1.35rem; font-weight: 900; color: var(--gold);
+  min-width: 1.4em; text-align: center; letter-spacing: -.02em;
+}
+.die { display: block; }
+
+/* ================= THE MINI BOARD =================
+   A live thumbnail of the whole lap, parked on the felt beside the strip.
+   No text at all: at 8px a space a name is noise, and what actually carries
+   is the group colour, the owner's ring, and the dots showing who is where. */
+.strip-wrap { position: relative; }
+.mini {
+  position: absolute; right: 2px; bottom: 20px; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 7px 7px 5px; border: 0; cursor: pointer;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(20,16,13,.9), rgba(10,8,6,.96));
+  box-shadow: var(--lift-3), 0 0 0 1px var(--edge-2);
+  backdrop-filter: blur(6px);
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.3), box-shadow .18s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.mini:hover { transform: translateY(-2px) scale(1.03); }
+.mini:active { transform: translateY(1px) scale(.99); }
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(11, 7px);
+  grid-template-rows: repeat(11, 7px);
+  gap: 1px;
+}
+.mini-cell {
+  position: relative; border-radius: 1px;
+  background: rgba(244,236,216,.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-cell.on { outline: 1.5px solid var(--gold); outline-offset: 0; z-index: 2; }
+.mini-dot { width: 3.4px; height: 3.4px; border-radius: 50%; box-shadow: 0 0 0 .5px rgba(0,0,0,.55); }
+.mini-built { position: absolute; top: .5px; right: .5px; width: 2px; height: 2px; background: var(--good); }
+.mini-mort { position: absolute; inset: 0; background: repeating-linear-gradient(45deg, rgba(0,0,0,.45) 0 1px, transparent 1px 3px); }
+.mini-label {
+  font-size: .52rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gold);
+}
+/* the desktop board is already the whole lap */
+@media (min-width: 940px) { .mini { display: none; } }
+
+/* ================= THE FULL BOARD OVERLAY ================= */
+.overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: max(12px, env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+  background: radial-gradient(120% 80% at 50% 0%, rgba(26,21,17,.98), rgba(5,4,3,.99));
+  animation: overlayIn .22s ease-out;
+}
+@keyframes overlayIn { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: none; } }
+.overlay-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.overlay-title { font-size: 1.02rem; font-weight: 800; color: var(--gold); }
+.overlay-board {
+  flex: 1 1 auto; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  overflow: auto;
+}
+/* inside the overlay the square is the board, at whatever size fits */
+.overlay-table { width: min(96vw, 96vh, 760px); }
+.overlay .square { display: grid; --sq: 9%; }
+.overlay .strip { display: none; }
+.overlay-hint { text-align: center; font-size: .8rem; }
+
+/* ---- the overlay board on a phone ----
+   At 96vw the eleven columns give each space about 34px, which is exactly
+   the width that made a square board unusable in the first place. Names
+   there don't shrink, they SHATTER — "Beit Al Qur'an" becomes "Be".
+
+   So below a tablet the full board stops pretending to be labelled and
+   becomes what it is actually for: a map. Group colour, owner's ring, what
+   is built, and who is standing where. The name is one tap away on the
+   deed, which is where a name is useful anyway. */
+@media (max-width: 700px) {
+  .overlay .sq-name, .overlay .sq-price { display: none; }
+  .overlay .sq-body {
+    align-items: center; justify-content: center; padding: 1px; gap: 1px;
+  }
+  .overlay .sq-tokens { margin-top: 0; justify-content: center; gap: 0; }
+  .overlay .sq-built { justify-content: center; gap: 1px; }
+  /* the band carries the group, so give it more of the space */
+  .overlay .sq--top .sq-band, .overlay .sq--bottom .sq-band { height: 34%; }
+  .overlay .sq--left .sq-band, .overlay .sq--right .sq-band { width: 34%; }
+  /* Corners still say what they are — they are the four a player looks for.
+     At 34px they have to wrap and they have to be tiny, or "BAB AL BAHRAIN"
+     clips to "AB AL BAHRAIN" and the one corner everybody needs to find is
+     the one that reads as a typo. */
+  .overlay .sq--corner .sq-name {
+    display: block; font-size: .34rem; line-height: 1.06; letter-spacing: 0;
+    text-align: center; width: 100%; overflow-wrap: anywhere; hyphens: none;
+  }
+  .overlay .sq--corner .sq-body { padding: 1px 0; }
+}
+
+/* ================= MONEY THAT MOVES =================
+   The figure counts to its new value and the change floats off the banner.
+   Both are short — this scoreboard updates several times a turn, and a
+   longer animation would still be running when the next one lands. */
+.cash { position: relative; display: inline-block; transition: color .3s; }
+.cash.up { color: var(--good); }
+.cash.down { color: var(--bad); }
+.cash-delta {
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translateX(-50%);
+  font-size: .72rem; font-weight: 900; white-space: nowrap;
+  pointer-events: none;
+  animation: floatOff 1.1s cubic-bezier(.2,.7,.3,1) forwards;
+}
+.cash-delta.up { color: var(--good); }
+.cash-delta.down { color: var(--bad); }
+@keyframes floatOff {
+  0%   { opacity: 0; transform: translate(-50%, 6px) scale(.85); }
+  18%  { opacity: 1; transform: translate(-50%, -2px) scale(1.06); }
+  70%  { opacity: 1; transform: translate(-50%, -12px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -22px) scale(.95); }
+}
+
+/* ================= LANDING =================
+   The token arrives on a space; the space acknowledges it. Without this a
+   move is just the strip having scrolled. */
+.cellbtn.on { animation: land .42s cubic-bezier(.2,.8,.3,1.3); }
+@keyframes land {
+  0%   { transform: translateY(-16px) scale(1.06); }
+  60%  { transform: translateY(-6px) scale(1.01); }
+  100% { transform: translateY(-9px) scale(1.03); }
+}
+
+/* the deed leads with what it is, then its name, then its group */
+.deed-kind {
+  font-size: .55rem; font-weight: 900; letter-spacing: .22em;
+  text-transform: uppercase; opacity: .72;
+}
+.deed-head b { margin: 1px 0 2px; }

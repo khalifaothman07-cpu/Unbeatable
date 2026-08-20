@@ -17,3 +17,15 @@
   margin-top: var(--s10); padding-top: var(--s4); border-top: 1px solid var(--footer-line);
 }
 .foot-note { font-family: var(--f-mono); font-size: var(--t-micro); letter-spacing: 0.08em; color: var(--footer-fg-3); white-space: nowrap; }
+
+/* Legal links share the base line with the copyright — same quiet mono
+   register, because they are the same kind of thing. Putting them in the
+   Pages column would rank a privacy notice alongside About. */
+.foot-legal {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.foot-legal a { color: var(--footer-fg-3); transition: color var(--dur-1) var(--ease-out); }
+.foot-legal a:hover { color: var(--footer-fg); }
+.foot-legal i { color: var(--footer-fg-3); font-style: normal; opacity: 0.5; }

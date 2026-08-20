@@ -1,15 +1,16 @@
 /* =========================================================================
    Lobby.tsx — the page before the game
    -------------------------------------------------------------------------
-   Sitting down at a board game normally comes with someone explaining it.
-   A web page has to do that itself, and the moment to do it is BEFORE the
-   first decision matters — not in a rules link nobody opens once they're
-   already lost.
+   The first version of this page tried to teach the whole game before
+   anyone had seen a board, and playtesters said the same thing about it
+   that they'd said about having no lobby at all: too long, too complicated,
+   hard to understand. Five open sections of prose is a rulebook, and nobody
+   reads a rulebook to start a game on a phone.
 
-   Three jobs, in the order a new player needs them:
-     1. what this game is and how you win
-     2. who is playing, and how the table works when they aren't in the room
-     3. start
+   So it now says the least it can:
+     1. what you are doing and how you win — four lines, always visible
+     2. seats, and Start
+     3. everything else behind two folds, shut by default
 
    The seat controls live here and nowhere else. Once the game begins they
    are gone for good, so a stray tap two hours in can't reset the table.
@@ -19,26 +20,25 @@ import { useState } from "react";
 import { COST } from "../game/rules";
 import type { Resource } from "../game/types";
 import { useGame } from "../state/store";
+import { ResIcon, RES_SHORT } from "./Icons";
 import { SeatBar } from "./SeatBar";
 
-const SHORT: Record<Resource, string> = {
-  palmWood: "Wood", limestone: "Stone", dates: "Dates", fish: "Fish", pearls: "Pearls",
-};
+const GOODS: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
 
 function Cost({ of }: { of: Partial<Record<Resource, number>> }) {
   return (
     <span className="cost">
       {(Object.keys(of) as Resource[]).map((r) => (
         <span key={r} className="cost-part">
-          <i className={`sw sw-${r}`} />{of[r]}&nbsp;{SHORT[r]}
+          <ResIcon res={r} size={17} />{of[r]}
         </span>
       ))}
     </span>
   );
 }
 
-function Section({ title, children, open = false }: { title: string; children: React.ReactNode; open?: boolean }) {
-  const [show, setShow] = useState(open);
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [show, setShow] = useState(false);
   return (
     <div className={`fold ${show ? "on" : ""}`}>
       <button className="fold-head" aria-expanded={show} onClick={() => setShow((v) => !v)}>
@@ -56,89 +56,72 @@ export function Lobby() {
 
   return (
     <>
+      {/* The game says its own name once, before it starts. Once there is a
+          board on screen the four seat banners and the board itself say what
+          this is, and a masthead is just a strip of phone the board could
+          have had — so it lives here and not in the running game. */}
+      <header className="head">
+        <p className="eyebrow">Isle of Pearls</p>
+        <h1 className="wordmark">LU&rsquo;LU&rsquo;A</h1>
+      </header>
+
       <div className="panel panel--lead">
         <p className="lede">
-          A trading and settlement game on a Bahraini island. You collect five goods — palm wood,
-          limestone, dates, fish and pearls — and spend them building huts and trade routes along the
-          coast. <b>First to 10 points wins.</b>
+          Collect goods, build along the coast. <b>First to 10 points wins.</b>
         </p>
+        <div className="goods-strip">
+          {GOODS.map((r) => (
+            <span key={r} className="good">
+              <ResIcon res={r} size={30} />
+              {RES_SHORT[r]}
+            </span>
+          ))}
+        </div>
+        <ol className="steps steps--tight">
+          <li><b>Roll.</b> Every tile with that number pays whoever built on its corners.</li>
+          <li><b>Spend.</b> Build, swap with the bank, or offer the table a deal.</li>
+          <li><b>End turn.</b></li>
+        </ol>
       </div>
 
-      <Section title="How a turn works" open>
-        <ol className="steps">
-          <li><b>Roll two dice.</b> Every tile showing that number pays out, to everyone with a
-            building on its corners. A hut earns 1, a qasr earns 2.</li>
-          <li><b>Build, or trade.</b> Spend goods on the things below, swap with the bank, or offer
-            a deal to the rest of the table.</li>
-          <li><b>End your turn.</b></li>
-        </ol>
-        <p className="muted">
-          Roll a <b>7</b> and nobody collects: the Shamal — a sandstorm — moves to a tile of your
-          choosing and blocks it until someone shifts it again. You take a card from a player
-          building there, and anyone holding 8 or more cards drops half.
-        </p>
-      </Section>
-
-      <Section title="What you can build">
+      <Section title="What things cost">
         <table className="ref">
           <tbody>
             <tr>
               <th>Trade route</th>
               <td><Cost of={COST.route} /></td>
-              <td className="muted">Extends your reach. Longest run of 5+ is worth 2 points.</td>
+              <td className="muted">Longest run of 5+ is worth 2 points.</td>
             </tr>
             <tr>
               <th>Barasti</th>
               <td><Cost of={COST.barasti} /></td>
-              <td className="muted">A palm hut. <b>1 point</b>, and collects from its three tiles.</td>
+              <td className="muted"><b>1 point.</b> Collects from its three tiles.</td>
             </tr>
             <tr>
               <th>Qasr</th>
               <td><Cost of={COST.qasr} /></td>
-              <td className="muted">Upgrades a barasti. <b>2 points</b>, and collects double.</td>
+              <td className="muted"><b>2 points.</b> Upgrades a barasti and collects double.</td>
             </tr>
             <tr>
               <th>Dhow card</th>
               <td><Cost of={COST.dhow} /></td>
-              <td className="muted">A hidden pearl is a point. Others move the Shamal, take goods,
-                or lay free routes.</td>
+              <td className="muted">A hidden pearl is a point; the rest do something.</td>
             </tr>
           </tbody>
         </table>
         <p className="muted">
-          A new barasti must sit two corners away from any other building, and connect to your own
-          routes.
+          A new barasti sits two corners clear of any other, and must touch your own routes.
+          Roll a <b>7</b> and nobody collects — the Shamal moves to a tile of your choosing
+          and blocks it, you take a card from someone building there, and anyone holding 8 or
+          more drops half.
         </p>
       </Section>
 
-      <Section title="Trading">
+      <Section title="Playing with friends who aren’t here">
         <p className="muted">
-          The bank swaps <b>4 of one good for 1 of any other</b>. Build on a <b>trade post</b> on the
-          coast and it gets cheaper: <b>3:1</b> at a general post, <b>2:1</b> at one that deals in
-          that specific good. Posts are marked around the edge of the board.
-        </p>
-        <p className="muted">
-          You can also offer a deal to the other players on your turn — anything for anything, and
-          they choose whether to take it.
-        </p>
-      </Section>
-
-      <Section title="Playing with people who aren't here">
-        <p className="muted">
-          <b>This device is the table.</b> Whoever sets the game up holds it — there's no server, so
-          the host's browser is what keeps the game alive. Leave this page open and everyone else
-          stays in the game; close it and the table closes with it.
-        </p>
-        <ol className="steps">
-          <li>Set a seat to <b>Open online</b> below. That creates the table and gives you a link.</li>
-          <li><b>Send the link</b> to whoever is taking that seat — or let them scan the QR code
-            if they're with you.</li>
-          <li>They open it, pick their seat and they're in. Empty seats can be
-            <b> bots</b>, so you never need a full four.</li>
-        </ol>
-        <p className="muted">
-          It goes over the internet, not your wifi, so friends anywhere can play. Everyone sees the
-          board update as it's played, and only ever sees their own cards.
+          <b>This device is the table.</b> Open a seat below, send the link, they pick that seat.
+          Keep this page open — close it and the table closes with it. Empty seats can be
+          <b> bots</b>, so you never need a full four.
         </p>
       </Section>
 

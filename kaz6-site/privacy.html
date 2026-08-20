@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Privacy — KAZ6</title>
+  <meta name="description" content="What this site stores in your browser, why, and how to clear it. Short, because there isn't much." />
+  <link rel="icon" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  <link rel="stylesheet" href="css/legal.css" />
+  <meta name="theme-color" content="#e2ddcc" />
+  <script>
+    try {
+      var t = localStorage.getItem("kaz6.theme");
+      var dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+      if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+      document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#181815" : "#e2ddcc");
+    } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
+  </script>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <nav class="nav" id="nav"></nav>
+
+  <header class="phero">
+    <div class="wrap">
+      <div class="phero-top">
+        <span class="phero-status">Privacy</span>
+        <span class="phero-loc">Last updated 20 August 2026</span>
+      </div>
+      <h1 class="phero-title">Privacy</h1>
+      <p class="phero-lead">What this site keeps, why it keeps it, and how to get rid of it. It is short because there genuinely isn&rsquo;t much.</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="wrap legal">
+
+      <h2>The short version</h2>
+      <p class="legal-lede">
+        This site counts visits so I can see whether anyone is reading it. It sets
+        <b>no cookies at all</b>. It runs no advertising, no third-party analytics,
+        and no tracking that follows you anywhere else. Nothing here is sold or
+        shared, because there is nobody to sell it to.
+      </p>
+
+      <h2>What gets stored on your device</h2>
+      <p>
+        Four things, all in your browser&rsquo;s local storage rather than in cookies.
+        Two of them exist only because you asked for them; one needs your permission,
+        and does not exist until you give it.
+      </p>
+
+      <table class="legal-table">
+        <thead>
+          <tr><th>What</th><th>Why</th><th>Needs permission?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-k="What"><code>kaz6.theme</code></td>
+            <td data-k="Why">Remembers whether you chose light, dark, or follow-my-device, so the site doesn&rsquo;t flash the wrong one on every page.</td>
+            <td data-k="Needs permission?">No — it&rsquo;s a setting you chose.</td>
+          </tr>
+          <tr>
+            <td data-k="What"><code>kaz6.session</code></td>
+            <td data-k="Why">Keeps you signed in, if you signed in. Without it, &ldquo;sign in&rdquo; could not work at all.</td>
+            <td data-k="Needs permission?">No — it&rsquo;s the thing you asked for.</td>
+          </tr>
+          <tr>
+            <td data-k="What"><code>kaz6.visitor</code></td>
+            <td data-k="Why">One random number, so that two visits from this browser can be recognised as the same person rather than two strangers.</td>
+            <td data-k="Needs permission?"><b>Yes.</b> It is not created unless you agree.</td>
+          </tr>
+          <tr>
+            <td data-k="What"><code>kaz6.consent</code></td>
+            <td data-k="Why">Remembers your answer to the bar at the bottom, so it stops asking.</td>
+            <td data-k="Needs permission?">No — remembering a refusal is the point of it.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="legal-note">
+        The games keep a little more — your board, your seat and your theme — so a
+        reload doesn&rsquo;t throw away a game in progress. That stays in your browser
+        and never reaches the visit log. If you play an online table, the game state
+        is shared with the other people at that table, which is what makes it an
+        online table.
+      </p>
+
+      <h2>Your answer, right now</h2>
+      <div class="legal-consent" data-consent-panel>
+        <p class="legal-consent-state" data-consent-state>Checking&hellip;</p>
+        <div class="legal-consent-acts" data-consent-acts></div>
+      </div>
+      <p class="legal-note">
+        You can change your mind here whenever you like, in either direction. Saying
+        no also deletes the number if one was already stored.
+      </p>
+
+      <h2>What gets recorded when you open a page</h2>
+      <p>Whether or not you agree to the number above, opening a page records:</p>
+      <ul class="legal-list">
+        <li>which page or game it was, and when</li>
+        <li>the site that sent you here, if any — <b>only the site</b>, not the full address</li>
+        <li>whether the screen is phone, tablet or desktop sized</li>
+      </ul>
+      <p>
+        If you agreed, the random number is attached, which is what makes &ldquo;12
+        visitors&rdquo; mean twelve people rather than twelve page loads. If you
+        didn&rsquo;t answer, no number is attached and that view can never be linked
+        to any other. <b>If you said no, nothing is recorded at all.</b>
+      </p>
+      <p class="legal-note">
+        Deliberately not recorded: your IP address, your exact location, your name
+        unless you sign in and tell me, and anything at all about what you do on any
+        other website. There is no fingerprinting.
+      </p>
+
+      <h2>If you sign in</h2>
+      <p>
+        Signing in is optional and the site works fully without it. It exists so your
+        name can sit on your seat in the games instead of &ldquo;Seat 2&rdquo;.
+      </p>
+      <p>
+        Signing in uses Google. Google tells this site three things: your name, your
+        email address, and your profile picture. That is all it sends and all that is
+        kept. Google will know that you signed in to this site &mdash; their handling
+        of that is covered by
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google&rsquo;s privacy policy</a>,
+        not this one.
+      </p>
+      <p>
+        Because the random number stays the same across signing in, your earlier
+        visits from this browser get connected to your name at that point. If you
+        would rather they didn&rsquo;t, decline the number above before you sign in,
+        or clear your browser storage first.
+      </p>
+
+      <h2>Where it lives and how long</h2>
+      <p>
+        In a Supabase database hosted in Tokyo, owned by me and read by nobody
+        else. The visit log is readable by exactly one account &mdash; mine. That
+        isn&rsquo;t a promise about how careful I am; the database itself refuses the
+        read for every other account, including anyone who digs the public key out of
+        this page&rsquo;s source.
+      </p>
+      <p>Visits older than <b>180 days</b> are deleted automatically, every night.</p>
+
+      <h2>Getting rid of it</h2>
+      <ul class="legal-list">
+        <li><b>Stop the counting</b> &mdash; say no above. That is immediate, and deletes the stored number.</li>
+        <li><b>Clear everything this site has put on your device</b> &mdash; clear site data for this domain in your browser settings. Nothing here survives that.</li>
+        <li><b>Delete your account and everything attached to it</b> &mdash; message me on <a href="https://instagram.com/k.a.z6official" target="_blank" rel="noopener">Instagram</a> and I&rsquo;ll do it. There is no email address on this site on purpose: an address that drops mail is worse than no address.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>
+        This site isn&rsquo;t aimed at children and doesn&rsquo;t knowingly keep
+        anything about anyone under 13. If that has happened, tell me and it goes.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If what is collected ever changes, this page changes with it and the date at
+        the top moves. If a change means collecting something genuinely new, the bar
+        at the bottom will ask again rather than assume the old answer still covers it.
+      </p>
+
+      <p class="legal-sig">
+        Khalifa Othman &middot; Manama, Bahrain
+      </p>
+    </div>
+  </section>
+
+  <footer class="foot" id="foot"></footer>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+  <script type="module" src="js/account.js"></script>
+  <script type="module" src="js/legal.js"></script>
+</body>
+</html>

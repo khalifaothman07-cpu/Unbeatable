@@ -25,8 +25,14 @@ function renderNav(){
      rather than an icon nobody has to guess at. */
   var theme='<button class="nav-theme" id="themeBtn" type="button" aria-live="polite"'
     +' title="Light, dark, or follow your device">Auto</button>';
+  /* An empty slot for account.js to fill. Declaring it here rather than
+     letting that module append to the nav means the chip has a defined
+     place in the order — after the theme control, before Contact — instead
+     of landing wherever it happens to be appended. The site still renders
+     exactly as it does today if account.js never loads. */
+  var acct='<span class="nav-acct" data-account></span>';
   nav.innerHTML='<a class="nav-mark wordmark" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
-    +'<div class="nav-links">'+links+theme+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
+    +'<div class="nav-links">'+links+theme+acct+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
 }
 
 /* FOOTER (single) */
@@ -34,12 +40,16 @@ function renderFooter(){
   var f=document.getElementById("foot"); if(!f) return;
   var pageLinks=SITE.pages.filter(p=>!p.home).map(p=>'<a href="'+esc(p.file)+'">'+esc(p.label)+'</a>').join("");
   var social=SITE.socials.map(s=>'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.name)+'</a>').join("");
+  /* Legal sits on the base line with the copyright, not in the Pages column
+     — it is the same register as "© 2026", not a destination like About. */
+  var legal=(SITE.legal||[]).map(p=>'<a href="'+esc(p.file)+'">'+esc(p.label)+'</a>').join('<i>·</i>');
   f.innerHTML='<div class="wrap"><div class="foot-grid">'
     +'<div class="foot-col"><span class="foot-mark wordmark">'+esc(SITE.name)+'</span><p class="foot-tag">'+esc(SITE.tagline)+'</p></div>'
     +'<div class="foot-col"><h4>Pages</h4>'+pageLinks+'</div>'
     +'<div class="foot-col"><h4>Channels</h4>'+social+'</div>'
     +'</div><div class="foot-base">'
     +'<span class="foot-note">'+esc(SITE.meta.place)+' · '+esc(SITE.meta.coords)+'</span>'
+    +(legal?'<span class="foot-legal">'+legal+'</span>':'')
     +'<span class="foot-note">© '+esc(SITE.meta.year)+' '+esc(SITE.name)+'</span>'
     +'</div></div>';
 }
