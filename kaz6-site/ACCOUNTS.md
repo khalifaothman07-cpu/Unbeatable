@@ -92,18 +92,25 @@ done, visit tracking already works — but every visitor stays anonymous and
 
 **Authentication → URL Configuration**
 
-- **Site URL**: your Netlify address (`https://<your-site>.netlify.app`, or
-  `https://kaz6.com` once the domain is connected)
+- **Site URL**: `https://kaz6.netlify.app`
+
+  **Not `kaz6.com`.** That domain currently forwards only its root — every
+  deep path 404s because it is not attached to Netlify (see the note in
+  `js/data.js`). The OAuth callback returns to `/admin.html`, so a sign-in
+  started at `kaz6.com` cannot finish. Use the netlify.app address until the
+  domain is pointed at Netlify properly.
 - **Redirect URLs** — add every origin the games are served from:
   ```
-  https://<your-site>.netlify.app/**
+  https://kaz6.netlify.app/**
   ```
-  Add the custom domain too when there is one. A redirect back to an origin
-  that is not on this list is refused, and the sign-in silently fails.
+  Add `https://kaz6.com/**` too once that domain actually serves deep paths.
+  A redirect back to an origin that is not on this list is refused, and the
+  sign-in fails silently.
 
 ### 4. Sign in once
 
-Open `/admin.html` and sign in with **khalifaothman07@gmail.com**.
+Open **`https://kaz6.netlify.app/admin.html`** and sign in with
+**khalifaothman07@gmail.com**.
 
 That address is stored in `public.app_settings` under `owner_email`. The
 `handle_new_user` trigger reads it and adds you to `public.admins` on first

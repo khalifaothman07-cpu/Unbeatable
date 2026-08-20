@@ -291,11 +291,28 @@
      league", Europa "the European cup". Club names stay: naming the
      record holders is factual reference, a competition brand is not.
      The fan-game disclaimers remain load-bearing — keep them verbatim.
-   • kaz6.com does not resolve (no A record). iam-golf's canonical +
-     og:image now point at kaz6.netlify.app, because aiming them at a
-     dead host broke link previews and told crawlers to canonicalise
-     to a URL that never answers. Two lines in iam-golf/index.html —
-     swap both back the day kaz6.com resolves.
+   • kaz6.com IS BOUGHT AND IS BROKEN — worse than the old "doesn't
+     resolve" note it replaces, because it half-works and so looks fine.
+     The apex 301s to kaz6.netlify.app, but ONLY the root: kaz6.com/
+     answers 200 while kaz6.com/games.html, /privacy.html and every
+     game 404 with no redirect at all. Anyone landing on the domain can
+     read the homepage and nothing else — every nav click dies.
+     CAUSE: the domain is not attached to Netlify. The project's primary
+     URL is still kaz6.netlify.app and there is no custom domain on it,
+     so something at the registrar is doing root-only URL forwarding
+     rather than DNS pointing at Netlify.
+     FIX (needs KO — it is registrar work): Netlify → Domain management
+     → Add domain → kaz6.com, then set the DNS Netlify asks for (either
+     hand it the nameservers, or an A record to 75.2.60.5 plus a CNAME
+     for www), and REMOVE the registrar's URL-forwarding rule, which is
+     what currently intercepts everything.
+     UNTIL THEN USE kaz6.netlify.app FOR EVERYTHING, including testing
+     the Google sign-in — the OAuth callback returns to /admin.html, and
+     on kaz6.com that path 404s, so a login started there cannot finish.
+     iam-golf's canonical + og:image still point at kaz6.netlify.app,
+     which is correct while the above is true. Two lines in
+     iam-golf/index.html — swap both the day kaz6.com serves deep paths,
+     NOT merely the day it resolves.
    • originals owed: hero.jpg is 508x450 and portrait.jpg 320x450 —
      both soft on desktop; iam-golf kit.jpg; Othello cast-photo
      consent before launch
