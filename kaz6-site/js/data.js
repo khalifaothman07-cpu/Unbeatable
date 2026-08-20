@@ -246,10 +246,23 @@
    paths through `base` and would resolve it to /games/<game>/js/... In
    `npm run dev` there is no site, the import 404s, and the game runs
    exactly as before. That degradation is deliberate; keep it.
-   MANUAL STEP STILL OWED: Google OAuth is not configured yet, so nobody
-   can sign in — tracking works, names do not. ACCOUNTS.md has the exact
-   Google Cloud + Supabase steps. KO becomes admin automatically on his
-   first sign-in, via app_settings.owner_email.
+   GOOGLE OAUTH IS NOW CONFIGURED and KO is in public.admins.
+   SUPABASE USES THE PKCE FLOW — do not "simplify" the callback back to
+   reading the URL fragment. The first version of account.js assumed the
+   implicit flow and looked for #access_token=. Supabase returns ?code=
+   instead, so the browser came home from Google holding a valid
+   authorisation code, ignored it, and stayed signed out — twice, with the
+   account created and the admin row written server-side each time. The
+   auth logs said it exactly: /authorize, /callback, "Login", and never a
+   /token request, because nobody asked for the tokens.
+   consumeCallback() now generates a code_verifier before redirecting,
+   sends code_challenge + code_challenge_method=s256, and POSTs
+   {auth_code, code_verifier} to /token?grant_type=pkce on the way back.
+   The fragment path is kept as a fallback and costs almost nothing.
+   THE REAL LESSON was that it failed SILENTLY: the button looked the same
+   before and after. Any auth failure now sets authError, the chip turns
+   red and says "sign-in failed", and /admin.html prints the reason instead
+   of repeating a bare prompt at somebody who just tried.
    THE GOOGLE REDIRECT URI IS NOT YOUR SITE. It is
    https://ngtpeamcaxdtghimdspz.supabase.co/auth/v1/callback — Google hands
    the user to Supabase, which then returns them to the site. The site's own
@@ -291,11 +304,35 @@
      league", Europa "the European cup". Club names stay: naming the
      record holders is factual reference, a competition brand is not.
      The fan-game disclaimers remain load-bearing — keep them verbatim.
-   • kaz6.com does not resolve (no A record). iam-golf's canonical +
-     og:image now point at kaz6.netlify.app, because aiming them at a
-     dead host broke link previews and told crawlers to canonicalise
-     to a URL that never answers. Two lines in iam-golf/index.html —
-     swap both back the day kaz6.com resolves.
+   • kaz6.com IS BOUGHT AND IS BROKEN — worse than the old "doesn't
+     resolve" note it replaces, because it half-works and so looks fine.
+     The apex 301s to kaz6.netlify.app, but ONLY the root: kaz6.com/
+     answers 200 while kaz6.com/games.html, /privacy.html and every
+     game 404 with no redirect at all. Anyone landing on the domain can
+     read the homepage and nothing else — every nav click dies.
+     DIAGNOSED, so nobody has to work it out again: the domain sits at
+     GODADDY (ns07/ns08.domaincontrol.com) with its A records pointing at
+     3.33.251.168 and 15.197.225.128 — GoDaddy's DOMAIN FORWARDING
+     service, which 301s the apex and throws the path away. www.kaz6.com
+     does not exist at all (NXDOMAIN). The domain has never been attached
+     to Netlify; the project's primary URL is still kaz6.netlify.app.
+     There are NO MX and NO TXT records, so nothing else depends on this
+     domain's DNS and handing it to Netlify loses nothing.
+     FIX — three steps, and step 1 is the one that gets skipped, which
+     makes the other two do nothing:
+       1. GoDaddy → Forwarding → DELETE the rule (it overrides all DNS)
+       2. Netlify → Domain management → Add domain → kaz6.com
+       3. GoDaddy → Nameservers → replace with the four Netlify shows
+     DEFERRED BY KO — not urgent and nothing depends on it. The site is
+     fully live and correct at kaz6.netlify.app; the custom domain is
+     cosmetic and unlocks no feature.
+     UNTIL THEN USE kaz6.netlify.app FOR EVERYTHING, including testing
+     the Google sign-in — the OAuth callback returns to /admin.html, and
+     on kaz6.com that path 404s, so a login started there cannot finish.
+     iam-golf's canonical + og:image still point at kaz6.netlify.app,
+     which is correct while the above is true. Two lines in
+     iam-golf/index.html — swap both the day kaz6.com serves deep paths,
+     NOT merely the day it resolves.
    • originals owed: hero.jpg is 508x450 and portrait.jpg 320x450 —
      both soft on desktop; iam-golf kit.jpg; Othello cast-photo
      consent before launch
