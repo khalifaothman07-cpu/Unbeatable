@@ -65,6 +65,10 @@ export function TradePanel() {
   const s = useGame();
   const [give, setGive] = useState<Basket>(empty);
   const [want, setWant] = useState<Basket>(empty);
+  /* Ten steppers open by default made the composer the tallest thing on the
+     page, sitting above the two panels — build and bank — that a player
+     actually touches every turn. It is one button until somebody wants it. */
+  const [open, setOpen] = useState(false);
 
   if (s.phase !== "main") return null;
 
@@ -153,11 +157,23 @@ export function TradePanel() {
   const overlap = RESOURCES.filter((r) => (give[r] ?? 0) > 0 && (want[r] ?? 0) > 0);
   const ready = giveN > 0 && wantN > 0 && !overlap.length;
 
+  if (!open) {
+    return (
+      <div className="panel panel--start">
+        <button className="btn small ghost" onClick={() => setOpen(true)}>Offer the table a deal</button>
+        <span className="muted">Swap goods with another seat — they have to agree.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="panel">
       <div className="panel-head">
         <span>Trade with the table</span>
-        {(giveN > 0 || wantN > 0) && <button className="btn tiny ghost" onClick={clear}>Clear</button>}
+        <span className="row" style={{ gap: 6 }}>
+          {(giveN > 0 || wantN > 0) && <button className="btn tiny ghost" onClick={clear}>Clear</button>}
+          <button className="btn tiny ghost" onClick={() => { clear(); setOpen(false); }}>Close</button>
+        </span>
       </div>
 
       <p className="trade-leg">You give</p>
@@ -190,7 +206,7 @@ export function TradePanel() {
         <button
           className="btn small"
           disabled={!ready}
-          onClick={() => { s.proposeTrade(give, want); clear(); }}
+          onClick={() => { s.proposeTrade(give, want); clear(); setOpen(false); }}
         >
           Post offer
         </button>

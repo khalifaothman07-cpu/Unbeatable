@@ -6,7 +6,13 @@
   <title>LU'LU'A — Isle of Pearls</title>
   <meta name="description" content="LU'LU'A (Pearl) — a Bahrain-themed trading and settlement game. Dive for pearls, run dhow routes, and build from barasti to qasr." />
   <link rel="icon" href="/games/luluaa/favicon.svg" />
-  <meta name="theme-color" content="#e8d9c0" />
+  <!-- Outfit, the games' shared face. A link rather than a CSS @import so it
+       isn't render-blocking, and with a real fallback stack because a blocked
+       or slow font must not leave the game unreadable. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#100d0b" />
   <!-- Runs before the first paint. Without it a saved Dark choice on a
        light-preference phone flashes cream for a frame every time the game
        is opened, which is the one thing dark mode exists to prevent. The
@@ -17,14 +23,14 @@
       if (t === "dark" || t === "light") {
         document.documentElement.setAttribute("data-theme", t);
         document.querySelector('meta[name="theme-color"]')
-          .setAttribute("content", t === "dark" ? "#17120e" : "#e8d9c0");
+          .setAttribute("content", t === "dark" ? "#100d0b" : "#2b241d");
       } else if (matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#17120e");
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", "#100d0b");
       }
     } catch (e) { /* storage blocked — the CSS default is a fine answer */ }
   </script>
-  <script type="module" crossorigin src="/games/luluaa/assets/index-DqCRPfIo.js"></script>
-  <link rel="stylesheet" crossorigin href="/games/luluaa/assets/index-CjnFQuvk.css">
+  <script type="module" crossorigin src="/games/luluaa/assets/index-DBebpQMw.js"></script>
+  <link rel="stylesheet" crossorigin href="/games/luluaa/assets/index-BBWTldM7.css">
 </head>
 <body>
   <div id="root"></div>

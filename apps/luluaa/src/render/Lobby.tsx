@@ -56,6 +56,15 @@ export function Lobby() {
 
   return (
     <>
+      {/* The game says its own name once, before it starts. Once there is a
+          board on screen the four seat banners and the board itself say what
+          this is, and a masthead is just a strip of phone the board could
+          have had — so it lives here and not in the running game. */}
+      <header className="head">
+        <p className="eyebrow">Isle of Pearls</p>
+        <h1 className="wordmark">LU&rsquo;LU&rsquo;A</h1>
+      </header>
+
       <div className="panel panel--lead">
         <p className="lede">
           Collect goods, build along the coast. <b>First to 10 points wins.</b>

@@ -14,6 +14,7 @@ import {
   publicScore, totalScore, useGame, visibleSeat,
 } from "./state/store";
 import { DhowBack, DhowIcon, ResIcon } from "./render/Icons";
+import { Dice } from "./render/Dice";
 import { useBot } from "./state/useBot";
 import { useTheme } from "./state/useTheme";
 
@@ -175,20 +176,94 @@ export function App() {
     return `${me.name} — build, trade, then end turn`;
   })();
 
+  /* =====================================================================
+     THE DOCK — the one thing this seat has to do next.
+     ---------------------------------------------------------------------
+     Roll, discard, steal, end turn and start again were five panels
+     scattered down a scrolling page, each one styled like a paragraph.
+     They are the same thing wearing different hats — the turn — so they
+     share one bar that sticks to the bottom of the screen. The rule is
+     that the button you need is never the button that scrolled away.
+
+     Only ever one at a time: the phases are exclusive, and a dock with
+     two decisions in it is a form again.
+     ===================================================================== */
+  const rollNonce = s.log.length;
+  const dock = (() => {
+    if (s.phase === "over")
+      return (
+        <div className="dock-row">
+          <button className="btn" onClick={() => s.newGame()}>New table</button>
+        </div>
+      );
+
+    if (s.phase === "discard") {
+      /* The discard is the DISCARDING seat's decision, not the active
+         seat's — a 7 can hit four people at once. It also must not be
+         offered to a device that doesn't hold that chair. */
+      const pid = s.discardQueue[0];
+      if (pid === undefined) return null;
+      if (!playableSeat(s, pid))
+        return <p className="muted">Waiting for {s.players[pid].name} to discard down to {s.discardTargets[pid]}…</p>;
+      return (
+        <>
+          <div className="panel-head">
+            <span>Discard</span>
+            <span className="dice">down to {s.discardTargets[pid]}</span>
+          </div>
+          <div className="dock-row">
+            {RESOURCES.filter((r) => s.players[pid].hand[r] > 0).map((r) => (
+              <button key={r} className="btn small" onClick={() => s.discard(r)}>
+                <ResIcon res={r} size={18} />{SHORT[r]} ({s.players[pid].hand[r]})
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    if (s.phase === "steal" && myTurn)
+      return (
+        <>
+          <div className="panel-head"><span>Take a card from</span></div>
+          <div className="dock-row">
+            {stealTargets.map((id) => (
+              <button key={id} className="btn small" onClick={() => s.stealFrom(id)}>{s.players[id].name}</button>
+            ))}
+          </div>
+        </>
+      );
+
+    if (s.phase === "roll" && myTurn)
+      return (
+        <div className="dock-row">
+          <Dice roll={s.dice} nonce={rollNonce} />
+          <button className="btn" onClick={s.roll}>Roll the dice</button>
+        </div>
+      );
+
+    if (s.phase === "main" && myTurn)
+      return (
+        <div className="dock-row">
+          <Dice roll={s.dice} nonce={rollNonce} />
+          <button className="btn" onClick={s.endTurn}>End turn</button>
+        </div>
+      );
+
+    return null;
+  })();
+
   return (
     <div className="shell">
-      <a className="kaz6-home" href="../../index.html">← KAZ6</a>
-
-      <header className="head">
-        <p className="eyebrow">Isle of Pearls</p>
-        <h1 className="wordmark">LU&rsquo;LU&rsquo;A</h1>
+      <div className="topbar">
+        <a className="kaz6-home" href="../../index.html">&larr; KAZ6</a>
         <div className="head-controls">
           <button
             className="btn tiny ghost"
             title={theme === "auto" ? `Following your device (${ground})` : `Always ${theme}`}
             onClick={cycle}
           >
-            {theme === "auto" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+            {theme === "auto" ? "Auto" : theme === "dark" ? "Night" : "Day"}
           </button>
           <button
             className="btn tiny ghost"
@@ -204,31 +279,56 @@ export function App() {
               if (!m) fx.gain();
             }}
           >
-            Sound {muted ? "off" : "on"}
+            {muted ? "Sound off" : "Sound on"}
           </button>
         </div>
-      </header>
+      </div>
 
       {/* Everything about setting the table lives before the game and
           nowhere after it — see Lobby. */}
       {!s.started ? <Lobby /> : (
         <>
-          <div className="scoreboard">
+          {/* Four seats across the top like a scoreboard. Points are the
+              biggest thing in each, because points are what everyone is
+              actually watching. */}
+          <div className="players">
             {s.players.map((p) => (
-              <div key={p.id} className={`seat ${p.id === activeSeat(s) ? "on" : ""} ${p.id === s.mySeat ? "you" : ""}`}>
-                <span className="dot" style={{ background: p.colour }} />
-                <b>{p.name}</b>
-                {s.seats[p.id]?.type === "bot" && <span className="tag2">bot</span>}
-                {p.id === s.mySeat && <span className="tag2 remote">you</span>}
-                <span className="pts">{publicScore(s, p.id)}<i>pts</i></span>
-                <span className="cards">
-                  {handCount(p.hand)} card{handCount(p.hand) === 1 ? "" : "s"} · {p.cards.length} dhow
+              <div
+                key={p.id}
+                className={`pbanner ${p.id === activeSeat(s) ? "on" : ""}`}
+                style={{ "--seat-colour": p.colour } as React.CSSProperties}
+              >
+                <span className="pbanner-top">
+                  <span className="pbanner-name">{p.name}</span>
+                  {s.seats[p.id]?.type === "bot" && <span className="tag2 bot">bot</span>}
+                  {p.id === s.mySeat && <span className="tag2 remote">you</span>}
+                </span>
+                <span className="pbanner-cash">{publicScore(s, p.id)} <i className="pbanner-unit">pts</i></span>
+                {/* A quarter of a phone's width is about eleven characters.
+                    "3 cards · 0 dhow" does not fit, so the dhow count only
+                    appears once somebody actually holds one. */}
+                <span className="pbanner-groups">
+                  <b>{handCount(p.hand)}</b> card{handCount(p.hand) === 1 ? "" : "s"}
+                  {p.cards.length > 0 && <> · <b>{p.cards.length}</b> dhow</>}
                 </span>
               </div>
             ))}
           </div>
 
-          <p className={`banner ${myTurn ? "mine" : ""}`}>{banner}</p>
+          <p className={`call ${myTurn ? "mine" : ""}`}>{banner}</p>
+
+          {/* The Shamal was the thing players said they couldn't follow: it
+              moves, and nothing said what it had done. It sits ABOVE the
+              board rather than below it — below, on a phone, it lands in the
+              strip of screen the dock covers, which is the one place a
+              status line is guaranteed not to be read. */}
+          {s.started && s.phase !== "over" && (
+            <p className="shamal-line">
+              <span className="shamal-mark" aria-hidden />
+              The Shamal blocks <b>{shamalWhere}</b>
+              {shamalHitsMe ? <> — including one of <b>your</b> tiles</> : <> — that tile pays nobody until it moves</>}
+            </p>
+          )}
 
           <BoardView
             board={s.board}
@@ -240,16 +340,6 @@ export function App() {
             <RouteLayer geo={s.geo} routes={s.routes} legal={myTurn ? edgeTargets : new Set()} onPick={s.clickEdge} />
             <BuildingLayer geo={s.geo} buildings={s.buildings} legal={myTurn ? vertexTargets : new Set()} onPick={s.clickVertex} />
           </BoardView>
-
-          {/* The Shamal was the thing players said they couldn't follow: it
-              moves, and nothing said what it had done. */}
-          {s.started && s.phase !== "over" && (
-            <p className="shamal-line">
-              <span className="shamal-mark" aria-hidden />
-              The Shamal blocks <b>{shamalWhere}</b>
-              {shamalHitsMe ? <> — including one of <b>your</b> tiles</> : <> — that tile pays nobody until it moves</>}
-            </p>
-          )}
 
           {/* ---- hand ---- */}
           {s.phase !== "setup" && (
@@ -321,52 +411,10 @@ export function App() {
             </div>
           )}
 
-          {/* ---- discard ---- */}
-          {s.phase === "discard" && (
-            <div className="panel panel--urgent">
-              <div className="panel-head">
-                <span>{s.players[s.discardQueue[0]].name} must discard</span>
-                <span className="dice">down to {s.discardTargets[s.discardQueue[0]]}</span>
-              </div>
-              <div className="row">
-                {RESOURCES.filter((r) => s.players[s.discardQueue[0]].hand[r] > 0).map((r) => (
-                  <button key={r} className="btn small" onClick={() => s.discard(r)}>
-                    <ResIcon res={r} size={18} />{SHORT[r]} ({s.players[s.discardQueue[0]].hand[r]})
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ---- steal ---- */}
-          {s.phase === "steal" && (
-            <div className="panel panel--urgent">
-              <div className="panel-head"><span>Take a card from</span></div>
-              <div className="row">
-                {stealTargets.map((id) => (
-                  <button key={id} className="btn small" onClick={() => s.stealFrom(id)}>{s.players[id].name}</button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <TradePanel />
-
-          {/* ---- actions ---- */}
-          {s.phase === "roll" && myTurn && (
-            <div className="panel panel--turn">
-              <button className="btn" onClick={s.roll}>Roll the dice</button>
-              {s.dice && <span className="dice">{s.dice[0]} + {s.dice[1]} = {s.dice[0] + s.dice[1]}</span>}
-            </div>
-          )}
-
           {s.phase === "main" && myTurn && (
             <>
               <div className="panel">
-                <div className="panel-head">
-                  <span>Build</span>
-                  {s.dice && <span className="dice">rolled {s.dice[0] + s.dice[1]}</span>}
-                </div>
+                <div className="panel-head"><span>Build</span></div>
                 <div className="build-row">
                   <button
                     className={`btn small ${s.pending === "route" ? "on" : ""}`}
@@ -409,6 +457,9 @@ export function App() {
               <div className="panel">
                 <div className="panel-head">
                   <span>Bank</span>
+                  {/* Only the RATES belong in the head. The nudge to go and
+                      take a trade post is a sentence, and set in the head's
+                      tracked caps it wrapped to two lines and shouted. */}
                   <span className="dice ports-held">
                     {myPorts.length
                       ? myPorts.map((p, i) => (
@@ -417,7 +468,7 @@ export function App() {
                             {p.resource ? "2:1" : "3:1 any"}
                           </span>
                         ))
-                      : "4:1 — build on a trade post for better"}
+                      : <span className="port-chip">4:1</span>}
                   </span>
                 </div>
                 <div className="row">
@@ -437,19 +488,17 @@ export function App() {
                   {!RESOURCES.some((g) => me.hand[g] >= tradeRate(s.current, g, s.buildings, s.geo)) &&
                     <span className="muted">Not enough of any one good to swap yet.</span>}
                 </div>
-              </div>
-
-              <div className="panel panel--turn">
-                <button className="btn" onClick={s.endTurn}>End turn</button>
+                {!myPorts.length && (
+                  <p className="muted hint">Build on a trade post and the rate drops to 3:1, or 2:1 on its own good.</p>
+                )}
               </div>
             </>
           )}
 
-          {s.phase === "over" && (
-            <div className="panel panel--turn">
-              <button className="btn" onClick={() => s.newGame()}>New table</button>
-            </div>
-          )}
+          {/* Trading sits under building deliberately: building is what a
+              player does every turn, trading is what they do when they're
+              stuck. The frequent thing goes first. */}
+          <TradePanel />
 
           {/* A running table shows only what it needs: who is connected and
               how to get back in. Seat setup is finished business. */}
@@ -485,6 +534,8 @@ export function App() {
           </div>
 
           <p className="seed">seed {s.board.seed} · {RESOURCE_LABEL.pearls} are scarcest by design</p>
+
+          {dock && <div className="dock">{dock}</div>}
         </>
       )}
     </div>

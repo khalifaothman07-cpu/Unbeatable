@@ -110,7 +110,12 @@ export function SeatBar() {
         </p>
       )}
 
-      <div className="row">
+      {/* One seat per line. As a wrapping row the four seats broke at
+          different widths and their buttons stacked, which made a four-item
+          list look like four different controls. The actions sit together on
+          the right; none of them is the gold one, because the gold one on
+          this screen is Start the game. */}
+      <div className="seatlist">
         {s.seats.map((seat, i) => (
           <span key={i} className={`seatctl ${i === s.mySeat ? "mine" : ""}`}>
             <b>Seat {i + 1}</b>
@@ -121,7 +126,7 @@ export function SeatBar() {
                 : "this device"}
             </span>
             {!joined && (
-              <>
+              <span className="seatctl-acts">
                 {seat.type === "bot" ? (
                   <button className="btn tiny ghost" onClick={() => s.setSeatType(i, "local")}>Take over</button>
                 ) : (
@@ -129,12 +134,12 @@ export function SeatBar() {
                 )}
                 {remoteConfigured && seat.type !== "bot" && (
                   seat.type === "local" ? (
-                    <button className="btn tiny" onClick={() => void s.openSeat(i)}>Open online</button>
+                    <button className="btn tiny ghost" onClick={() => void s.openSeat(i)}>Open online</button>
                   ) : (
                     <button className="btn tiny ghost" onClick={() => s.closeSeat(i)}>Make local</button>
                   )
                 )}
-              </>
+              </span>
             )}
           </span>
         ))}
