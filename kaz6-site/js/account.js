@@ -38,6 +38,7 @@ const SUPABASE_KEY = "sb_publishable_Td08KXJimYLQIbwS3fpPEA_-AfRp_Jl";
 const VISITOR_KEY = "kaz6.visitor";
 const SESSION_KEY = "kaz6.session";
 const CONSENT_KEY = "kaz6.consent";
+const VERIFIER_KEY = "kaz6.pkce";
 
 /* ---------- tiny storage helpers ------------------------------------------
    Every read is wrapped. Safari in private mode throws on localStorage
@@ -210,15 +211,62 @@ async function rest(path, options) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, Object.assign({}, opts, { headers }));
 }
 
-/* ---------- sign in ------------------------------------------------------- */
+/* ---------- sign in -------------------------------------------------------
+   PKCE, because that is what Supabase actually does.
 
-/** Send the browser to Google. Returns here with tokens in the URL hash. */
-function signIn() {
+   The first version of this assumed the implicit flow and read the tokens
+   out of the URL fragment (#access_token=...). Supabase returns ?code=...
+   instead, so the browser came back from Google carrying a perfectly good
+   authorisation code, ignored it, and stayed signed out. The auth logs told
+   the story exactly: /authorize then /callback then "Login" — and never a
+   /token request, because nobody ever asked for the tokens.
+
+   Worse, it failed SILENTLY. Supabase had created the account, the trigger
+   had run, the admin row existed — and the person clicking the button just
+   landed back on the homepage with nothing to show for it. Hence authError
+   below: a sign-in that does not work now says so.
+
+   The fragment path is kept as a fallback. It costs a few lines and covers
+   a project configured the other way. */
+
+/** Random string, URL-safe, from real entropy. */
+function b64url(bytes) {
+  let s = "";
+  for (const b of new Uint8Array(bytes)) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** The proof half of PKCE: base64url(SHA-256(verifier)). */
+async function challengeFor(verifier) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return b64url(digest);
+}
+
+/** Set when a sign-in came back broken, so the UI can say so. */
+let authError = null;
+
+/** Send the browser to Google. It returns with ?code=, which boot exchanges. */
+async function signIn() {
   const back = new URL(window.location.href);
   back.hash = "";
+  back.search = "";
   const url = new URL(`${SUPABASE_URL}/auth/v1/authorize`);
   url.searchParams.set("provider", "google");
   url.searchParams.set("redirect_to", back.toString());
+
+  try {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const verifier = b64url(bytes);
+    writeStore(VERIFIER_KEY, verifier);
+    url.searchParams.set("code_challenge", await challengeFor(verifier));
+    url.searchParams.set("code_challenge_method", "s256");
+  } catch (e) {
+    /* no crypto.subtle (an insecure context) — go without a challenge and
+       let the fragment fallback handle the return */
+    dropStore(VERIFIER_KEY);
+  }
+
   window.location.assign(url.toString());
 }
 
@@ -238,23 +286,85 @@ function signOut() {
   render();
 }
 
-/** Supabase returns from OAuth with the tokens in the fragment. Take them,
-    then scrub the address bar — an access token must not sit in history,
-    get bookmarked, or ride along in a Referer header. */
-function consumeCallback() {
-  if (!window.location.hash || window.location.hash.length < 2) return false;
-  const frag = new URLSearchParams(window.location.hash.slice(1));
+/** Take the auth bits out of the address bar and leave everything else.
+    A code or an access token must not sit in history, get bookmarked, or
+    ride along in a Referer header. */
+function scrubUrl() {
+  const url = new URL(window.location.href);
+  for (const k of ["code", "state", "error", "error_code", "error_description"]) {
+    url.searchParams.delete(k);
+  }
+  const q = url.searchParams.toString();
+  history.replaceState(null, "", url.pathname + (q ? `?${q}` : ""));
+}
+
+/** Finish a sign-in that Google has just sent back. Returns true if this
+    page load is the one that landed a session. */
+async function consumeCallback() {
+  const url = new URL(window.location.href);
+  const q = url.searchParams;
+  const frag = new URLSearchParams((url.hash || "").replace(/^#/, ""));
+
+  /* The provider can refuse, and it says so in the query on the PKCE path
+     and in the fragment on the implicit one. Either way it must not vanish. */
+  const failed = q.get("error_description") || q.get("error")
+    || frag.get("error_description") || frag.get("error");
+  if (failed) {
+    authError = decodeURIComponent(String(failed).replace(/\+/g, " "));
+    dropStore(VERIFIER_KEY);
+    scrubUrl();
+    return false;
+  }
+
+  /* ---- PKCE: swap the code for a session ---- */
+  const code = q.get("code");
+  if (code) {
+    const verifier = readStore(VERIFIER_KEY);
+    dropStore(VERIFIER_KEY);
+    if (!verifier) {
+      /* the code is real but this browser never made the matching secret —
+         a stale link, or storage cleared mid-flow */
+      authError = "That sign-in link has already been used. Try signing in again.";
+      scrubUrl();
+      return false;
+    }
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
+        method: "POST",
+        headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
+      });
+      if (!res.ok) {
+        let why = `HTTP ${res.status}`;
+        try { const b = await res.json(); why = b.error_description || b.msg || b.error || why; } catch (e) { /* keep the status */ }
+        authError = `Could not finish signing in — ${why}`;
+        scrubUrl();
+        return false;
+      }
+      saveSession(await res.json());
+      scrubUrl();
+      return true;
+    } catch (e) {
+      authError = "Could not reach the server to finish signing in.";
+      scrubUrl();
+      return false;
+    }
+  }
+
+  /* ---- implicit fallback: tokens straight in the fragment ---- */
   const access = frag.get("access_token");
   const refresh = frag.get("refresh_token");
-  if (!access || !refresh) return false;
+  if (access && refresh) {
+    saveSession({
+      access_token: access,
+      refresh_token: refresh,
+      expires_in: Number(frag.get("expires_in") || 3600),
+    });
+    scrubUrl();
+    return true;
+  }
 
-  saveSession({
-    access_token: access,
-    refresh_token: refresh,
-    expires_in: Number(frag.get("expires_in") || 3600),
-  });
-  history.replaceState(null, "", window.location.pathname + window.location.search);
-  return true;
+  return false;
 }
 
 /* ---------- profile ------------------------------------------------------- */
@@ -379,8 +489,20 @@ function render() {
     btn.type = "button";
     btn.className = "acct-btn";
     btn.textContent = "Sign in";
-    btn.addEventListener("click", signIn);
+    btn.addEventListener("click", () => { void signIn(); });
     el.appendChild(btn);
+    /* A sign-in that came back broken used to leave the button looking
+       exactly as it did before you pressed it, which is indistinguishable
+       from nothing having happened. */
+    if (authError) {
+      btn.classList.add("acct-btn--failed");
+      btn.title = authError;
+      const warn = document.createElement("span");
+      warn.className = "acct-warn";
+      warn.textContent = "sign-in failed";
+      warn.title = authError;
+      el.appendChild(warn);
+    }
     return;
   }
 
@@ -535,7 +657,9 @@ function whenReady() {
 
 async function boot() {
   session = loadSession();
-  const returned = consumeCallback();
+  /* awaited: on the PKCE path this performs the token exchange, and it is
+     what sets `session` when the browser is coming back from Google */
+  const returned = await consumeCallback();
   if (session) {
     await loadProfile();
     if (returned) await stitchProfile();
@@ -561,6 +685,10 @@ const account = {
   getVisitorId,
   recordVisit,
   isSignedIn: () => Boolean(session),
+  /** Why the last sign-in failed, or null. The dashboard shows this instead
+      of repeating a bare "sign in" prompt at somebody who just tried and
+      got nothing — which is how the PKCE bug stayed invisible. */
+  error: () => authError,
   /** "yes" | "no" | null. Exposed so the privacy page can show the current
       answer and offer to change it — a consent you cannot withdraw is not
       a consent. */

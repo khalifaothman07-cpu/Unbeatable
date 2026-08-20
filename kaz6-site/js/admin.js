@@ -427,10 +427,13 @@ async function draw() {
 
 account.ready.then(async () => {
   if (!account.isSignedIn()) {
+    const why = account.error();
     gate(
-      "Sign in to see this",
-      "This page is the visit log for kaz6 — who opened the site and the games, and when. " +
-      "It only ever opens for the owner’s account.",
+      why ? "That sign-in didn’t finish" : "Sign in to see this",
+      why
+        ? `${why} Try again — and if it keeps happening, the reason is worth reading rather than repeating.`
+        : "This page is the visit log for kaz6 — who opened the site and the games, and when. " +
+          "It only ever opens for the owner’s account.",
       true
     );
     return;

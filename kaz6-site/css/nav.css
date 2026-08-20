@@ -125,3 +125,12 @@
   .acct-btn { padding: 5px 8px; }
   .acct-btn--quiet { padding-inline: 2px; }
 }
+
+/* A failed sign-in has to look different from one never attempted. */
+.acct-btn--failed { border-color: var(--red); color: var(--band-fg); }
+.acct-warn {
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.06em; color: var(--red);
+  white-space: nowrap;
+}
+@media (max-width: 680px) { .acct-warn { display: none; } }

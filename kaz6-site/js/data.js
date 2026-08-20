@@ -246,10 +246,23 @@
    paths through `base` and would resolve it to /games/<game>/js/... In
    `npm run dev` there is no site, the import 404s, and the game runs
    exactly as before. That degradation is deliberate; keep it.
-   MANUAL STEP STILL OWED: Google OAuth is not configured yet, so nobody
-   can sign in — tracking works, names do not. ACCOUNTS.md has the exact
-   Google Cloud + Supabase steps. KO becomes admin automatically on his
-   first sign-in, via app_settings.owner_email.
+   GOOGLE OAUTH IS NOW CONFIGURED and KO is in public.admins.
+   SUPABASE USES THE PKCE FLOW — do not "simplify" the callback back to
+   reading the URL fragment. The first version of account.js assumed the
+   implicit flow and looked for #access_token=. Supabase returns ?code=
+   instead, so the browser came home from Google holding a valid
+   authorisation code, ignored it, and stayed signed out — twice, with the
+   account created and the admin row written server-side each time. The
+   auth logs said it exactly: /authorize, /callback, "Login", and never a
+   /token request, because nobody asked for the tokens.
+   consumeCallback() now generates a code_verifier before redirecting,
+   sends code_challenge + code_challenge_method=s256, and POSTs
+   {auth_code, code_verifier} to /token?grant_type=pkce on the way back.
+   The fragment path is kept as a fallback and costs almost nothing.
+   THE REAL LESSON was that it failed SILENTLY: the button looked the same
+   before and after. Any auth failure now sets authError, the chip turns
+   red and says "sign-in failed", and /admin.html prints the reason instead
+   of repeating a bare prompt at somebody who just tried.
    THE GOOGLE REDIRECT URI IS NOT YOUR SITE. It is
    https://ngtpeamcaxdtghimdspz.supabase.co/auth/v1/callback — Google hands
    the user to Supabase, which then returns them to the site. The site's own
