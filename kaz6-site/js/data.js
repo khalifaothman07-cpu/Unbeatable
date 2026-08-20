@@ -297,15 +297,22 @@
      answers 200 while kaz6.com/games.html, /privacy.html and every
      game 404 with no redirect at all. Anyone landing on the domain can
      read the homepage and nothing else — every nav click dies.
-     CAUSE: the domain is not attached to Netlify. The project's primary
-     URL is still kaz6.netlify.app and there is no custom domain on it,
-     so something at the registrar is doing root-only URL forwarding
-     rather than DNS pointing at Netlify.
-     FIX (needs KO — it is registrar work): Netlify → Domain management
-     → Add domain → kaz6.com, then set the DNS Netlify asks for (either
-     hand it the nameservers, or an A record to 75.2.60.5 plus a CNAME
-     for www), and REMOVE the registrar's URL-forwarding rule, which is
-     what currently intercepts everything.
+     DIAGNOSED, so nobody has to work it out again: the domain sits at
+     GODADDY (ns07/ns08.domaincontrol.com) with its A records pointing at
+     3.33.251.168 and 15.197.225.128 — GoDaddy's DOMAIN FORWARDING
+     service, which 301s the apex and throws the path away. www.kaz6.com
+     does not exist at all (NXDOMAIN). The domain has never been attached
+     to Netlify; the project's primary URL is still kaz6.netlify.app.
+     There are NO MX and NO TXT records, so nothing else depends on this
+     domain's DNS and handing it to Netlify loses nothing.
+     FIX — three steps, and step 1 is the one that gets skipped, which
+     makes the other two do nothing:
+       1. GoDaddy → Forwarding → DELETE the rule (it overrides all DNS)
+       2. Netlify → Domain management → Add domain → kaz6.com
+       3. GoDaddy → Nameservers → replace with the four Netlify shows
+     DEFERRED BY KO — not urgent and nothing depends on it. The site is
+     fully live and correct at kaz6.netlify.app; the custom domain is
+     cosmetic and unlocks no feature.
      UNTIL THEN USE kaz6.netlify.app FOR EVERYTHING, including testing
      the Google sign-in — the OAuth callback returns to /admin.html, and
      on kaz6.com that path 404s, so a login started there cannot finish.
