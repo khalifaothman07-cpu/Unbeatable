@@ -4,7 +4,7 @@
 
 An independent, fan-made football draft game. Spin a generator to land on a real Spanish club and season, draft one player from that squad, build your XI position by position across a formation of your choice, then play out a full 38-game campaign against a realistic league. No build step, no dependencies — just static HTML, CSS, and JavaScript.
 
-**[▶ Play it live](https://YOUR-USERNAME.github.io/laliga-38-0/)** · *(update this link after enabling GitHub Pages)*
+**[▶ Play it live](https://kaz6.com/games/espana/index.html)**
 
 ---
 
@@ -42,24 +42,20 @@ npx serve .
 
 Then open <http://localhost:8000>. (Opening `index.html` directly via `file://` also works.)
 
-## Deploy with GitHub Pages
+## How it's deployed
 
-**Option A — included workflow (recommended):** this repo ships with `.github/workflows/pages.yml`. Push to `main`, then in **Settings → Pages → Build and deployment**, set **Source: GitHub Actions**. Every push redeploys automatically.
-
-**Option B — no workflow:** **Settings → Pages → Source: Deploy from a branch**, choose `main` / `root`.
+This game lives inside the [kaz6](https://kaz6.com) site and is published with it by Netlify. There is no build step and no workflow of its own — the files here are served exactly as they are.
 
 ## Project structure
 
 ```
-laliga-38-0/
+games/espana/
 ├── index.html            # markup + meta tags
 ├── css/
 │   └── styles.css        # all styling
 ├── js/
 │   ├── data.js           # the squad & opponent database (edit ratings here)
 │   └── game.js           # generator, draft, formations, simulation, stats
-├── .github/workflows/
-│   └── pages.yml          # auto-deploy to GitHub Pages
 ├── LICENSE
 └── README.md
 ```
