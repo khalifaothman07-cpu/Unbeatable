@@ -21,6 +21,7 @@ import {
 } from "./game/rules";
 import { TOKEN_LABEL, activeSeat, playableSeat, useGame } from "./state/store";
 import { useBot } from "./state/useBot";
+import { useAccountName } from "./state/useAccountName";
 
 export function App() {
   const s = useGame();
@@ -34,6 +35,9 @@ export function App() {
 
   /* bot seats play themselves; the hook is a no-op when there are none */
   useBot();
+
+  /* if this device is signed in, its seat carries a real name */
+  useAccountName();
 
   /* One listener for every button on the page rather than a call at each
      onClick: the response belongs to the act of pressing, not to any
@@ -130,7 +134,10 @@ export function App() {
             >
               <span className="pbanner-top">
                 <TokenIcon token={p.token} fill={p.colour} size={20} />
-                <span className="pbanner-name">{TOKEN_LABEL[p.token]}</span>
+                {/* p.name, not the token label: they are the same thing
+                    until somebody signs in, and then this is where their
+                    real name belongs. */}
+                <span className="pbanner-name">{p.name}</span>
               </span>
               <span className="pbanner-cash">
                 {p.bankrupt ? "out" : <Cash amount={p.cash} />}

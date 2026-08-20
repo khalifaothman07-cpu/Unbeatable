@@ -118,7 +118,10 @@ export function SeatBar() {
       <div className="seatlist">
         {s.seats.map((seat, i) => (
           <span key={i} className={`seatctl ${i === s.mySeat ? "mine" : ""}`}>
-            <b>Seat {i + 1}</b>
+            {/* the player's name, which is "Seat N" until they sign in —
+                so a signed-in host sees their own name here rather than
+                finding out only once the game has started */}
+            <b>{s.players[i].name}</b>
             <span className={`tag2 ${seat.type}`}>
               {i === s.mySeat ? "you"
                 : seat.type === "bot" ? "bot"

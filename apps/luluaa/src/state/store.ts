@@ -230,6 +230,8 @@ export interface GameState {
   stealFrom: (playerId: number) => void;
   endTurn: () => void;
   revealHand: () => void;
+  /** Put a real name on a seat. Lobby only — see the implementation. */
+  renameSeat: (seatId: number, name: string) => void;
   startGame: () => void;
   setSeatType: (seatId: number, type: SeatType) => void;
   openSeat: (seatId: number) => Promise<void>;
@@ -421,6 +423,19 @@ export const useGame = create<GameState>((rawSet, get) => {
   },
 
   revealHand: () => set({ handRevealed: true }),
+
+  /* Names ride in the snapshot, so a rename reaches the other phones at the
+     table for free. It is restricted to the LOBBY on purpose: renaming is
+     cosmetic, but a write that lands mid-turn still bumps the revision and
+     would make a harmless label change race a real move. Before the game
+     starts there is no move to race. */
+  renameSeat: (seatId, name) => {
+    const s = get();
+    if (s.started) return;
+    const clean = name.trim().slice(0, 14);
+    if (!clean || !s.players[seatId] || s.players[seatId].name === clean) return;
+    set({ players: s.players.map((p, i) => (i === seatId ? { ...p, name: clean } : p)) });
+  },
 
   /* Leaving the lobby is a one-way door on purpose. Seat setup and "new
      game" stay out of reach for the rest of the table's life, so a stray

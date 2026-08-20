@@ -1,0 +1,126 @@
+/* ============================================================
+   admin.css  ·  THE PRIVATE DASHBOARD
+   ------------------------------------------------------------
+   ONE HUE, ON PURPOSE. This site's palette is paper, ink and a
+   single red. A dashboard is where people reach for a rainbow,
+   and it would look like a different website within one screen.
+   Every chart here is single-series, so colour never has to
+   carry identity: rank and position do, and the number sits on
+   the bar. Both accents were checked against both surfaces
+   before use — --red on paper and --red-ink on the dark ground
+   each clear 3:1 with chroma to spare.
+
+   The consequence worth naming: where a second series would
+   normally appear (new vs returning visitors), this uses two
+   charts side by side instead of two colours in one. Small
+   multiples, not a legend.
+   ============================================================ */
+
+.adm-gate {
+  max-width: 46ch;
+  padding: var(--s5) 0;
+}
+.adm-gate h2 { font-family: var(--f-display); font-size: var(--t-h3); margin-bottom: var(--s2); }
+.adm-gate p { color: var(--fg-2); line-height: 1.6; margin-bottom: var(--s3); }
+.adm-signin {
+  font-family: var(--f-mono); font-size: var(--t-label);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--on-red); background: var(--red);
+  border: 0; padding: 12px 22px; cursor: pointer;
+  transition: filter var(--dur-1) var(--ease-out);
+}
+.adm-signin:hover { filter: brightness(0.86); }
+
+/* ---- stat tiles: a number, not a chart ---------------------------------- */
+.adm-tiles {
+  display: grid; gap: 1px;
+  grid-template-columns: repeat(2, 1fr);
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+@media (min-width: 760px) { .adm-tiles { grid-template-columns: repeat(4, 1fr); } }
+.adm-tile { background: var(--bg); padding: var(--s3) var(--s3) calc(var(--s3) + 2px); }
+.adm-tile-k {
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3);
+}
+.adm-tile-v {
+  font-family: var(--f-display); font-weight: 800;
+  font-size: clamp(2.2rem, 5vw, 3.2rem); line-height: 1; margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.adm-tile-n { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); margin-top: 6px; }
+
+/* ---- figures ------------------------------------------------------------- */
+.adm-figs { display: grid; gap: var(--s4); }
+.adm-pair { display: grid; gap: var(--s4); }
+@media (min-width: 760px) { .adm-pair { grid-template-columns: 1fr 1fr; } }
+.adm-grid { display: grid; gap: var(--s4); }
+@media (min-width: 760px) { .adm-grid { grid-template-columns: 1fr 1fr; } }
+
+.adm-fig { border-top: 1px solid var(--line); padding-top: var(--s2); }
+.adm-fig-h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+.adm-fig-t { font-family: var(--f-body); font-size: var(--t-label); font-weight: 600; }
+.adm-fig-n { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); }
+
+/* the time series. Bars, not a line: these are counts on discrete days, and
+   a line between two sparse days draws traffic that never happened. */
+.adm-chart { width: 100%; height: auto; display: block; overflow: visible; }
+.adm-bar { fill: var(--red-ink, var(--red)); transition: opacity var(--dur-1) var(--ease-out); }
+.adm-chart:hover .adm-bar { opacity: 0.45; }
+.adm-chart .adm-bar:hover { opacity: 1; }
+.adm-bar-hit { fill: transparent; cursor: pointer; }
+.adm-axis { fill: var(--fg-3); font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.04em; }
+.adm-rule { stroke: var(--line); stroke-width: 1; }
+
+/* ---- ranked lists: horizontal bars in plain HTML ------------------------- */
+/* Names here are page paths and referrer hosts — long, and left-aligned text
+   is what the eye scans. A vertical bar chart would rotate every label. */
+/* The gap between ROWS has to beat the gap between a row's own label and its
+   own bar, or the bar floats halfway between two labels and you cannot tell
+   which one it belongs to. That was the first draft's mistake: one even 7px
+   gap everywhere, so every bar was ambiguous. */
+.adm-rank { display: grid; gap: 15px; }
+.adm-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.adm-row-k {
+  font-size: 0.82rem; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.adm-row-v { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.adm-row-bar { grid-column: 1 / -1; height: 6px; background: var(--line); }
+.adm-row-fill { height: 100%; background: var(--red-ink, var(--red)); border-radius: 0 3px 3px 0; }
+
+/* ---- the recent list ----------------------------------------------------- */
+.adm-tablewrap { overflow-x: auto; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.adm-table th {
+  text-align: left; font-family: var(--f-mono); font-size: var(--t-micro);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3);
+  font-weight: 500; padding: 8px 12px 8px 0; white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.adm-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.adm-table tr:last-child td { border-bottom: 0; }
+.adm-when { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); white-space: nowrap; }
+.adm-who { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+.adm-who img { width: 20px; height: 20px; border-radius: 50%; filter: var(--img-filter); }
+/* An unnamed visitor is still a person, and the id is the only handle we
+   have on them — but it is noise at full length, so it shows its head. */
+.adm-anon { font-family: var(--f-mono); font-size: var(--t-micro); color: var(--fg-3); }
+.adm-path { font-family: var(--f-mono); font-size: var(--t-micro); word-break: break-all; }
+
+.adm-empty { color: var(--fg-3); font-size: 0.9rem; padding: var(--s3) 0; }
+.adm-note { color: var(--fg-3); font-size: var(--t-micro); font-family: var(--f-mono); margin-top: var(--s2); line-height: 1.6; }
+
+/* One tooltip, moved rather than rebuilt. */
+.adm-tip {
+  position: fixed; z-index: 200; pointer-events: none;
+  background: var(--plate-bg); color: var(--plate-fg);
+  font-family: var(--f-mono); font-size: var(--t-micro);
+  padding: 6px 9px; white-space: nowrap;
+  opacity: 0; transition: opacity 0.12s;
+}
+.adm-tip.on { opacity: 1; }

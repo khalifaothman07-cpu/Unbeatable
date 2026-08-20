@@ -110,7 +110,7 @@ export function SeatBar() {
         {s.seats.map((seat, i) => (
           <span key={i} className={`seatctl ${i === s.mySeat ? "mine" : ""}`}>
             <TokenIcon token={s.players[i].token} fill={s.players[i].colour} size={22} />
-            <b>{TOKEN_LABEL[s.players[i].token]}</b>
+            <b>{s.players[i].name}</b>
             <span className={`tag2 ${seat.type}`}>
               {i === s.mySeat ? "you"
                 : seat.type === "bot" ? "bot"

@@ -57,7 +57,12 @@ export const TOKEN_LABEL: Record<Token, string> = {
 };
 
 const COLOURS = ["#b4623f", "#1c7d84", "#7a6a2f", "#5c4e7a"];
-const NAMES = ["Seat 1", "Seat 2", "Seat 3", "Seat 4"];
+/* A player is called by their piece. The banner already showed the token
+   label while the call line said "Seat 1 — roll", so the same person had
+   two names on one screen; naming them after the piece from the start
+   settles it in favour of the one that means something on a board. A seat
+   whose player signs in gets their real name here instead. */
+const NAMES = TOKENS.map((t) => TOKEN_LABEL[t]);
 
 export interface Player {
   id: number;
@@ -199,6 +204,8 @@ export interface GameState {
   unmortgage: (index: number) => void;
   payBail: () => void;
   usePass: () => void;
+  /** Put a real name on a seat. Lobby only — see the implementation. */
+  renameSeat: (seatId: number, name: string) => void;
   settleDebt: () => void;
   declareBankrupt: () => void;
   proposeTrade: (t: Trade) => void;
@@ -712,6 +719,19 @@ export const useGame = create<GameState>((rawSet, get) => {
         players: get().players.map((p) => (p.id === s.current ? { ...p, stuck: 0 } : p)),
         log: say(s.log, `${me.name} pays ${full(BAIL)} and clears the queue.`),
       });
+    },
+
+    /* Names ride in the snapshot, so a rename reaches the other phones at
+       the table for free. It is restricted to the LOBBY on purpose:
+       renaming is cosmetic, but a write that lands mid-turn still bumps the
+       revision and would make a harmless label change race a real move.
+       Before the game starts there is no move to race. */
+    renameSeat: (seatId, name) => {
+      const s = get();
+      if (s.started) return;
+      const clean = name.trim().slice(0, 14);
+      if (!clean || !s.players[seatId] || s.players[seatId].name === clean) return;
+      set({ players: s.players.map((p, i) => (i === seatId ? { ...p, name: clean } : p)) });
     },
 
     usePass: () => {

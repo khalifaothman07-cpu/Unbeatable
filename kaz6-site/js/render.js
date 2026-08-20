@@ -25,8 +25,14 @@ function renderNav(){
      rather than an icon nobody has to guess at. */
   var theme='<button class="nav-theme" id="themeBtn" type="button" aria-live="polite"'
     +' title="Light, dark, or follow your device">Auto</button>';
+  /* An empty slot for account.js to fill. Declaring it here rather than
+     letting that module append to the nav means the chip has a defined
+     place in the order — after the theme control, before Contact — instead
+     of landing wherever it happens to be appended. The site still renders
+     exactly as it does today if account.js never loads. */
+  var acct='<span class="nav-acct" data-account></span>';
   nav.innerHTML='<a class="nav-mark wordmark" href="index.html" aria-label="KAZ6 home">'+esc(SITE.name)+'</a>'
-    +'<div class="nav-links">'+links+theme+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
+    +'<div class="nav-links">'+links+theme+acct+'<a class="nav-link nav-cta" href="contact.html">Contact</a></div>';
 }
 
 /* FOOTER (single) */

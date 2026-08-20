@@ -16,6 +16,7 @@ import {
 import { DhowBack, DhowIcon, ResIcon } from "./render/Icons";
 import { Dice } from "./render/Dice";
 import { useBot } from "./state/useBot";
+import { useAccountName } from "./state/useAccountName";
 import { useTheme } from "./state/useTheme";
 
 const RESOURCES: Resource[] = ["palmWood", "limestone", "dates", "fish", "pearls"];
@@ -65,6 +66,9 @@ export function App() {
 
   /* bot seats play themselves; the hook is a no-op when there are none */
   useBot();
+
+  /* if this device is signed in, its seat carries a real name */
+  useAccountName();
 
   /* One listener for every button on the page rather than a call at each
      onClick: the response belongs to the act of pressing, not to any

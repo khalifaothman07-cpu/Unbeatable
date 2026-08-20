@@ -223,6 +223,34 @@
    mail is worse than no address. IAM GOLF already follows the same
    rule ("only the real channel — no invented email/phone").
 
+   ACCOUNTS + THE VISIT LOG (new — full detail in kaz6-site/ACCOUNTS.md).
+   Every page and every game records a view into public.visits. The site
+   is NOT walled: signing in is optional and only adds a NAME to numbers
+   that are collected either way. Two identities — visitor_id (a uuid in
+   localStorage, minted on first arrival, anonymous) and user_id (null
+   until a Google sign-in). visitor_id survives the sign-in and is
+   stamped onto the profile, which is what lets a sign-in name the
+   visits that came BEFORE it. Dashboard at /admin.html, deliberately
+   not in the nav.
+   THE RULE THAT INVERTS HERE: luluaa_games/fareej_games must let anon
+   SELECT (Realtime cannot work otherwise) — hence "don't put anything
+   in a snapshot you wouldn't hand a stranger". public.visits is the
+   opposite and must stay that way: anon has INSERT and nothing else,
+   there is no UPDATE or DELETE policy at all, and SELECT requires a row
+   in public.admins. Verified over REST, not assumed: anon insert 201,
+   select 401, forge/patch/delete/purge-rpc all 401.
+   ONE COPY OF THE CLIENT: kaz6-site/js/account.js. The site imports it;
+   the games pull it in at RUNTIME via a dynamic import of the string
+   "/js/account.js" (each app's src/state/account.ts). Do NOT turn it into
+   a static import or an index.html script tag — Vite rewrites absolute
+   paths through `base` and would resolve it to /games/<game>/js/... In
+   `npm run dev` there is no site, the import 404s, and the game runs
+   exactly as before. That degradation is deliberate; keep it.
+   MANUAL STEP STILL OWED: Google OAuth is not configured yet, so nobody
+   can sign in — tracking works, names do not. ACCOUNTS.md has the exact
+   Google Cloud + Supabase steps. KO becomes admin automatically on his
+   first sign-in, via app_settings.owner_email.
+
    OPEN (KO's calls):
    • football games are now generically named (per KO): "La Liga" and
      "Champions League" are gone from both — España reads "the Spanish
