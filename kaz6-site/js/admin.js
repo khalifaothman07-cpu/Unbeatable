@@ -258,14 +258,22 @@ async function draw() {
      end up with their name on them. */
   const nameFor = (v) => byId.get(v.user_id) || byVisitor.get(v.visitor_id) || null;
 
-  /* --- tiles ------------------------------------------------------------- */
-  const visitors = new Set(visits.map((v) => v.visitor_id));
+  /* --- tiles -------------------------------------------------------------
+     A null visitor_id means that person had not answered the consent bar,
+     so nothing was stored on their device and this view cannot be joined to
+     any other. Those views are REAL and are counted in the totals, but they
+     can never be counted as visitors — adding them in would inflate the
+     figure with people we cannot actually distinguish. They get their own
+     line instead. */
+  const identified = visits.filter((v) => v.visitor_id);
+  const anonymous = visits.length - identified.length;
+  const visitors = new Set(identified.map((v) => v.visitor_id));
   const known = new Set(visits.map(nameFor).filter(Boolean).map((p) => p.id));
   /* "returning" within this window: seen on more than one distinct day.
      Defined against the window, not all of history, so it stays computable
      from what is on screen. */
   const daysSeen = new Map();
-  for (const v of visits) {
+  for (const v of identified) {
     if (!daysSeen.has(v.visitor_id)) daysSeen.set(v.visitor_id, new Set());
     daysSeen.get(v.visitor_id).add(dayKey(v.at));
   }
@@ -280,7 +288,9 @@ async function draw() {
   };
   tiles.append(
     tile("Visitors", visitors.size, `distinct browsers, ${DAYS} days`),
-    tile("Views", visits.length, "pages and games opened"),
+    tile("Views", visits.length, anonymous
+      ? `${anonymous} of them uncounted as visitors`
+      : "pages and games opened"),
     tile("Signed in", known.size, known.size === 1 ? "person with a name" : "people with names"),
     tile("Returning", `${pct}%`, "came back on another day")
   );
@@ -291,7 +301,7 @@ async function draw() {
   const idx = new Map(days.map((d, i) => [d, i]));
 
   const uniqPerDay = days.map(() => new Set());
-  for (const v of visits) {
+  for (const v of identified) {
     const i = idx.get(dayKey(v.at));
     if (i != null) uniqPerDay[i].add(v.visitor_id);
   }
@@ -299,7 +309,7 @@ async function draw() {
   /* First day we see a browser inside this window counts as new; every later
      day it returns. Both are relative to the window, and the note says so. */
   const firstDay = new Map();
-  for (const v of [...visits].reverse()) {
+  for (const v of [...identified].reverse()) {
     if (!firstDay.has(v.visitor_id)) firstDay.set(v.visitor_id, dayKey(v.at));
   }
   const newPerDay = days.map(() => 0);
@@ -371,10 +381,16 @@ async function draw() {
       }
       who.appendChild(document.createTextNode(p.full_name || p.email || "Signed in"));
       whoCell.appendChild(who);
-    } else {
+    } else if (v.visitor_id) {
       const anon = el("span", "adm-anon", v.visitor_id.slice(0, 8));
       anon.title = "Anonymous visitor — this is their browser's id";
       whoCell.appendChild(anon);
+    } else {
+      /* no id at all: they had not answered the consent bar, so nothing was
+         stored and this view stands alone */
+      const none = el("span", "adm-anon", "—");
+      none.title = "Hadn’t answered the consent bar, so nothing was stored on their device. This view can’t be linked to any other.";
+      whoCell.appendChild(none);
     }
     tr.appendChild(whoCell);
 
@@ -396,6 +412,14 @@ async function draw() {
   }
   notes.push("New and returning are measured against this 30-day window, not all of history.");
   notes.push("A visitor is one browser. The same person on a phone and a laptop counts twice until they sign in on both.");
+  if (anonymous) {
+    notes.push(
+      `${anonymous} view${anonymous === 1 ? "" : "s"} shown as “—” came from someone who hadn’t answered ` +
+      "the consent bar, so nothing was stored on their device. They count in Views and in the page and " +
+      "referrer lists, and they can never count as visitors — there is no way to tell whether two of them " +
+      "were the same person. Anyone who declined outright isn’t here at all."
+    );
+  }
   body.appendChild(el("p", "adm-note", notes.join(" ")));
 }
 

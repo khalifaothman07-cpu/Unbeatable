@@ -250,6 +250,40 @@
    can sign in — tracking works, names do not. ACCOUNTS.md has the exact
    Google Cloud + Supabase steps. KO becomes admin automatically on his
    first sign-in, via app_settings.owner_email.
+   THE GOOGLE REDIRECT URI IS NOT YOUR SITE. It is
+   https://ngtpeamcaxdtghimdspz.supabase.co/auth/v1/callback — Google hands
+   the user to Supabase, which then returns them to the site. The site's own
+   origins go in Supabase → Authentication → URL Configuration, NOT in the
+   Google console. KO's first attempt had "HTTPS://Kaz6.com" in that box,
+   which cannot work. Advice found online about Google One Tap (client id in
+   the page, implicit flow, your own backend verifying JWTs) describes a
+   DIFFERENT integration and none of it applies here.
+
+   CONSENT — the bar is not decoration; it gates behaviour.
+   This site sets NO cookies; it uses localStorage. That is not a loophole:
+   the EU rule covers storing anything on a device, so what matters is what
+   each key is FOR. theme (a chosen preference), session (the login they
+   asked for) and the consent flag itself are exempt. kaz6.visitor, the
+   tracking id, is not — and it is the only reason the bar exists.
+   Three states: unanswered stores NOTHING and logs the view with a NULL
+   visitor_id; allowed mints the id; declined logs nothing at all and
+   DELETES any id already held. Reversible both ways from /privacy.html.
+   Two things that were the other way first and should stay as they are:
+   saying yes does NOT re-send the view already on screen (it wrote two rows
+   for one page load and inflated Views — the id applies from the next
+   navigation), and the id is minted AT the moment of agreement rather than
+   lazily on first use.
+   public.visits.visitor_id is therefore NULLABLE. The dashboard counts
+   distinct non-null ids as visitors and reports the nulls separately —
+   never add them together, they are views we cannot attribute.
+   DATA LIVES IN TOKYO (ap-northeast-1), and privacy.html says so. An early
+   draft claimed the EU; a false data-location claim in a privacy notice is
+   exactly the sort of error worth catching. Move that line if the project
+   ever moves region.
+   Privacy + Terms live in SITE.legal, rendered on the FOOTER BASE LINE, and
+   deliberately NOT in SITE.pages — a portfolio's nav should not spend one of
+   its six slots on a privacy notice. There is no accept-to-continue gate:
+   the fan-game disclaimers are restated verbatim on terms.html.
 
    OPEN (KO's calls):
    • football games are now generically named (per KO): "La Liga" and
@@ -316,6 +350,14 @@ const SITE = {
     { file: "games.html",     label: "Games",    n: "03", desc: "Five strategy games, all of them live. Draft, manage, and chase a perfect run." },
     { file: "ventures.html",  label: "Ventures", n: "04", desc: "IAM GOLF — premium pre-owned clubs, delivered across the Gulf." },
     { file: "contact.html",   label: "Contact",  n: "05", desc: "Socials and a direct line." },
+  ],
+
+  /* Kept out of SITE.pages on purpose. These belong in the footer, where
+     people look for them, and nowhere near the nav — a portfolio's top bar
+     should not spend one of its six slots on a privacy notice. */
+  legal: [
+    { file: "privacy.html", label: "Privacy" },
+    { file: "terms.html",   label: "Terms" },
   ],
 
   heroMedia:  { type: "image", src: "assets/media/hero.jpg", alt: "Khalifa Othman" },

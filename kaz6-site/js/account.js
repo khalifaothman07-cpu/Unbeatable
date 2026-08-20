@@ -37,6 +37,7 @@ const SUPABASE_KEY = "sb_publishable_Td08KXJimYLQIbwS3fpPEA_-AfRp_Jl";
 
 const VISITOR_KEY = "kaz6.visitor";
 const SESSION_KEY = "kaz6.session";
+const CONSENT_KEY = "kaz6.consent";
 
 /* ---------- tiny storage helpers ------------------------------------------
    Every read is wrapped. Safari in private mode throws on localStorage
@@ -65,8 +66,64 @@ function uuid() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-/** The durable anonymous id for this browser. Created on first arrival. */
+/* ---------- consent -------------------------------------------------------
+   Three states, and the difference between them is REAL — this gates what
+   is written to the device, not just what a banner says.
+
+     null   nobody has answered yet. Nothing is stored. A view is still
+            logged, but with no identifier, so it cannot be tied to any
+            other view. You learn that a page was opened; you do not learn
+            who opened it.
+     "yes"  the tracking id is minted and kept. Full picture.
+     "no"   nothing is logged at all, ever, and any id already held is
+            thrown away.
+
+   Two things deliberately DO NOT wait on this, because both are storage a
+   visitor asked for by acting:
+     - the login session, without which "sign in" cannot work
+     - the theme choice, which is a preference they set themselves
+   Under the EU rule the exemption is for storage strictly necessary to
+   provide a service the user requested, and those two are exactly that.
+   The tracking id is not, which is the whole reason this bar exists.
+
+   Calling it a "cookie banner" would be wrong on the technicality — this
+   site sets no cookies whatsoever — but the rule covers storing anything
+   on someone's device, so the distinction buys nothing and the bar says
+   what it actually does instead. */
+
+function consentState() {
+  const v = readStore(CONSENT_KEY);
+  return v === "yes" || v === "no" ? v : null;
+}
+
+function setConsent(value) {
+  writeStore(CONSENT_KEY, value);
+  if (value === "no") {
+    /* honour it properly: drop the id we may already be holding rather
+       than merely stopping new writes */
+    dropStore(VISITOR_KEY);
+  } else if (value === "yes") {
+    /* Mint it here, at the moment of agreement, rather than leaving it to
+       whenever something next happens to ask. Lazily creating it meant that
+       right after clicking yes there was still nothing stored, and the id
+       only appeared on the next navigation — which works, but makes the
+       stored state depend on which page you happened to click on. */
+    getVisitorId();
+  }
+  renderConsent();
+  /* Saying yes deliberately does NOT re-send the view already on screen.
+     Re-sending it wrote a second row for one page load — an anonymous one
+     and an identified one — which quietly inflated Views, the one number on
+     the dashboard that should mean exactly "pages opened". The id applies
+     from the next navigation instead, which on any visit longer than a
+     single page is a few seconds away. An accurate total beats claiming one
+     extra visitor. */
+}
+
+/** The durable id for this browser, or null when we are not allowed one.
+    Never mints anything unless consent is "yes". */
 function getVisitorId() {
+  if (consentState() !== "yes") return null;
   let v = readStore(VISITOR_KEY);
   if (!v || v.length !== 36) {
     v = uuid();
@@ -221,11 +278,17 @@ async function loadProfile() {
     and note that they were here. One PATCH, fire and forget. */
 async function stitchProfile() {
   if (!session || !profile) return;
+  /* Only claim the browser when there is a browser id to claim. Without
+     consent there is none, and writing null here would wipe a link made on
+     an earlier visit when they HAD agreed. */
+  const patch = { last_seen_at: new Date().toISOString() };
+  const vid = getVisitorId();
+  if (vid) patch.visitor_id = vid;
   try {
     await rest(`profiles?id=eq.${profile.id}`, {
       method: "PATCH",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({ visitor_id: getVisitorId(), last_seen_at: new Date().toISOString() }),
+      body: JSON.stringify(patch),
     });
   } catch (e) { /* not worth surfacing */ }
 }
@@ -253,6 +316,9 @@ let recorded = false;
     lands, so a game that re-renders cannot inflate its own numbers. */
 async function recordVisit(extra) {
   if (recorded) return;
+  /* A refusal is a refusal. Not "log it without the id", not "log it just
+     this once" — nothing leaves the browser. */
+  if (consentState() === "no") return;
   recorded = true;
 
   const path = window.location.pathname || "/";
@@ -346,6 +412,107 @@ function render() {
   el.append(who, out);
 }
 
+/* ---------- the consent bar ----------------------------------------------- */
+
+/* Deliberately NOT a modal. A wall in front of a portfolio is the same
+   mistake as a login wall: it costs you the visit it was meant to measure.
+   This sits at the bottom, the page is fully usable behind it, and ignoring
+   it forever is a valid answer — that state logs the view with no
+   identifier and stores nothing. */
+/* The bar carries its own styles rather than living in a stylesheet. It is
+   the one piece of UI that appears on BOTH design systems — the site's
+   paper-and-ink editorial pages and the games' dark lit table — and the
+   games do not load the site's CSS at all. A dark plate with cream text
+   reads as deliberate on either ground, and injecting it here keeps this
+   module self-sufficient, which is the same reason there is only one copy
+   of it. */
+const CONSENT_CSS = `
+.consent {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9000;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: #141414; color: #e8e5dc;
+  border-top: 1px solid rgba(232,229,220,.22);
+  box-shadow: 0 -10px 34px -14px rgba(0,0,0,.85);
+  font-family: Inter, -apple-system, system-ui, sans-serif;
+  animation: consent-in .32s cubic-bezier(.22,.9,.3,1) both;
+}
+@keyframes consent-in { from { transform: translateY(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .consent { animation: none; } }
+.consent-text {
+  flex: 1 1 22rem; min-width: 0; margin: 0;
+  font-size: .84rem; line-height: 1.55; color: rgba(232,229,220,.82);
+}
+.consent-text a { color: #e8e5dc; text-underline-offset: 3px; }
+.consent-acts { display: flex; gap: 8px; flex: 0 0 auto; }
+.consent-btn {
+  font: inherit; font-size: .78rem; font-weight: 600;
+  padding: 9px 16px; cursor: pointer;
+  color: #e8e5dc; background: transparent;
+  border: 1px solid rgba(232,229,220,.34); border-radius: 3px;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.consent-btn:hover { border-color: #e8e5dc; }
+.consent-btn:active { transform: translateY(1px); }
+/* Neither answer is dressed up as the good one. Yes is legible, no is
+   equally reachable — a "decline" hidden in grey 10px text is a dark
+   pattern and would make the whole bar dishonest. */
+.consent-btn--yes { background: #c1121f; border-color: #c1121f; color: #fff; }
+.consent-btn--yes:hover { filter: brightness(1.1); border-color: #c1121f; }
+@media (max-width: 560px) {
+  .consent { padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .consent-acts { width: 100%; }
+  .consent-acts .consent-btn { flex: 1; }
+}
+`;
+
+function ensureConsentCss() {
+  if (document.getElementById("kaz6-consent-css")) return;
+  const style = document.createElement("style");
+  style.id = "kaz6-consent-css";
+  style.textContent = CONSENT_CSS;
+  document.head.appendChild(style);
+}
+
+function renderConsent() {
+  const existing = document.querySelector(".consent");
+  if (consentState() !== null) { if (existing) existing.remove(); return; }
+  if (existing || !document.body) return;
+  ensureConsentCss();
+
+  const bar = document.createElement("aside");
+  bar.className = "consent";
+  bar.setAttribute("role", "region");
+  bar.setAttribute("aria-label", "Visit counting");
+
+  const text = document.createElement("p");
+  text.className = "consent-text";
+  text.innerHTML =
+    "This site keeps a private count of who visits. Saying yes stores one " +
+    "random number in your browser so two visits can be told apart — " +
+    "nothing else, no cookies, and nobody else sees it. " +
+    '<a href="/privacy.html">What’s stored</a>.';
+
+  const acts = document.createElement("div");
+  acts.className = "consent-acts";
+
+  const yes = document.createElement("button");
+  yes.type = "button";
+  yes.className = "consent-btn consent-btn--yes";
+  yes.textContent = "That’s fine";
+  yes.addEventListener("click", () => setConsent("yes"));
+
+  const no = document.createElement("button");
+  no.type = "button";
+  no.className = "consent-btn";
+  no.textContent = "No thanks";
+  no.addEventListener("click", () => setConsent("no"));
+
+  acts.append(yes, no);
+  bar.append(text, acts);
+  document.body.appendChild(bar);
+}
+
 /* ---------- boot ---------------------------------------------------------- */
 
 let ready = null;
@@ -378,6 +545,7 @@ async function boot() {
   recordVisit();
   await whenReady();
   render();
+  renderConsent();
   return { visitorId: getVisitorId(), user: session ? session.user : null, profile };
 }
 
@@ -393,6 +561,11 @@ const account = {
   getVisitorId,
   recordVisit,
   isSignedIn: () => Boolean(session),
+  /** "yes" | "no" | null. Exposed so the privacy page can show the current
+      answer and offer to change it — a consent you cannot withdraw is not
+      a consent. */
+  consent: consentState,
+  setConsent,
   /** A live access token for callers that query on the owner's behalf —
       the dashboard. Refreshes if it is about to expire; null when signed
       out, which is the dashboard's cue to show its sign-in prompt. */

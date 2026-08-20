@@ -40,12 +40,16 @@ function renderFooter(){
   var f=document.getElementById("foot"); if(!f) return;
   var pageLinks=SITE.pages.filter(p=>!p.home).map(p=>'<a href="'+esc(p.file)+'">'+esc(p.label)+'</a>').join("");
   var social=SITE.socials.map(s=>'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.name)+'</a>').join("");
+  /* Legal sits on the base line with the copyright, not in the Pages column
+     — it is the same register as "© 2026", not a destination like About. */
+  var legal=(SITE.legal||[]).map(p=>'<a href="'+esc(p.file)+'">'+esc(p.label)+'</a>').join('<i>·</i>');
   f.innerHTML='<div class="wrap"><div class="foot-grid">'
     +'<div class="foot-col"><span class="foot-mark wordmark">'+esc(SITE.name)+'</span><p class="foot-tag">'+esc(SITE.tagline)+'</p></div>'
     +'<div class="foot-col"><h4>Pages</h4>'+pageLinks+'</div>'
     +'<div class="foot-col"><h4>Channels</h4>'+social+'</div>'
     +'</div><div class="foot-base">'
     +'<span class="foot-note">'+esc(SITE.meta.place)+' · '+esc(SITE.meta.coords)+'</span>'
+    +(legal?'<span class="foot-legal">'+legal+'</span>':'')
     +'<span class="foot-note">© '+esc(SITE.meta.year)+' '+esc(SITE.name)+'</span>'
     +'</div></div>';
 }

@@ -5,10 +5,50 @@ sign-in that puts a name to it.
 
 ## What it does
 
-Every visitor's browser mints a `visitor_id` (a uuid in `localStorage`) the
-first time it arrives, and every page view is written to `public.visits`.
-That happens for **everyone**, signed in or not — there is no wall, and the
-site works exactly as before if the log is unreachable.
+Every page view is written to `public.visits`. That happens for **everyone**,
+signed in or not — there is no wall, and the site works exactly as before if
+the log is unreachable.
+
+Whether the view carries an identifier depends on consent (below).
+
+## Consent — three states, and they mean different things
+
+This site sets **no cookies at all**; it uses `localStorage`. That is not a
+loophole. The EU rule covers *storing or accessing information on someone's
+device*, whatever it is called, so the question is what each key is **for**:
+
+| Key | Purpose | Consent? |
+|---|---|---|
+| `kaz6.theme` | a preference they chose | no — exempt |
+| `kaz6.session` | the login they asked for | no — exempt |
+| `kaz6.consent` | remembers a refusal | no — the refusal itself |
+| **`kaz6.visitor`** | **the tracking id** | **yes** |
+
+So the bar exists for exactly one key. What it gates is real:
+
+| State | Stored on device | Recorded |
+|---|---|---|
+| **Hasn't answered** | nothing at all | the view, with `visitor_id = NULL` |
+| **Allowed** | `kaz6.visitor` | everything |
+| **Declined** | just the refusal | **nothing, ever** |
+
+Two decisions worth knowing about, because both were the other way first:
+
+- **Saying yes does not re-send the view already on screen.** Doing that wrote
+  two rows for one page load — one anonymous, one identified — and quietly
+  inflated Views. The id applies from the next navigation instead. An accurate
+  total beats claiming one extra visitor.
+- **The id is minted at the moment of agreement**, not lazily on first use.
+  Lazily meant nothing was stored right after clicking yes, and the id only
+  appeared on whichever page they happened to load next.
+
+Declining is honoured properly: any id already held is **deleted**, not just
+ignored. The choice is reversible in both directions from `/privacy.html`,
+because a permission you cannot withdraw is a notice, not a permission.
+
+The bar carries its own CSS, injected from `account.js`. It is the one piece
+of UI that appears on both design systems — the site's paper-and-ink pages and
+the games' dark table — and the games do not load the site's stylesheet.
 
 Signing in with Google adds a `profiles` row and stamps the visitor's id onto
 it. Because `visitor_id` survives the sign-in, signing in names everything
@@ -145,6 +185,16 @@ portfolio is a good way to make sure nobody sees it.
 | `admin.html` | The private page |
 | `apps/*/src/state/account.ts` | A loader that pulls `js/account.js` in at runtime, so the games do not bundle a second copy |
 | `apps/*/src/state/useAccountName.ts` | Records the visit, and puts your name on your seat |
+| `privacy.html` · `terms.html` | The two legal pages, linked from the footer's base line |
+| `js/legal.js` · `css/legal.css` | The live consent control on the privacy page |
+
+## Where the data actually lives
+
+Supabase project `ngtpeamcaxdtghimdspz`, region **`ap-northeast-1` (Tokyo)**.
+The privacy page says Tokyo because that is where it is — an early draft said
+"the EU", which was wrong, and a false data-location claim in a privacy notice
+is the kind of error that matters. If the project ever moves region, that line
+in `privacy.html` moves with it.
 
 ## What is deliberately not tracked
 
